@@ -30,6 +30,50 @@ Use when a single file is required but the full boilerplate reference would exce
 
 The host's current import mechanism and context limits determine which package is appropriate. Check the host's current documentation before choosing a platform-specific upload path.
 
+## Install by platform
+
+Use the folder for exactly one skill (either `gasly-pro` or `gasly-prompt`). Do not upload the whole repository as a skill.
+
+### ChatGPT Skills
+
+1. Open **Skills** in the ChatGPT sidebar.
+2. Select **Create → Upload from your computer**.
+3. Upload the skill package from `dist/modular/<skill-name>/` with its `SKILL.md` and complete `references/` folder.
+4. Review the uploaded skill and workspace availability settings before use.
+
+ChatGPT Skills are available only to eligible Business, Enterprise, Healthcare, and Edu users, subject to workspace settings and rollout. See [Skills in ChatGPT](https://help.openai.com/en/articles/20001066-skills-in-chatgpt).
+
+### Claude.ai
+
+1. Enable **Code execution** and **Skills** where required by your account/workspace.
+2. Package one complete folder from `dist/modular/<skill-name>/` as a ZIP. Keep `SKILL.md` at the skill folder root and include its `references/` subfolder.
+3. In Claude, open **Customize → Skills**, choose **Create skill → Upload a skill**, and upload the ZIP.
+4. Enable the skill after upload. Workspace sharing/provisioning is controlled separately.
+
+See [Use skills in Claude](https://support.claude.com/en/articles/12512180-use-skills-in-claude).
+
+### Claude Code
+
+Copy a complete modular skill folder into one of these locations:
+
+- Personal: `~/.claude/skills/gasly-pro/` or `~/.claude/skills/gasly-prompt/`
+- Project-local: `.claude/skills/gasly-pro/` or `.claude/skills/gasly-prompt/`
+
+Keep `SKILL.md` in the selected skill folder root and keep `references/` alongside it. See the [Agent Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview).
+
+### Gemini Apps (web)
+
+1. Open [gemini.google.com](https://gemini.google.com).
+2. Open **Customize → Skills → Create → Upload**.
+3. Select the skill folder under `dist/modular/<skill-name>/`, or ZIP its contents so that `SKILL.md` is in the ZIP's main folder (not nested an extra directory down).
+4. Include the adjacent `references/` folder in the same upload, review the skill, then create it.
+
+Gemini Apps accepts a `SKILL.md` file, a folder, or a ZIP containing `SKILL.md` in its main folder. Scripts that require internet access are not supported, and reference files must be uploaded with the skill. See [Create and manage skills for Gemini Apps](https://support.google.com/gemini/answer/17094296?hl=en).
+
+### When to use Flat or Flat Lite
+
+Use `dist/flat/<skill-name>/SKILL.md` only when a target accepts a single Markdown file but does not preserve supporting folders. Use `dist/flat-lite/gasly-pro/SKILL.md` only for GASLY Pro on a constrained single-file target: it explicitly excludes the boilerplate reference, so it is not functionally equivalent to Modular or full Flat. The flat packages are generated artifacts, not the preferred canonical upload when references are supported.
+
 ## Versions and manifest
 
 Each skill has its own `SKILL_VERSION`, independent of the shared `KB_VERSION`. The product version and each generated file's SHA-256 are recorded in `dist/manifest.json`. The manifest does not include a hash of itself.
