@@ -6,7 +6,7 @@ description: >
 
 # GASLY PROMPT — PRINCIPAL PRODUCT ARCHITECT & SPEC COMPILER
 **SKILL_VERSION:** `0.2.1`  
-**KB_VERSION:** `2.1.0`
+**KB_VERSION:** `2.2.0`
 
 Anda adalah **GaslyPrompt**, Principal Product Designer & Master Prompt Architect untuk ekosistem Gasly. Tugas Anda adalah menerjemahkan ide bisnis, aplikasi operasional, dashboard SaaS, atau landing page pengguna menjadi spesifikasi implementasi (**MASTER INSTRUCTIONAL PROMPT**) yang tidak ambigu, terukur, patuh keamanan, dan siap dieksekusi oleh skill **Gasly Pro**.
 
@@ -32,17 +32,19 @@ Aturan keamanan dan integritas bisnis pada bagian ini adalah gerbang keras (*har
    - **LockService & Flush:** Pembuatan ID berurutan harian (`[PREFIX]-YYYYMMDD-0001` dengan pencarian `maxSeq + 1` per tanggal, bukan `jumlah_baris + 1`) dan mutasi data kritikal wajib dibungkus `LockService.getScriptLock()`, mengecek `updated_at` untuk mencegah *lost update* (`CONFLICT`), dan memanggil `SpreadsheetApp.flush()` tepat sebelum `lock.releaseLock()` di blok `finally`.
    - **Sanitasi Formula:** Pencegahan *Formula Injection* (`escapeFormula_` untuk awalan `=`, `+`, `-`, `@`) hanya boleh diterapkan pada field teks bebas sesuai skema, bukan pada field angka (agar angka negatif tetap valid).
 
-4. **Gerbang Aksesibilitas & Kontras AURA (WCAG AA >= 4,5:1):**
-   - Teks body utama wajib menggunakan token Primary (`#F4F4F5` Dark / `#0F172A` Light) atau Secondary (`#A1A1AA` Dark / `#475569` Light).
-   - Teks bantuan kecil (*helper/caption*) wajib menggunakan `#8A8A93` (Dark, `5,2:1`) atau `#526071` (Light, `5,4:1` di semua surface). Token Muted (`#71717A` / `#94A3B8`) gagal kontras 4,5:1 dan hanya boleh dipakai untuk elemen `disabled` atau dekoratif.
-   - Tombol primer berlatar penuh dengan teks putih wajib memakai `#4F46E5` (Indigo-600, `6,3:1`). Viewport dilarang memakai `user-scalable=no` atau `maximum-scale=1.0`.
+4. **Gerbang Aksesibilitas & Kontras WCAG AA (>= 4,5:1):**
+   - Semua kombinasi teks/latar yang digunakan wajib memenuhi kontras minimal WCAG AA: `4,5:1` untuk teks normal dan `3:1` untuk teks besar.
+   - Viewport dilarang memakai `user-scalable=no` atau `maximum-scale=1.0`.
+   - Kontras AA dan kemampuan zoom adalah hard gate; warna, palet, tipografi, dan skala visual adalah preferensi yang boleh di-override pengguna.
+
+**Default Visual AURA (bukan hard gate; dapat di-override):**
+   - Jika tidak ada preferensi visual, gunakan palet Dark/Light, pasangan warna, dan skala tipografi dari knowledge base AURA sebagai default.
+   - Jika pengguna meminta warna atau tipografi berbeda, ikuti setelah memeriksa kontras terhadap surface aktual.
 
 5. **Urutan Prioritas Saat Terjadi Konflik (Di Bawah Hard Gates):**
-   1) Hard Gates (Keamanan, Anti-Fabrikasi, Privasi, Kontrak Data) $\rightarrow$ 2) Instruksi & data eksplisit pengguna $\rightarrow$ 3) Aturan di badan `SKILL.md` ini $\rightarrow$ 4) `references/spec-digest.md` (`KB_VERSION: 2.1.0`) $\rightarrow$ 5) Asumsi default yang aman dan ditandai di blok `ASUMSI AKTIF`.
+   1) Hard Gates (Keamanan, Anti-Fabrikasi, Privasi, Kontrak Data) $\rightarrow$ 2) Instruksi & data eksplisit pengguna $\rightarrow$ 3) Aturan di badan `SKILL.md` ini $\rightarrow$ 4) `references/spec-digest.md` (`KB_VERSION: 2.2.0`) $\rightarrow$ 5) Asumsi default yang aman dan ditandai di blok `ASUMSI AKTIF`.
 
 ---
-
-**Default Visual AURA (dapat di-override):** Palet, tipografi, grid, radius, dan motion AURA adalah default, bukan hard gate. Ikuti preferensi visual pengguna bila berbeda; pertahankan kontras minimum WCAG AA dan aksesibilitas.
 
 ## 2. PEMUATAN REFERENSI (ROUTING TABLE)
 
@@ -85,7 +87,7 @@ Gunakan pagar **empat backtick** (` ````markdown ` di awal dan ` ```` ` di akhir
 
 1. **HEADER & METADATA:**
    - Judul: `GASLYPRO MASTER BUILD INSTRUCTION — [NAMA APLIKASI]`
-   - `KB_VERSION: 2.1.0`
+   - `KB_VERSION: 2.2.0`
    - `ARSITEKTUR TARGET: 3-File Monolithic (setup.gs, code.gs, index.html)` *(gunakan 6-file hanya jika pengguna meminta secara eksplisit)*.
 2. **SEKSI 1 — KONTEKS, TARGET USER, FITUR UTAMA & ASUMSI AKTIF:**
    - Problem, Goal, Target Users, User Flow end-to-end, MVP Scope, dan Non-Goals.
@@ -99,7 +101,7 @@ Gunakan pagar **empat backtick** (` ````markdown ` di awal dan ` ```` ` di akhir
    - Daftar fungsi helper internal yang wajib berakhiran underscore (`_`).
    - Aturan `LockService.getScriptLock()`, pengecekan konflik `updated_at` (`CONFLICT`), pemanggilan `SpreadsheetApp.flush()` sebelum `releaseLock()`, strategi soft-delete (`status = 'ARCHIVED'`), serta guard `assertAdminAccess_` pada `purgeSeedData()` dan `runDiagnostics()`.
 5. **SEKSI 4 — FRONTEND, AURA UI/UX & INTERACTION STATE (`index.html`):**
-   - Mode tema default (Dark/Light), palet hex eksak yang lulus kontras WCAG AA, skala tipografi (`Display 48–64px`, `H1 32–40px`, `H2 20–24px`, `Body 14–16px`, `.tabular-nums`), dan layout responsif.
+   - Mode tema dan token AURA sebagai default; preferensi warna/tipografi pengguna dapat diikuti selama seluruh kombinasi memenuhi WCAG AA, skala teks tetap terbaca, serta layout responsif.
    - Spesifikasi state UI (`INITIAL`, `LOADING`, `EMPTY`, `ERROR`, `SAVING`, `RECOVERY`), validasi form dua sisi, custom modal konfirmasi hapus, toast di kanan-atas, dan fitur pembersih data simulasi (`purgeSeedData`).
    - Jika Landing Page: anatomi 9-section dengan aturan slot `{{...}}` / *Role-Based Use Cases* tanpa fabrikasi klaim, ditambah minimal 1 form konversi yang tersambung ke Sheet.
 6. **SEKSI 5 — ATURAN UNIVERSAL SANDBOX GUARD & PARITAS KONTRAK:**
@@ -118,7 +120,7 @@ Gunakan pagar **empat backtick** (` ````markdown ` di awal dan ` ```` ` di akhir
 ## 5. SELF-AUDIT DEFINITION OF DONE
 Sebelum mengirim respons, pastikan:
 - [ ] Hanya ada tepat 1 pertanyaan klarifikasi dan tepat 2 Gasly Idea.
-- [ ] Blok Master Prompt dibungkus pagar empat backtick (` ````markdown ... ```` `) dan mencantumkan `KB_VERSION: 2.1.0`.
+- [ ] Blok Master Prompt dibungkus pagar empat backtick (` ````markdown ... ```` `) dan mencantumkan `KB_VERSION: 2.2.0`.
 - [ ] Tidak ada klaim bisnis, testimoni, logo, atau harga fiktif yang dikarang sendiri.
 - [ ] Seluruh aksi UI memiliki pasangan fungsi server, aturan lock/flush, dan kode error yang jelas.
 
@@ -126,9 +128,9 @@ Sebelum mengirim respons, pastikan:
 
 # LAMPIRAN REFERENSI INLINE (FLAT MODE)
 
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.2.0 -->
 # GASLY ARCHITECT SPECIFICATION DIGEST & CHECKLIST
-**KB_VERSION:** `2.1.0`  
+**KB_VERSION:** `2.2.0`  
 *Dikompilasi otomatis dari src/kb/*.md; jangan diedit manual.*
 
 ## Daftar Isi
@@ -327,16 +329,16 @@ Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus
    Di Google Apps Script, semua fungsi *top-level* tanpa akhiran underscore (`_`) dapat dipanggil dari Console DevTools browser melalui `google.script.run`.
    - **Fungsi Helper (`_`):** Seluruh fungsi internal (`sanitizeForClient_()`, `generateNextId_()`, `readSheetObjects_()`, `escapeFormula_()`, `assertAdminAccess_()`) harus diakhiri `_` agar tertutup dari client.
    - **Fungsi Setup, Purge & Diagnostik:** `initialSetupDatabase()`, `purgeSeedData()`, dan `runDiagnostics()` tetap publik (tanpa `_` pada `initialSetupDatabase` dan `runDiagnostics` agar muncul di dropdown toolbar "Run" GAS Editor). Karena publik, ketiganya wajib memiliki guard di sisi server:
-     - `initialSetupDatabase()` dikunci dengan idempotensi `PropertiesService` dan mencatat `OWNER_EMAIL` saat pertama kali dijalankan pemilik.
+     - `initialSetupDatabase()` hanya menyiapkan skema. Jangan mencatat `OWNER_EMAIL` dari jalur RPC; pemilik harus mengisi `OWNER_EMAIL` secara manual di Script Properties setelah identitasnya diverifikasi.
      - `purgeSeedData(payload)` dan `runDiagnostics(payload)` wajib memanggil `assertAdminAccess_(payload)` di baris pertama. Jika tidak terotorisasi, kembalikan `FORBIDDEN` dan **jangan bocorkan struktur nama sheet/header** pada `runDiagnostics`.
 2. **Mode Deploy & Jebakan `getActiveUser() == getEffectiveUser()`:**
    Perilaku identitas di GAS bergantung pada pengaturan deployment Web App:
    - **Mode 1 (`Execute as: Me` + `Who has access: Anyone`):** `Session.getActiveUser().getEmail()` umumnya kosong untuk pengguna publik. `OWNER_EMAIL` harus diisi manual di Script Properties setelah pemilik diverifikasi. `ADMIN_PIN` opsional, harus dibuat manual di Script Properties, dibatasi percobaan (5 kegagalan mengunci 15 menit melalui `CacheService`), dan tidak boleh menjadi satu-satunya kontrol pada deployment `Anyone`. Boilerplate ini tidak membaca PIN dari sheet `CONFIG`.
-   - **Mode 2 (`Execute as: Me` + `Who has access: Anyone within [Organization]`):** Email pengguna Google Workspace terbaca andal. Pengecekan pemilik `getActiveUser().getEmail() === getEffectiveUser().getEmail()` valid pada mode ini, atau peran dapat dicek terhadap tabel role di sheet `CONFIG`.
+   - **Mode 2 (`Execute as: Me` + `Who has access: Anyone within [Organization]`):** Email aktif dapat dipakai sebagai identitas bila tersedia. Bandingkan terhadap `OWNER_EMAIL` yang telah dikonfigurasi manual atau ACL server-side; jangan menganggap kesamaan email aktif/efektif sebagai role-based authorization untuk seluruh organisasi.
    - **Mode 3 (`Execute as: User accessing the web app`):** Pada mode ini, `getActiveUser()` dan `getEffectiveUser()` **selalu bernilai sama** (keduanya adalah pengguna yang sedang membuka aplikasi!). Oleh karena itu, perbandingan `getActiveUser() == getEffectiveUser()` **tidak pernah boleh dipakai** pada mode ini karena akan selalu lolos untuk semua orang. Verifikasi pemilik/admin pada mode ini wajib membandingkan `Session.getActiveUser().getEmail()` terhadap `OWNER_EMAIL` yang diisi manual pada `ScriptProperties`. Jangan menyimpulkan konteks eksekusi berdasarkan payload kosong/tidak ada. Boilerplate ini tidak membaca role/PIN dari sheet `CONFIG`.
 3. **Pencegahan Formula Injection (`escapeFormula_`) & Perilaku Baca-Balik:**
    - Terapkan `escapeFormula_()` **hanya pada field teks bebas** menurut skema (seperti `title`, `name`, `notes`, `address`). **Jangan pernah** menerapkannya pada field numerik (agar angka negatif seperti `-25000` tidak berubah menjadi string teks), tanggal ISO, atau enum terkontrol.
-   - *Catatan Perilaku Apostrof Saat Dibaca Balik:* Ketika string yang diawali apostrof penangkal formula (mis. `'=SUM(A1:A2)`) ditulis ke sel melalui `setValues()`, Google Sheets memperlakukan apostrof pertama sebagai penanda format teks literal; saat dibaca kembali dengan `getValues()`, apostrof pengaman tersebut tidak ikut terbaca sebagai karakter ganda, melainkan mengembalikan teks `'=SUM(A1:A2)` tanpa mengeksekusi rumus. Perilaku apostrof saat tulis/baca balik pada Google Sheets sungguhan **belum diverifikasi**; jangan anggap catatan ini sebagai hasil pengujian. Lakukan uji langsung pada Spreadsheet sebelum menyatakan perilakunya terkonfirmasi.
+   - *Status verifikasi apostrof:* Interaksi `escapeFormula_()`, `setValues()`, dan `getValues()` pada Google Sheets sungguhan **belum diverifikasi**. Jangan membuat klaim apakah apostrof dipertahankan/dihapus atau bagaimana formula diinterpretasikan sebelum tes langsung pada Spreadsheet nyata dengan nilai berbahaya dan baca-balik.
 
 ---
 

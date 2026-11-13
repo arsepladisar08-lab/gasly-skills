@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.2.0 -->
 # GAS BACKEND SAFE ENGINE (DATA, CONCURRENCY, SECURITY & SCHEMA)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat pada setiap pembuatan atau modifikasi kode backend (`setup.gs` dan `code.gs`).
@@ -62,16 +62,16 @@ Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus
    Di Google Apps Script, semua fungsi *top-level* tanpa akhiran underscore (`_`) dapat dipanggil dari Console DevTools browser melalui `google.script.run`.
    - **Fungsi Helper (`_`):** Seluruh fungsi internal (`sanitizeForClient_()`, `generateNextId_()`, `readSheetObjects_()`, `escapeFormula_()`, `assertAdminAccess_()`) harus diakhiri `_` agar tertutup dari client.
    - **Fungsi Setup, Purge & Diagnostik:** `initialSetupDatabase()`, `purgeSeedData()`, dan `runDiagnostics()` tetap publik (tanpa `_` pada `initialSetupDatabase` dan `runDiagnostics` agar muncul di dropdown toolbar "Run" GAS Editor). Karena publik, ketiganya wajib memiliki guard di sisi server:
-     - `initialSetupDatabase()` dikunci dengan idempotensi `PropertiesService` dan mencatat `OWNER_EMAIL` saat pertama kali dijalankan pemilik.
+     - `initialSetupDatabase()` hanya menyiapkan skema. Jangan mencatat `OWNER_EMAIL` dari jalur RPC; pemilik harus mengisi `OWNER_EMAIL` secara manual di Script Properties setelah identitasnya diverifikasi.
      - `purgeSeedData(payload)` dan `runDiagnostics(payload)` wajib memanggil `assertAdminAccess_(payload)` di baris pertama. Jika tidak terotorisasi, kembalikan `FORBIDDEN` dan **jangan bocorkan struktur nama sheet/header** pada `runDiagnostics`.
 2. **Mode Deploy & Jebakan `getActiveUser() == getEffectiveUser()`:**
    Perilaku identitas di GAS bergantung pada pengaturan deployment Web App:
    - **Mode 1 (`Execute as: Me` + `Who has access: Anyone`):** `Session.getActiveUser().getEmail()` umumnya kosong untuk pengguna publik. `OWNER_EMAIL` harus diisi manual di Script Properties setelah pemilik diverifikasi. `ADMIN_PIN` opsional, harus dibuat manual di Script Properties, dibatasi percobaan (5 kegagalan mengunci 15 menit melalui `CacheService`), dan tidak boleh menjadi satu-satunya kontrol pada deployment `Anyone`. Boilerplate ini tidak membaca PIN dari sheet `CONFIG`.
-   - **Mode 2 (`Execute as: Me` + `Who has access: Anyone within [Organization]`):** Email pengguna Google Workspace terbaca andal. Pengecekan pemilik `getActiveUser().getEmail() === getEffectiveUser().getEmail()` valid pada mode ini, atau peran dapat dicek terhadap tabel role di sheet `CONFIG`.
+   - **Mode 2 (`Execute as: Me` + `Who has access: Anyone within [Organization]`):** Email aktif dapat dipakai sebagai identitas bila tersedia. Bandingkan terhadap `OWNER_EMAIL` yang telah dikonfigurasi manual atau ACL server-side; jangan menganggap kesamaan email aktif/efektif sebagai role-based authorization untuk seluruh organisasi.
    - **Mode 3 (`Execute as: User accessing the web app`):** Pada mode ini, `getActiveUser()` dan `getEffectiveUser()` **selalu bernilai sama** (keduanya adalah pengguna yang sedang membuka aplikasi!). Oleh karena itu, perbandingan `getActiveUser() == getEffectiveUser()` **tidak pernah boleh dipakai** pada mode ini karena akan selalu lolos untuk semua orang. Verifikasi pemilik/admin pada mode ini wajib membandingkan `Session.getActiveUser().getEmail()` terhadap `OWNER_EMAIL` yang diisi manual pada `ScriptProperties`. Jangan menyimpulkan konteks eksekusi berdasarkan payload kosong/tidak ada. Boilerplate ini tidak membaca role/PIN dari sheet `CONFIG`.
 3. **Pencegahan Formula Injection (`escapeFormula_`) & Perilaku Baca-Balik:**
    - Terapkan `escapeFormula_()` **hanya pada field teks bebas** menurut skema (seperti `title`, `name`, `notes`, `address`). **Jangan pernah** menerapkannya pada field numerik (agar angka negatif seperti `-25000` tidak berubah menjadi string teks), tanggal ISO, atau enum terkontrol.
-   - *Catatan Perilaku Apostrof Saat Dibaca Balik:* Ketika string yang diawali apostrof penangkal formula (mis. `'=SUM(A1:A2)`) ditulis ke sel melalui `setValues()`, Google Sheets memperlakukan apostrof pertama sebagai penanda format teks literal; saat dibaca kembali dengan `getValues()`, apostrof pengaman tersebut tidak ikut terbaca sebagai karakter ganda, melainkan mengembalikan teks `'=SUM(A1:A2)` tanpa mengeksekusi rumus. Perilaku apostrof saat tulis/baca balik pada Google Sheets sungguhan **belum diverifikasi**; jangan anggap catatan ini sebagai hasil pengujian. Lakukan uji langsung pada Spreadsheet sebelum menyatakan perilakunya terkonfirmasi.
+   - *Status verifikasi apostrof:* Interaksi `escapeFormula_()`, `setValues()`, dan `getValues()` pada Google Sheets sungguhan **belum diverifikasi**. Jangan membuat klaim apakah apostrof dipertahankan/dihapus atau bagaimana formula diinterpretasikan sebelum tes langsung pada Spreadsheet nyata dengan nilai berbahaya dan baca-balik.
 <!-- DIGEST:END -->
 
 ---
@@ -92,3 +92,8 @@ Boilerplate CRUD GASLY adalah **single-tenant**: record tidak memiliki `owner_id
 - **Peringatan deployment:** Jangan publikasikan baseline dengan `Who has access: Anyone` sebagai default. Batasi audience ke domain/akun tepercaya, atau tambahkan autentikasi dan guard otorisasi server-side sebelum setiap read/write. Menyembunyikan menu frontend bukan kontrol akses.
 - **Pola read-scoped per role:** identifikasi user di server; resolve role dari ACL server-side; tentukan allowlist sheet/field/filter untuk role; filter data di server sebelum dikirim ke client; tolak role yang tidak eksplisit; jangan menerima `role`, `owner_id`, atau filter keamanan dari client sebagai sumber otoritatif.
 - **Contoh:** `OWNER` dapat membaca semua sheet; `FINANCE` hanya membaca transaksi sesuai tugas; `STAFF` hanya membaca record miliknya bila sistem memiliki `owner_id` tervalidasi. Ini pola desain, bukan fitur yang telah diimplementasikan boilerplate.
+
+
+### 7. Batas Pembersihan Seed Data
+
+Penghapusan seed menggunakan blok baris berurutan dari bawah ke atas, bukan penulisan ulang seluruh tabel. Terapkan batas maksimum 500 baris per eksekusi; bila terlampaui, tolak operasi dengan `VALIDATION_ERROR` dan minta operator menjalankan batch yang lebih kecil. Google Sheets tidak menyediakan transaksi database, sehingga jangan menjanjikan rollback atomik atas mutasi multi-sheet.

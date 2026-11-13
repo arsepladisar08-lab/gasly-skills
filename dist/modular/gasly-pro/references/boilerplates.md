@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.2.0 -->
 # MASTER BOILERPLATES & UNIVERSAL SANDBOX PREVIEW GUARD
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat pada setiap pembuatan atau modifikasi kode (`setup.gs`, `code.gs`, `index.html`).
@@ -151,7 +151,7 @@ function initialSetupDatabase() {
  */
 var DEPLOY_MODE = 'EXECUTE_AS_ME';
 // Harus mencerminkan setting deployment Web App; PIN tidak boleh menjadi satu-satunya kontrol pada ANYONE.
-var DEPLOY_ACCESS = 'RESTRICTED';
+var DEPLOY_ACCESS = 'ANYONE';
 var ALLOWED_CATEGORIES = ['Operasional', 'Pemasaran', 'Infrastruktur', 'Lisensi'];
 var ALLOWED_STATUSES = ['ACTIVE', 'PENDING', 'COMPLETED', 'ARCHIVED'];
 
@@ -221,7 +221,7 @@ function escapeFormula_(val) {
 /**
  * Verifikasi akses admin yang memperhitungkan DEPLOY_MODE.
  * Pada mode USER_ACCESSING, getActiveUser() === getEffectiveUser() selalu bernilai true,
- * sehingga verifikasi wajib membandingkan terhadap OWNER_EMAIL di ScriptProperties atau ADMIN_PIN.
+ * sehingga verifikasi wajib membandingkan terhadap OWNER_EMAIL yang diatur manual atau PIN fallback yang dibatasi percobaan.
  */
 function assertAdminAccess_(payload) {
   var props = PropertiesService.getScriptProperties();
@@ -796,6 +796,8 @@ window.configurePreviewAdmin = function(pin) {
   var db = getMockDb_();
   db.adminPin = pin;
   db.adminConfigured = true;
+  db.adminFailedCount = 0;
+  db.adminLockUntil = 0;
   saveMockDb_(db);
   return true;
 };
@@ -815,6 +817,30 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
       code: code,
       meta: { schemaVersion: '1.0.0', timestamp: nowIso, sandbox: true }
     };
+  }
+
+  function authorizeMockAdmin_() {
+    if (!db.adminConfigured || !db.adminPin) {
+      return { allowed: false, message: 'Konfigurasi admin belum selesai. Atur autentikasi simulasi secara eksplisit.' };
+    }
+    if (Number(db.adminLockUntil || 0) > now.getTime()) {
+      return { allowed: false, message: 'Percobaan autentikasi simulasi terkunci selama 15 menit.' };
+    }
+    if (payload && payload.adminPin && String(payload.adminPin) === String(db.adminPin)) {
+      db.adminFailedCount = 0;
+      db.adminLockUntil = 0;
+      saveMockDb_(db);
+      return { allowed: true };
+    }
+    db.adminFailedCount = Number(db.adminFailedCount || 0) + 1;
+    if (db.adminFailedCount >= 5) {
+      db.adminFailedCount = 0;
+      db.adminLockUntil = now.getTime() + 15 * 60 * 1000;
+      saveMockDb_(db);
+      return { allowed: false, message: 'Terlalu banyak percobaan autentikasi simulasi. Akses terkunci 15 menit.' };
+    }
+    saveMockDb_(db);
+    return { allowed: false, message: 'Autentikasi simulasi tidak valid.' };
   }
 
   if (actionName === 'getBootstrapData') {
@@ -899,8 +925,9 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'purgeSeedData') {
-    if (!db.adminConfigured || !payload || !payload.adminPin || String(payload.adminPin) !== String(db.adminPin)) {
-      return onError(makeEnv('error', null, 'Konfigurasi admin belum selesai atau kredensial simulasi tidak valid.', 'FORBIDDEN'));
+    var mockAuth = authorizeMockAdmin_();
+    if (!mockAuth.allowed) {
+      return onError(makeEnv('error', null, mockAuth.message, 'FORBIDDEN'));
     }
     var beforeCount = db.items.length;
     db.items = db.items.filter(function(it) {
