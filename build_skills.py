@@ -132,6 +132,8 @@ def check_rpc(md):
     functions = re.findall(r"^function\s+([A-Za-z0-9_]+)\s*\(", server.group(1), re.M)
     public = {name for name in functions if not name.endswith("_") and name not in LIFECYCLE}
     mock = set(re.findall(r"actionName\s*===\s*['\"]([A-Za-z0-9_]+)['\"]", client.group(1)))
+    # runDiagnostics is a separately guarded lifecycle/admin endpoint, not a CRUD action.
+    mock.discard("runDiagnostics")
     if not public or public != mock:
         raise ValueError("RPC action-name mismatch: server-only=" + str(sorted(public-mock)) + " mock-only=" + str(sorted(mock-public)))
 
