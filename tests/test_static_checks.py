@@ -35,6 +35,9 @@ class StaticRegressionTests(unittest.TestCase):
             skill = next(line for line in lines if line.startswith("**SKILL_VERSION:**")).split()[-1].strip(chr(96))
             kb = next(line for line in lines if line.startswith("**KB_VERSION:**")).split()[-1].strip(chr(96))
             self.assertNotEqual(skill, kb)
+            manifest = json.loads(read("dist/manifest.json"))
+            self.assertEqual(manifest["skills"][name]["skill_version"], "0.2.1")
+            self.assertEqual(manifest["skills"][name]["kb_version"], "2.3.0")
 
     def test_no_unproven_full_parity_claim(self):
         for name in ("gasly-pro", "gasly-prompt"):

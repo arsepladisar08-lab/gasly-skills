@@ -31,9 +31,10 @@ def read_version(text, name):
 
 
 def read_skill_version(text, name):
+    prefix = "**SKILL_VERSION:**"
     for line in text.splitlines():
-        if line.startswith("**SKILL_VERSION:**"):
-            return line.split(":", 1)[1].strip().strip(TICK).strip()
+        if line.startswith(prefix):
+            return line[len(prefix):].strip().strip(TICK).strip()
     raise ValueError("SKILL_VERSION missing: " + name)
 
 
@@ -101,7 +102,7 @@ def make_routing(kind, refs, excluded=None):
     if kind == "lite":
         lines += ["**Mode distribusi: Flat Lite. Referensi berikut sengaja dikecualikan:**"]
         for name in excluded or []:
-            lines.append("- references/" + name + " — dikecualikan; isi referensi tidak tersedia di paket ini.")
+            lines.append("- " + TICK + "references/" + name + TICK + " — dikecualikan; isi referensi tidak tersedia di paket ini.")
         lines += ["", "Untuk topik yang memerlukan referensi yang dikecualikan, nyatakan keterbatasannya dan minta konteks sumber atau gunakan paket Modular/Flat penuh.", ""]
     else:
         lines += ["Baca referensi sesuai kondisi berikut:", "",
@@ -115,7 +116,7 @@ def make_routing(kind, refs, excluded=None):
                 condition, when = "Kondisional (App/Dashboard)", "Dashboard, portal, atau internal tool."
             else:
                 condition, when = "Kondisional (Landing Page)", "Landing page dan situs pemasaran."
-            lines.append("| references/" + name + " | " + condition + " | " + when + " |")
+            lines.append("| " + TICK + "references/" + name + TICK + " | **" + condition + "** | " + when + " |")
         lines += ["", "Fallback: bila referensi tidak tersedia, nyatakan Mode Referensi Mandiri dan jangan mengklaim telah membacanya.", ""]
     return "\n".join(lines)
 
