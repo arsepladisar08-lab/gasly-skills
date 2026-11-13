@@ -92,6 +92,8 @@ const cache = {
   remove(key) { cacheData.delete(key); }
 };
 const serverContext = {
+  SCHEMA_VERSION: "1.0.0",
+  DEFAULT_TZ: "Asia/Jakarta",
   Date: FixedDate,
   Session: {
     getActiveUser: () => ({ getEmail: () => state.active }),
