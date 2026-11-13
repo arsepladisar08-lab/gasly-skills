@@ -161,6 +161,8 @@ const staleUpdate = serverContext.saveItem({ id: "TRX-20261113-0001", title: "Ch
 expectCode(staleUpdate, "CONFLICT", "server stale update");
 const validUpdate = serverContext.saveItem({ id: "TRX-20261113-0001", title: "Changed title", category: "Operasional", amount: 120, status: "ACTIVE", updated_at: "2026-11-13T09:00:00+07:00" });
 expectCode(validUpdate, "OK", "server matching update");
+expectCode(serverContext.deleteItem({ id: "TRX-20261113-0001", updated_at: "stale" }), "CONFLICT", "server stale delete");
+expectCode(serverContext.deleteItem({ id: "TRX-20261113-0001", updated_at: validUpdate.data.updated_at }), "OK", "server current delete");
 
 // (e) daily ID sequence resets in the next local date.
 const ids = new FakeSheet([["id"], ["TRX-20261113-0005"]]);
@@ -202,6 +204,19 @@ expectCode(mockMissingDelete, "VALIDATION_ERROR", "mock delete without updated_a
 expectCode(mockCall("purgeSeedData", undefined), "FORBIDDEN", "mock purge without auth");
 expectCode(mockCall("runDiagnostics", undefined), "FORBIDDEN", "mock diagnostics without auth");
 assert.equal(mockWindow.configurePreviewAdmin("Preview-Only-Long-PIN"), true, "explicit preview admin configuration");
+const mockInitial = mockCall("getBootstrapData", {});
+assert.equal(mockInitial.code, "OK");
+const mockRecord = mockInitial.data.items[0];
+expectCode(mockCall("saveItem", { id: mockRecord.id, title: mockRecord.title, category: mockRecord.category, amount: mockRecord.amount, status: mockRecord.status, updated_at: "stale" }), "CONFLICT", "mock stale update");
+expectCode(mockCall("saveItem", { id: mockRecord.id, title: mockRecord.title, category: mockRecord.category, amount: mockRecord.amount, status: mockRecord.status, updated_at: mockRecord.updated_at }), "OK", "mock current update");
+const mockUpdated = mockCall("getBootstrapData", {}).data.items.find(item => item.id === mockRecord.id);
+expectCode(mockCall("deleteItem", { id: mockRecord.id, updated_at: "stale" }), "CONFLICT", "mock stale delete");
+expectCode(mockCall("deleteItem", { id: mockRecord.id, updated_at: mockUpdated.updated_at }), "OK", "mock current delete");
+// Throttle mock authorization after five bad PINs; reconfiguration clears the preview lock.
+assert.equal(mockWindow.configurePreviewAdmin("Preview-Only-Long-PIN"), true);
+for (let i = 0; i < 5; i++) expectCode(mockCall("purgeSeedData", { adminPin: "wrong-preview-pin" }), "FORBIDDEN", "mock invalid PIN");
+expectCode(mockCall("runDiagnostics", { adminPin: "Preview-Only-Long-PIN" }), "FORBIDDEN", "mock five-attempt lockout");
+assert.equal(mockWindow.configurePreviewAdmin("Preview-Only-Long-PIN"), true, "reconfigure preview admin after lockout");
 expectCode(mockCall("runDiagnostics", { adminPin: "Preview-Only-Long-PIN" }), "OK", "mock diagnostics with simulated auth");
 
 // (f) Server and preview produce identical +07:00 timestamp strings under CI timezone.

@@ -52,7 +52,9 @@ class StaticRegressionTests(unittest.TestCase):
         routing = content.split("## 2. PEMUATAN REFERENSI (ROUTING TABLE)", 1)[1].split("## 3.", 1)[0]
         self.assertIn("references/boilerplates.md", routing)
         self.assertIn("dikecualikan", routing)
-        self.assertNotIn("## MASTER BOILERPLATES & UNIVERSAL SANDBOX PREVIEW GUARD", content)
+        self.assertNotIn("## 2. Boilerplate `setup.gs`", content)
+        self.assertNotIn("## 3. Boilerplate `code.gs`", content)
+        self.assertNotIn("## 4. Boilerplate `index.html`", content)
 
     def test_manifest_sha256_matches_every_generated_file(self):
         manifest = json.loads(read("dist/manifest.json"))
@@ -64,6 +66,8 @@ class StaticRegressionTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256(target.read_bytes()).hexdigest(), expected, rel)
         self.assertNotIn("dist/manifest.json", generated)
         self.assertNotIn("compatibility", json.dumps(manifest).lower())
+        self.assertEqual(manifest["product_version"], "0.2.1")
+        self.assertEqual(manifest["kb_version"], "2.2.0")
 
     def test_flat_lite_is_smaller_than_full_flat(self):
         self.assertLess(len(read("dist/flat-lite/gasly-pro/SKILL.md")), len(read("dist/flat/gasly-pro/SKILL.md")))
@@ -75,6 +79,10 @@ class StaticRegressionTests(unittest.TestCase):
         self.assertIn("read-scoped", backend)
         self.assertIn("Anyone", backend)
         self.assertIn("CacheService", backend)
+        boilerplate = read("src/kb/boilerplates.md")
+        self.assertIn("var DEPLOY_ACCESS = 'ANYONE';", boilerplate)
+        self.assertIn("adminLockUntil", boilerplate)
+        self.assertIn("MAX_PURGE_ROWS_PER_RUN = 500", boilerplate)
 
 if __name__ == "__main__":
     unittest.main()
