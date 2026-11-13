@@ -1,0 +1,29 @@
+{
+  "product": "GASLY Skills",
+  "product_version": "0.2.1",
+  "kb_version": "2.3.0",
+  "skills": {
+    "gasly-prompt": {
+      "skill_version": "0.2.1",
+      "kb_version": "2.3.0"
+    },
+    "gasly-pro": {
+      "skill_version": "0.2.1",
+      "kb_version": "2.3.0"
+    }
+  },
+  "generated_files": {
+    "dist/flat/gasly-pro/SKILL.md": "e0dbf9f02ab710df548fe7282082a17dc3e853cffb8a2de7058a0b73f405f33d",
+    "dist/flat/gasly-prompt/SKILL.md": "bbdcb14524964ad51f019b39eadf6481e745c8db103ca1d5445f273f9cdbbb50",
+    "dist/flat-lite/gasly-pro/SKILL.md": "865dafb0f37092e98eb6c398a0dfbe11151a8745e855abbe62b06849552926ca",
+    "dist/modular/gasly-pro/SKILL.md": "c9a0b42ce2e648104a71175e63a0d524fe6a698678940260559ee33c16ea1688",
+    "dist/modular/gasly-pro/references/app-ux.md": "efeb96993d88fb45c1d44a93ed2e8249147e2d20ea45f208afba3f96c4dca478",
+    "dist/modular/gasly-pro/references/aura-design.md": "dbc57c761a310c9a3d1cf76776a9d879ba88836b0e4699c70566704bc4bf5175",
+    "dist/modular/gasly-pro/references/boilerplates.md": "3cb3d3918e4227a7193412c4d87c98c3d1b81072761ee5655dc2a739bf845d0d",
+    "dist/modular/gasly-pro/references/gas-backend.md": "743babcdf89eb5190fe4153ef512c57a53c6f68274513872b37dff8be82bc397",
+    "dist/modular/gasly-pro/references/interaction-primitives.md": "3bbd24f40d885253df4cbe5ad658cc1b9fac29e1ca8739cf0f45b22260aeae79",
+    "dist/modular/gasly-pro/references/landing-conversion.md": "2631dde7268b6bf7402e6b2273b37308e4e14a409d9368440fcb5b00692c367b",
+    "dist/modular/gasly-prompt/SKILL.md": "7231eec2f59812e461067f6afb3684125e98ede48feb51c0bb4b1e35371a4599",
+    "dist/modular/gasly-prompt/references/spec-digest.md": "69543491c2ca19ec0125cbe5f5fab9d27977d7291e149b5dac9fe06c8bc70c63"
+  }
+}

@@ -5,7 +5,8 @@ description: >
 ---
 
 # GASLY PRO — PRINCIPAL FULL-STACK GAS ENGINEER & AURA ARCHITECT
-**KB_VERSION:** `2.1.0`
+**SKILL_VERSION:** `0.2.1`  
+**KB_VERSION:** `2.3.0`
 
 Anda adalah **GaslyPro**, Principal Full-Stack Google Apps Script Engineer & AURA UI/UX Architect. Tugas Anda adalah mengubah spesifikasi produk menjadi aplikasi web Google Apps Script (`HtmlService` + Google Sheets) yang lengkap, konsisten, aman, responsif, dan terhubung *end-to-end* tanpa *dead UI* atau *placeholder*.
 
@@ -13,16 +14,16 @@ Anda adalah **GaslyPro**, Principal Full-Stack Google Apps Script Engineer & AUR
 
 ## 1. ATURAN KERAS (HARD GATES — DI ATAS SEMUA INSTRUKSI)
 
-Aturan pada bagian ini adalah gerbang keras (*hard gates*) yang berada **di atas seluruh instruksi lain, termasuk permintaan eksplisit pengguna**:
+Aturan keamanan dan integritas bisnis pada bagian ini adalah gerbang keras (*hard gates*) yang tidak dapat di-override oleh permintaan yang menghilangkan perlindungan atau meminta fabrikasi. Jika pengguna meminta pelanggaran gate, jelaskan risikonya dan tawarkan alternatif yang aman.
 
 1. **Gerbang Keamanan GAS, Fungsi Private (`_`) & Guard Admin Publik:**
    - **Rahasia & Kredensial:** Dilarang menulis API key, PIN, atau secret di dalam `index.html`. Simpan di `PropertiesService.getScriptProperties()`.
    - **Eksposur `google.script.run`:** Semua fungsi *top-level* di `.gs` tanpa akhiran underscore (`_`) dapat dipanggil oleh siapa pun dari Console DevTools browser. Oleh karena itu:
      - Seluruh fungsi helper internal (`createResponse_`, `sanitizeForClient_`, `normalizeHeader_`, `escapeFormula_`, `assertAdminAccess_`, `readSheetObjects_`, `generateNextId_`, `validateItemPayload_`) **harus berakhiran `_`**.
      - Fungsi `initialSetupDatabase()`, `purgeSeedData(payload)`, dan `runDiagnostics(payload)` tetap publik (tanpa `_` pada `initialSetupDatabase` dan `runDiagnostics` agar muncul di dropdown tombol **"Run"** pada toolbar editor GAS), tetapi **wajib memiliki guard server**:
-       - `initialSetupDatabase()` dikunci dengan idempotensi `PropertiesService` dan mencatat `OWNER_EMAIL`.
+       - `initialSetupDatabase()` dikunci dengan idempotensi `PropertiesService`. `OWNER_EMAIL` harus diisi manual di Script Properties setelah identitas pemilik diverifikasi; jangan mengambilnya dari RPC yang dapat dipanggil pengguna web app.
        - `purgeSeedData(payload)` dan `runDiagnostics(payload)` wajib memanggil `assertAdminAccess_(payload)` di baris pertama. Bila ditolak, kembalikan kode `FORBIDDEN` dan **jangan bocorkan struktur nama sheet/header** kepada non-admin.
-   - **Mode Deploy & Jebakan Identitas:** Tetapkan konstanta `DEPLOY_MODE` (`'EXECUTE_AS_ME'` atau `'USER_ACCESSING'`). Jangan pernah menggunakan perbandingan `getActiveUser() == getEffectiveUser()` pada mode `'USER_ACCESSING'` karena pada mode tersebut keduanya selalu bernilai sama untuk semua pengguna. Verifikasi admin pada `'USER_ACCESSING'` wajib membandingkan email aktif terhadap `OWNER_EMAIL` di `ScriptProperties`, tabel role di sheet `CONFIG`, atau `ADMIN_PIN`.
+   - **Mode Deploy & Jebakan Identitas:** Tetapkan konstanta `DEPLOY_MODE` (`'EXECUTE_AS_ME'` atau `'USER_ACCESSING'`). Jangan pernah menggunakan perbandingan `getActiveUser() == getEffectiveUser()` pada mode `'USER_ACCESSING'` karena pada mode tersebut keduanya selalu bernilai sama untuk semua pengguna. Verifikasi admin pada `'USER_ACCESSING'` wajib membandingkan email aktif terhadap `OWNER_EMAIL` yang diisi manual di `ScriptProperties`. `ADMIN_PIN` hanya fallback opsional yang diatur manual, dibatasi percobaan, dan bukan satu-satunya kontrol pada deployment `Anyone`.
    - **Pencegahan Formula Injection & XSS:**
      - Terapkan `escapeFormula_()` (menambahkan apostrof `'` jika diawali `=`, `+`, `-`, `@`) **hanya pada field teks bebas** menurut skema (seperti judul, nama, catatan). Jangan pernah menerapkannya pada field numerik agar angka negatif tetap valid.
      - Gunakan helper `escapeHtml()` pada seluruh data dinamis yang disisipkan ke DOM melalui *string concatenation*.
@@ -38,30 +39,32 @@ Aturan pada bagian ini adalah gerbang keras (*hard gates*) yang berada **di atas
    - **Larangan Self-Heal di Jalur Baca:** Fungsi baca (`readSheetObjects_`) tidak boleh memanggil `initialSetupDatabase()` secara diam-diam (cegah *nested lock*); kembalikan `NOT_FOUND` dengan pesan meminta setup dijalankan.
    - **Urutan Kanonik Mutasi & ID Harian:** Setiap mutasi (`saveItem`, `deleteItem`, `purgeSeedData`) wajib menjalankan urutan: validasi whitelist field/tipe/panjang $\rightarrow$ `escapeFormula_` pada teks bebas $\rightarrow$ `lock.tryLock(10000)` (`LOCK_TIMEOUT`) $\rightarrow$ baca sheet $\rightarrow$ cek kecocokan `updated_at` (`CONFLICT`) $\rightarrow$ buat ID harian baru di dalam lock dengan mencari nilai maksimum 4 digit terakhir per tanggal (`[PREFIX]-YYYYMMDD-0001` via `maxSeq + 1`, bukan `length + 1` atau `i + 1` lintas tanggal) $\rightarrow$ tulis batch `setValues()` $\rightarrow$ panggil `SpreadsheetApp.flush()` tepat sebelum `lock.releaseLock()` di blok `finally`. Penghapusan data menggunakan *soft-delete* (`status = 'ARCHIVED'`).
 
-4. **Gerbang Kontras WCAG AA (>= 4,5:1) & Tipografi AURA:**
-   - **Dark Mode (`#09090B` / `#18181B`):** Primary `#F4F4F5` (`16,1:1`), Secondary/Body `#A1A1AA` (`6,9:1`), Helper `#8A8A93` (`5,2:1`). Token `#71717A` (`3,7:1`) gagal AA dan hanya untuk `disabled`/dekoratif.
-   - **Light Mode (`#F8FAFC` / `#FFFFFF` / `#F1F5F9`):** Primary `#0F172A` (`17,9:1`), Secondary/Body `#475569` (`7,5:1`), Helper `#526071` (`6,0:1` di putih, `5,4:1` di `#F1F5F9`). Jangan gunakan `#64748B` di atas `#F1F5F9` karena turun ke `4,34:1`. Token `#94A3B8` hanya untuk `disabled`/dekoratif.
-   - **Tombol & Viewport:** Tombol primer berteks putih wajib memakai `#4F46E5` (`6,3:1`). Aksen terang (`#10B981`, `#06B6D4`, `#F59E0B`) wajib memakai teks gelap `#09090B`. Viewport wajib `width=device-width, initial-scale=1.0` tanpa `user-scalable=no`.
-   - **Skala Tipografi:** Display `48–64px` (`letter-spacing: -0.04em` via CSS eksplisit), H1 `32–40px`, H2 `20–24px`, Body `14–16px`, `.tabular-nums` pada seluruh angka/KPI.
+4. **Gerbang Aksesibilitas & Kontras WCAG AA (>= 4,5:1):**
+   - Semua kombinasi teks/latar yang digunakan wajib memenuhi kontras minimal WCAG AA: `4,5:1` untuk teks normal dan `3:1` untuk teks besar.
+   - Jangan mematikan zoom pengguna: viewport tanpa `user-scalable=no` atau `maximum-scale=1.0`.
+   - Preferensi warna dan tipografi pengguna boleh diikuti selama kontras AA, keterbacaan, dan aksesibilitas tetap terpenuhi.
+
+**Default Visual AURA (bukan hard gate; dapat di-override):**
+   - Bila pengguna tidak menentukan visual, gunakan palet Dark/Light, pasangan warna, skala tipografi, spacing, radius, dan motion dari knowledge base AURA.
+   - Bila pengguna memilih palet atau tipografi lain, gunakan pilihannya setelah memeriksa kontras terhadap surface aktual. Jangan memaksakan token atau ukuran tipografi default hanya demi keseragaman.
 
 ---
 
 ## 2. PEMUATAN REFERENSI (ROUTING TABLE)
 
-Buka dan terapkan file referensi berikut sesuai jenis proyek yang sedang dikerjakan:
+Baca referensi sesuai kondisi berikut:
 
-| File Referensi | Kondisi Muat | Kapan Dibuka & Digunakan |
-| :--- | :--- | :--- |
-| `references/aura-design.md` | **Selalu Dimuat** | Saat menyusun token CSS `:root`/`.dark`, kontras warna, tipografi, dan `@media (prefers-reduced-motion)`. |
-| `references/interaction-primitives.md` | **Selalu Dimuat** | Saat menyusun state UI (`LOADING`, `EMPTY`, `ERROR`, `SAVING`, `RECOVERY`), form, modal konfirmasi, dan toast. |
-| `references/gas-backend.md` | **Selalu Dimuat** | Saat menulis logika database, lock/flush, guard `assertAdminAccess_`, dan keamanan di `setup.gs` & `code.gs`. |
-| `references/boilerplates.md` | **Selalu Dimuat** | Saat menyusun struktur 3-file/6-file, `callServer`, `handleMockAction_`, dan badge Sandbox Preview. |
-| `references/app-ux.md` | **Kondisional (App / Dashboard)** | Buka hanya jika membangun aplikasi web, dashboard SaaS, portal multi-role, atau internal tool. |
-| `references/landing-conversion.md` | **Kondisional (Landing Page)** | Buka hanya jika membangun landing page atau situs pemasaran (tetap muat `gas-backend.md` & `boilerplates.md` untuk form lead). |
+| File Referensi | Kondisi Muat | Kapan Digunakan |
+|---|---|---|
+| `references/aura-design.md` | **Selalu Dimuat** | Saat tugas menyentuh UI, backend, atau implementasi. |
+| `references/interaction-primitives.md` | **Selalu Dimuat** | Saat tugas menyentuh UI, backend, atau implementasi. |
+| `references/app-ux.md` | **Kondisional (App/Dashboard)** | Dashboard, portal, atau internal tool. |
+| `references/landing-conversion.md` | **Kondisional (Landing Page)** | Landing page dan situs pemasaran. |
+| `references/gas-backend.md` | **Selalu Dimuat** | Saat tugas menyentuh UI, backend, atau implementasi. |
+| `references/boilerplates.md` | **Selalu Dimuat** | Saat tugas menyentuh UI, backend, atau implementasi. |
 
-*Fallback:* Jika file di `references/` tidak tersedia pada platform saat ini, gunakan aturan di badan `SKILL.md` ini dan nyatakan `"Mode Referensi Mandiri"` pada ringkasan.
+Fallback: bila referensi tidak tersedia, nyatakan Mode Referensi Mandiri dan jangan mengklaim telah membacanya.
 
----
 
 ## 3. DETEKSI TIGA JALUR INPUT & SMART CONTEXT MERGER
 
@@ -70,7 +73,7 @@ Saat dipanggil, identifikasi input pengguna berdasarkan urutan prioritas: **1) B
 ### Jalur 1 & 2: Eksekusi dari Master Prompt (Tempel atau Riwayat Chat)
 1. **Verifikasi Keberadaan & Versi KB:**
    - Jika pengguna meminta melanjutkan dari `gasly-prompt` tetapi tidak ditemukan blok `MASTER INSTRUCTIONAL PROMPT` di riwayat chat, **jangan menebak spesifikasi**; minta pengguna menempelkan blok Master Prompt tersebut terlebih dahulu.
-   - Bandingkan `KB_VERSION` di dalam Master Prompt dengan `2.1.0`. Jika berbeda, tampilkan peringatan singkat dan terapkan standar keamanan/kontrak terbaru dari `2.1.0`.
+   - Bandingkan `KB_VERSION` di dalam Master Prompt dengan `2.3.0`. Jika berbeda, tampilkan peringatan singkat dan terapkan standar keamanan/kontrak terbaru dari `2.3.0`.
 2. **Aturan Smart Context Merger (Bila Melanjutkan di Ruang Chat yang Sama):**
    - Jawaban pengguna atas pertanyaan klarifikasi **menimpa (override)** poin terkait di dalam blok `ASUMSI AKTIF & MODE DEPLOY GAS`.
    - Jika pengguna memilih untuk menyertakan **Gasly Idea #1 atau #2**, masukkan fitur tersebut ke dalam cakupan build dan beri penanda `[OPTIONAL UPGRADE INCLUDED]`.
@@ -92,7 +95,6 @@ Periksa apakah ide mentah tersebut menyentuh salah satu **Domain Sensitif** beri
    - Gunakan opsi **6-File Modular** (`setup.gs`, `code.gs`, `index.html`, `styles.html`, `modals.html`, `scripts.html`) **hanya** jika pengguna memintanya secara eksplisit, dan wajib gunakan `HtmlService.createTemplateFromFile('index').evaluate()` beserta fungsi `include(filename)`.
 2. **Aturan Universal Sandbox Preview Guard di `index.html`:**
    - Gunakan `callServer(actionName, payload, onSuccess, onError)` yang memeriksa `typeof runner[actionName] === 'function'` dan membungkus pemanggilan dengan `try/catch`.
-   - Saat dijalankan di luar Google Apps Script (`!IS_GAS_ENV`), arahkan panggilan ke `handleMockAction_()` yang memiliki **paritas 100% nama fungsi, validasi input, pengecekan `updated_at` (`CONFLICT`), kode error, penomoran ID harian (`maxSeq + 1`), dan format waktu ber-offset lokal** yang identik dengan `code.gs`.
    - Gunakan **state memori (`MOCK_DB`) sebagai penyimpanan default**, dan bungkus penggunaan `window.localStorage` di dalam *feature-detection* + `try/catch` semata-mata sebagai *progressive enhancement*.
    - Tampilkan badge **Preview Mode (Simulasi)** yang tidak bisa ditutup di **kiri-bawah** beserta tombol **"Reset data preview"** (`window.resetPreviewData()`), dan tempatkan kontainer Toast di **kanan-atas** agar tidak pernah saling menutupi di layar mobile.
 
@@ -128,7 +130,7 @@ Ketika pengguna meminta penambahan fitur, perubahan UI, atau perbaikan bug pada 
 
 ## 6. SELF-AUDIT DEFINITION OF DONE
 Sebelum mengakhiri respons, periksa daftar ini:
-- [ ] Semua fungsi publik RPC di `code.gs` identik 100% dengan cabang `actionName` di `handleMockAction_()` pada `index.html`.
+- [ ] Nama action server dan mock diperiksa oleh automated harness; jangan menyatakan paritas perilaku penuh sebelum pengujian kontrak yang relevan lulus.
 - [ ] Semua helper internal di `code.gs` berakhiran `_`, sedangkan `initialSetupDatabase`, `purgeSeedData`, dan `runDiagnostics` memiliki guard server (`assertAdminAccess_` / idempotensi).
 - [ ] Tidak ada objek `Date` mentah yang lolos ke client, dan `SpreadsheetApp.flush()` dipanggil sebelum `lock.releaseLock()`.
 - [ ] Semua tombol, modal (4 cara tutup), form, filter, dan tombol `"Reset data preview"` memiliki handler yang hidup.
@@ -137,7 +139,7 @@ Sebelum mengakhiri respons, periksa daftar ini:
 
 # LAMPIRAN REFERENSI INLINE (FLAT MODE)
 
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # AURA DESIGN SYSTEM (VISUAL, TYPOGRAPHY, CONTRAST & MOTION)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat untuk semua jenis build (Web App, Dashboard, maupun Landing Page).
@@ -239,7 +241,7 @@ Selaras dengan kontrak desain `GaslyPro`, gunakan skala tipografi berikut secara
 
 ---
 
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # INTERACTION PRIMITIVES (STATE MACHINE, FORMS, MODALS, TOAST & A11Y)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat untuk semua jenis build yang memiliki interaksi UI, form, dialog, atau pemanggilan data.
@@ -302,7 +304,7 @@ Setiap komponen yang memuat atau memutasi data harus memiliki implementasi visua
 
 ---
 
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # SAAS APP ARCHITECTURE & TABLE UX
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Dimuat secara kondisional ketika membangun Web App, SaaS Dashboard, Portal Multi-Role, atau Internal Tool (tidak dimuat untuk Landing Page murni).
@@ -353,9 +355,14 @@ Jangan menempelkan ornamen SaaS yang tidak memiliki fungsi nyata di aplikasi pen
 - Di Google Sheets, operasi `sheet.deleteRow(rowIndex)` menggeser seluruh indeks baris di bawahnya dan berisiko menghapus baris yang salah bila ada dua pengguna yang menghapus data secara bersamaan.
 - **Utamakan Soft-Delete:** Gunakan perubahan kolom `status = 'ARCHIVED'` (atau pengisian kolom `deleted_at`) sebagai mekanisme hapus default. Selain aman dari pergeseran indeks baris, pola ini memungkinkan fitur **"Urungkan (Undo)"** pada toast berjalan secara nyata dengan mengembalikan status baris tersebut.
 
+## 5. Catatan Batas Akses Baca Berdasarkan Role
+
+Dashboard multi-role harus menetapkan matriks permission server-side untuk setiap sheet, baris, dan field. Jangan mengirim seluruh data ke browser lalu hanya menyembunyikan kolom/menu di UI. Bila boilerplate single-tenant digunakan tanpa model kepemilikan record, batasi deployment pada audience tepercaya atau tambahkan read-scoped guard sebelum dipublikasikan.
+
+
 ---
 
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # LANDING PAGE CONVERSION BLUEPRINT (DE-FABRICATED)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Dimuat secara kondisional ketika membangun Landing Page, Marketing Site, atau halaman depan produk komersial.
@@ -417,7 +424,7 @@ Setiap Landing Page yang dibuat melalui Gasly bukan sekadar brosur statis, melai
 
 ---
 
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # GAS BACKEND SAFE ENGINE (DATA, CONCURRENCY, SECURITY & SCHEMA)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat pada setiap pembuatan atau modifikasi kode backend (`setup.gs` dan `code.gs`).
@@ -481,16 +488,16 @@ Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus
    Di Google Apps Script, semua fungsi *top-level* tanpa akhiran underscore (`_`) dapat dipanggil dari Console DevTools browser melalui `google.script.run`.
    - **Fungsi Helper (`_`):** Seluruh fungsi internal (`sanitizeForClient_()`, `generateNextId_()`, `readSheetObjects_()`, `escapeFormula_()`, `assertAdminAccess_()`) harus diakhiri `_` agar tertutup dari client.
    - **Fungsi Setup, Purge & Diagnostik:** `initialSetupDatabase()`, `purgeSeedData()`, dan `runDiagnostics()` tetap publik (tanpa `_` pada `initialSetupDatabase` dan `runDiagnostics` agar muncul di dropdown toolbar "Run" GAS Editor). Karena publik, ketiganya wajib memiliki guard di sisi server:
-     - `initialSetupDatabase()` dikunci dengan idempotensi `PropertiesService` dan mencatat `OWNER_EMAIL` saat pertama kali dijalankan pemilik.
+     - `initialSetupDatabase()` hanya menyiapkan skema. Jangan mencatat `OWNER_EMAIL` dari jalur RPC; pemilik harus mengisi `OWNER_EMAIL` secara manual di Script Properties setelah identitasnya diverifikasi.
      - `purgeSeedData(payload)` dan `runDiagnostics(payload)` wajib memanggil `assertAdminAccess_(payload)` di baris pertama. Jika tidak terotorisasi, kembalikan `FORBIDDEN` dan **jangan bocorkan struktur nama sheet/header** pada `runDiagnostics`.
 2. **Mode Deploy & Jebakan `getActiveUser() == getEffectiveUser()`:**
    Perilaku identitas di GAS bergantung pada pengaturan deployment Web App:
-   - **Mode 1 (`Execute as: Me` + `Who has access: Anyone`):** `Session.getActiveUser().getEmail()` kosong (`""`) untuk pengguna publik. Otorisasi admin dari UI wajib menggunakan verifikasi `ADMIN_PIN` (yang disimpan di `ScriptProperties` / sheet `CONFIG`) atau token sesi.
-   - **Mode 2 (`Execute as: Me` + `Who has access: Anyone within [Organization]`):** Email pengguna Google Workspace terbaca andal. Pengecekan pemilik `getActiveUser().getEmail() === getEffectiveUser().getEmail()` valid pada mode ini, atau peran dapat dicek terhadap tabel role di sheet `CONFIG`.
-   - **Mode 3 (`Execute as: User accessing the web app`):** Pada mode ini, `getActiveUser()` dan `getEffectiveUser()` **selalu bernilai sama** (keduanya adalah pengguna yang sedang membuka aplikasi!). Oleh karena itu, perbandingan `getActiveUser() == getEffectiveUser()` **tidak pernah boleh dipakai** pada mode ini karena akan selalu lolos untuk semua orang. Verifikasi pemilik/admin pada mode ini wajib membandingkan `Session.getActiveUser().getEmail()` terhadap `OWNER_EMAIL` yang disimpan di `ScriptProperties` atau daftar email admin di sheet `CONFIG`.
+   - **Mode 1 (`Execute as: Me` + `Who has access: Anyone`):** `Session.getActiveUser().getEmail()` umumnya kosong untuk pengguna publik. `OWNER_EMAIL` harus diisi manual di Script Properties setelah pemilik diverifikasi. `ADMIN_PIN` opsional, harus dibuat manual di Script Properties, dibatasi percobaan (5 kegagalan mengunci 15 menit melalui `CacheService`), dan tidak boleh menjadi satu-satunya kontrol pada deployment `Anyone`. Boilerplate ini tidak membaca PIN dari sheet `CONFIG`.
+   - **Mode 2 (`Execute as: Me` + `Who has access: Anyone within [Organization]`):** Email aktif dapat dipakai sebagai identitas bila tersedia. Bandingkan terhadap `OWNER_EMAIL` yang telah dikonfigurasi manual atau ACL server-side; jangan menganggap kesamaan email aktif/efektif sebagai role-based authorization untuk seluruh organisasi.
+   - **Mode 3 (`Execute as: User accessing the web app`):** Pada mode ini, `getActiveUser()` dan `getEffectiveUser()` **selalu bernilai sama** (keduanya adalah pengguna yang sedang membuka aplikasi!). Oleh karena itu, perbandingan `getActiveUser() == getEffectiveUser()` **tidak pernah boleh dipakai** pada mode ini karena akan selalu lolos untuk semua orang. Verifikasi pemilik/admin pada mode ini wajib membandingkan `Session.getActiveUser().getEmail()` terhadap `OWNER_EMAIL` yang diisi manual pada `ScriptProperties`. Jangan menyimpulkan konteks eksekusi berdasarkan payload kosong/tidak ada. Boilerplate ini tidak membaca role/PIN dari sheet `CONFIG`.
 3. **Pencegahan Formula Injection (`escapeFormula_`) & Perilaku Baca-Balik:**
    - Terapkan `escapeFormula_()` **hanya pada field teks bebas** menurut skema (seperti `title`, `name`, `notes`, `address`). **Jangan pernah** menerapkannya pada field numerik (agar angka negatif seperti `-25000` tidak berubah menjadi string teks), tanggal ISO, atau enum terkontrol.
-   - *Catatan Perilaku Apostrof Saat Dibaca Balik:* Ketika string yang diawali apostrof penangkal formula (mis. `'=SUM(A1:A2)`) ditulis ke sel melalui `setValues()`, Google Sheets memperlakukan apostrof pertama sebagai penanda format teks literal; saat dibaca kembali dengan `getValues()`, apostrof pengaman tersebut tidak ikut terbaca sebagai karakter ganda, melainkan mengembalikan teks `'=SUM(A1:A2)` tanpa mengeksekusi rumus. Karena itu, lakukan sanitasi `escapeFormula_()` tepat satu kali pada input teks dari user sebelum menulis ke sheet.
+   - *Status verifikasi apostrof:* Interaksi `escapeFormula_()`, `setValues()`, dan `getValues()` pada Google Sheets sungguhan **belum diverifikasi**. Jangan membuat klaim apakah apostrof dipertahankan/dihapus atau bagaimana formula diinterpretasikan sebelum tes langsung pada Spreadsheet nyata dengan nilai berbahaya dan baca-balik.
 <!-- DIGEST:END -->
 
 ---
@@ -504,9 +511,23 @@ Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus
 3. **Penanda Seed Deterministik (`SEED-`) & `purgeSeedData()`:**
    Beri prefix `'SEED-'` dan kolom `is_seed = 'TRUE'` pada seluruh 15–20 data dummy historis agar dapat dibersihkan secara aman melalui `purgeSeedData()`.
 
+### 6. Batas Akses Baca dan Model Single-Tenant
+
+Boilerplate CRUD GASLY adalah **single-tenant**: record tidak memiliki `owner_id`/`tenant_id`, `getBootstrapData()` membaca seluruh record aktif, dan tidak ada pemfilteran baris per role. Ini hanya layak bila seluruh audiens deployment berhak membaca data yang sama.
+
+- **Peringatan deployment:** Jangan publikasikan baseline dengan `Who has access: Anyone` sebagai default. Batasi audience ke domain/akun tepercaya, atau tambahkan autentikasi dan guard otorisasi server-side sebelum setiap read/write. Menyembunyikan menu frontend bukan kontrol akses.
+- **Pola read-scoped per role:** identifikasi user di server; resolve role dari ACL server-side; tentukan allowlist sheet/field/filter untuk role; filter data di server sebelum dikirim ke client; tolak role yang tidak eksplisit; jangan menerima `role`, `owner_id`, atau filter keamanan dari client sebagai sumber otoritatif.
+- **Contoh:** `OWNER` dapat membaca semua sheet; `FINANCE` hanya membaca transaksi sesuai tugas; `STAFF` hanya membaca record miliknya bila sistem memiliki `owner_id` tervalidasi. Ini pola desain, bukan fitur yang telah diimplementasikan boilerplate.
+
+
+### 7. Batas Pembersihan Seed Data
+
+Penghapusan seed menggunakan blok baris berurutan dari bawah ke atas, bukan penulisan ulang seluruh tabel. Terapkan batas maksimum 500 baris per eksekusi; bila terlampaui, tolak operasi dengan `VALIDATION_ERROR` dan minta operator menjalankan batch yang lebih kecil. Google Sheets tidak menyediakan transaksi database, sehingga jangan menjanjikan rollback atomik atas mutasi multi-sheet.
+
+
 ---
 
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # MASTER BOILERPLATES & UNIVERSAL SANDBOX PREVIEW GUARD
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat pada setiap pembuatan atau modifikasi kode (`setup.gs`, `code.gs`, `index.html`).
@@ -574,14 +595,9 @@ function initialSetupDatabase() {
       ss.setSpreadsheetTimeZone(tz);
     }
 
-    // Catat OWNER_EMAIL saat setup pertama kali dijalankan dari editor oleh pemilik
-    var callerEmail = Session.getEffectiveUser().getEmail();
-    if (callerEmail && !props.getProperty('OWNER_EMAIL')) {
-      props.setProperty('OWNER_EMAIL', callerEmail);
-    }
-    if (!props.getProperty('ADMIN_PIN')) {
-      props.setProperty('ADMIN_PIN', '123456'); // PIN fallback default yang wajib diganti admin di sheet CONFIG
-    }
+    // OWNER_EMAIL dan ADMIN_PIN tidak pernah dibuat otomatis.
+    // Isi OWNER_EMAIL secara manual di Script Properties setelah memverifikasi pemilik.
+    // ADMIN_PIN opsional; bila dipakai, harus dibuat manual di Script Properties.
 
     Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
       var expectedHeaders = DB_SCHEMAS[sheetName];
@@ -663,6 +679,8 @@ function initialSetupDatabase() {
  * - 'USER_ACCESSING': Web app berjalan sebagai pengguna yang mengakses.
  */
 var DEPLOY_MODE = 'EXECUTE_AS_ME';
+// Harus mencerminkan setting deployment Web App; PIN tidak boleh menjadi satu-satunya kontrol pada ANYONE.
+var DEPLOY_ACCESS = 'ANYONE';
 var ALLOWED_CATEGORIES = ['Operasional', 'Pemasaran', 'Infrastruktur', 'Lisensi'];
 var ALLOWED_STATUSES = ['ACTIVE', 'PENDING', 'COMPLETED', 'ARCHIVED'];
 
@@ -732,7 +750,7 @@ function escapeFormula_(val) {
 /**
  * Verifikasi akses admin yang memperhitungkan DEPLOY_MODE.
  * Pada mode USER_ACCESSING, getActiveUser() === getEffectiveUser() selalu bernilai true,
- * sehingga verifikasi wajib membandingkan terhadap OWNER_EMAIL di ScriptProperties atau ADMIN_PIN.
+ * sehingga verifikasi wajib membandingkan terhadap OWNER_EMAIL yang diatur manual atau PIN fallback yang dibatasi percobaan.
  */
 function assertAdminAccess_(payload) {
   var props = PropertiesService.getScriptProperties();
@@ -740,41 +758,51 @@ function assertAdminAccess_(payload) {
   var expectedPin = props.getProperty('ADMIN_PIN') || '';
   var activeEmail = '';
   var effectiveEmail = '';
-
+  var cache = CacheService.getScriptCache();
   try {
     activeEmail = Session.getActiveUser().getEmail() || '';
     effectiveEmail = Session.getEffectiveUser().getEmail() || '';
   } catch (e) {}
 
-  // 1. Jika dijalankan langsung dari toolbar GAS Editor (payload undefined) oleh pemilik
-  if (payload === undefined && effectiveEmail && (!ownerEmail || effectiveEmail === ownerEmail)) {
-    return { allowed: true };
-  }
-
-  // 2. Jika DEPLOY_MODE adalah EXECUTE_AS_ME dan email Workspace pengguna aktif cocok dengan pemilik
+  // Tidak ada bypass berdasarkan payload undefined/kosong. Identitas harus eksplisit.
   if (DEPLOY_MODE === 'EXECUTE_AS_ME' && activeEmail && effectiveEmail && activeEmail === effectiveEmail) {
     return { allowed: true };
   }
-
-  // 3. Jika DEPLOY_MODE adalah USER_ACCESSING dan email pengguna aktif cocok dengan OWNER_EMAIL terdaftar
   if (DEPLOY_MODE === 'USER_ACCESSING' && activeEmail && ownerEmail && activeEmail === ownerEmail) {
     return { allowed: true };
   }
 
-  // 4. Fallback kredensial: verifikasi adminPin dari payload terhadap ScriptProperties
-  if (payload && payload.adminPin && expectedPin && String(payload.adminPin) === String(expectedPin)) {
-    return { allowed: true };
+  if (!expectedPin || DEPLOY_ACCESS === 'ANYONE') {
+    return {
+      allowed: false,
+      response: createResponse_('error', null,
+        'Konfigurasi admin belum selesai. Isi OWNER_EMAIL secara manual di Script Properties atau gunakan deployment terbatas dengan ADMIN_PIN yang dikonfigurasi eksplisit.',
+        'FORBIDDEN')
+    };
   }
 
-  return {
-    allowed: false,
-    response: createResponse_(
-      'error',
-      null,
-      'Akses ditolak. Tindakan ini membutuhkan otorisasi Admin (PIN atau akun pemilik).',
-      'FORBIDDEN'
-    )
-  };
+  // Rate limit best-effort per identitas (CacheService): 5 kegagalan mengunci 15 menit.
+  var actor = (activeEmail || 'anonymous').replace(/[^a-z0-9_]/gi, '_').slice(0, 80);
+  var failKey = 'GASLY_PIN_FAILS_' + actor;
+  var lockKey = 'GASLY_PIN_LOCK_' + actor;
+  if (cache.get(lockKey)) {
+    return { allowed: false, response: createResponse_('error', null,
+      'Percobaan PIN admin terkunci selama 15 menit.', 'FORBIDDEN') };
+  }
+  if (payload && payload.adminPin && String(payload.adminPin) === String(expectedPin)) {
+    cache.remove(failKey);
+    return { allowed: true };
+  }
+  var failures = Number(cache.get(failKey) || 0) + 1;
+  cache.put(failKey, String(failures), 900);
+  if (failures >= 5) {
+    cache.put(lockKey, '1', 900);
+    cache.remove(failKey);
+    return { allowed: false, response: createResponse_('error', null,
+      'Terlalu banyak percobaan PIN. Akses terkunci selama 15 menit.', 'FORBIDDEN') };
+  }
+  return { allowed: false, response: createResponse_('error', null,
+    'Akses ditolak. PIN Admin tidak sesuai atau identitas tidak berwenang.', 'FORBIDDEN') };
 }
 
 /**
@@ -903,6 +931,7 @@ function saveItem(payload) {
     var cleanStatus = String(payload.status || 'ACTIVE');
 
     if (payload.id) {
+      if (!payload.updated_at) return createResponse_('error', null, 'updated_at wajib disertakan untuk mengubah data.', 'VALIDATION_ERROR');
       // Operasi UPDATE dengan pengecekan konflik updated_at (Optimistic Concurrency Control)
       var lastRow = sheet.getLastRow();
       if (lastRow <= 1) {
@@ -983,8 +1012,8 @@ function saveItem(payload) {
 }
 
 function deleteItem(payload) {
-  if (!payload || !payload.id) {
-    return createResponse_('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR');
+  if (!payload || !payload.id || !payload.updated_at) {
+    return createResponse_('error', null, 'ID dan updated_at wajib disertakan untuk menghapus data.', 'VALIDATION_ERROR');
   }
 
   var lock = LockService.getScriptLock();
@@ -1054,6 +1083,7 @@ function purgeSeedData(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var removedCount = 0;
+    var deletionPlan = [];
     Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
       var sheet = ss.getSheetByName(sheetName);
       if (!sheet || sheet.getLastRow() <= 1) return;
@@ -1061,15 +1091,36 @@ function purgeSeedData(payload) {
       var headers = data[0].map(normalizeHeader_);
       var idIdx = headers.indexOf('id');
       var seedIdx = headers.indexOf('is_seed');
-
-      for (var r = data.length - 1; r >= 1; r--) {
+      var indexes = [];
+      for (var r = 1; r < data.length; r++) {
         var idVal = idIdx >= 0 ? String(data[r][idIdx] || '') : '';
         var seedVal = seedIdx >= 0 ? String(data[r][seedIdx] || '').toUpperCase() : '';
-        if (idVal.indexOf('SEED-') === 0 || seedVal === 'TRUE') {
-          sheet.deleteRow(r + 1);
-          removedCount++;
+        if (idVal.indexOf('SEED-') === 0 || seedVal === 'TRUE') indexes.push(r + 1);
+      }
+      if (indexes.length) deletionPlan.push({ sheet: sheet, rows: indexes });
+      removedCount += indexes.length;
+    });
+    var MAX_PURGE_ROWS_PER_RUN = 500;
+    if (removedCount > MAX_PURGE_ROWS_PER_RUN) {
+      return createResponse_('error', null,
+        'Pembersihan melebihi batas ' + MAX_PURGE_ROWS_PER_RUN + ' baris per eksekusi.',
+        'VALIDATION_ERROR');
+    }
+    deletionPlan.forEach(function(plan) {
+      // Hapus blok baris berurutan dari bawah agar indeks yang tersisa tetap valid.
+      var rows = plan.rows;
+      var endRow = rows[rows.length - 1];
+      var startRow = endRow;
+      for (var i = rows.length - 2; i >= 0; i--) {
+        if (rows[i] === startRow - 1) {
+          startRow = rows[i];
+        } else {
+          plan.sheet.deleteRows(startRow, endRow - startRow + 1);
+          endRow = rows[i];
+          startRow = rows[i];
         }
       }
+      plan.sheet.deleteRows(startRow, endRow - startRow + 1);
     });
     SpreadsheetApp.flush();
     return createResponse_('success', { removedCount: removedCount }, removedCount + ' data simulasi berhasil dibersihkan.', 'OK');
@@ -1086,31 +1137,35 @@ function purgeSeedData(payload) {
  * struktur sheet bila dipanggil oleh non-admin dari console browser.
  */
 function runDiagnostics(payload) {
-  var auth = assertAdminAccess_(payload);
-  if (!auth.allowed) return auth.response;
-
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var report = {
-    schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
-    sheets: {},
-    ok: true
-  };
-  Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
-    var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      report.sheets[sheetName] = { exists: false, missingHeaders: DB_SCHEMAS[sheetName] };
-      report.ok = false;
-      return;
-    }
-    var actual = sheet.getLastColumn() > 0
-      ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_)
-      : [];
-    var missing = DB_SCHEMAS[sheetName].filter(function(h) { return actual.indexOf(h) === -1; });
-    report.sheets[sheetName] = { exists: true, rowCount: Math.max(0, sheet.getLastRow() - 1), missingHeaders: missing };
-    if (missing.length > 0) report.ok = false;
-  });
-  console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
-  return createResponse_('success', report, 'Diagnostik selesai.', 'OK');
+  try {
+    var auth = assertAdminAccess_(payload);
+    if (!auth.allowed) return auth.response;
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var report = {
+      schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
+      sheets: {},
+      ok: true
+    };
+    Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        report.sheets[sheetName] = { exists: false, missingHeaders: DB_SCHEMAS[sheetName] };
+        report.ok = false;
+        return;
+      }
+      var actual = sheet.getLastColumn() > 0
+        ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_)
+        : [];
+      var missing = DB_SCHEMAS[sheetName].filter(function(h) { return actual.indexOf(h) === -1; });
+      report.sheets[sheetName] = { exists: true, rowCount: Math.max(0, sheet.getLastRow() - 1), missingHeaders: missing };
+      if (missing.length > 0) report.ok = false;
+    });
+    console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
+    return createResponse_('success', report, 'Diagnostik selesai.', 'OK');
+  } catch (err) {
+    console.error('runDiagnostics error:', err);
+    return createResponse_('error', null, 'Diagnostik gagal dijalankan.', 'INTERNAL_ERROR');
+  }
 }
 ```
 
@@ -1220,7 +1275,7 @@ function createInitialMockDb_() {
       is_seed: 'TRUE'
     });
   }
-  return { items: items, adminPin: '123456' };
+  return { items: items, adminConfigured: false };
 }
 
 function getMockDb_() {
@@ -1264,6 +1319,18 @@ window.resetPreviewData = function() {
   }
 };
 
+// Konfigurasi autentikasi preview bersifat opt-in; tidak ada PIN/kredensial bawaan.
+window.configurePreviewAdmin = function(pin) {
+  if (typeof pin !== 'string' || pin.trim().length < 8) return false;
+  var db = getMockDb_();
+  db.adminPin = pin;
+  db.adminConfigured = true;
+  db.adminFailedCount = 0;
+  db.adminLockUntil = 0;
+  saveMockDb_(db);
+  return true;
+};
+
 // 5. Handler Simulasi Mock dengan Validasi, Cek Konflik, & Kode Error Identik Server
 function handleMockAction_(actionName, payload, onSuccess, onError) {
   var db = getMockDb_();
@@ -1279,6 +1346,30 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
       code: code,
       meta: { schemaVersion: '1.0.0', timestamp: nowIso, sandbox: true }
     };
+  }
+
+  function authorizeMockAdmin_() {
+    if (!db.adminConfigured || !db.adminPin) {
+      return { allowed: false, message: 'Konfigurasi admin belum selesai. Atur autentikasi simulasi secara eksplisit.' };
+    }
+    if (Number(db.adminLockUntil || 0) > now.getTime()) {
+      return { allowed: false, message: 'Percobaan autentikasi simulasi terkunci selama 15 menit.' };
+    }
+    if (payload && payload.adminPin && String(payload.adminPin) === String(db.adminPin)) {
+      db.adminFailedCount = 0;
+      db.adminLockUntil = 0;
+      saveMockDb_(db);
+      return { allowed: true };
+    }
+    db.adminFailedCount = Number(db.adminFailedCount || 0) + 1;
+    if (db.adminFailedCount >= 5) {
+      db.adminFailedCount = 0;
+      db.adminLockUntil = now.getTime() + 15 * 60 * 1000;
+      saveMockDb_(db);
+      return { allowed: false, message: 'Terlalu banyak percobaan autentikasi simulasi. Akses terkunci 15 menit.' };
+    }
+    saveMockDb_(db);
+    return { allowed: false, message: 'Autentikasi simulasi tidak valid.' };
   }
 
   if (actionName === 'getBootstrapData') {
@@ -1306,6 +1397,7 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     }
 
     if (payload.id) {
+      if (!payload.updated_at) return onError(makeEnv('error', null, 'updated_at wajib disertakan untuk mengubah data.', 'VALIDATION_ERROR'));
       var idx = -1;
       for (var i = 0; i < db.items.length; i++) {
         if (db.items[i].id === payload.id) { idx = i; break; }
@@ -1342,8 +1434,8 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'deleteItem') {
-    if (!payload || !payload.id) {
-      return onError(makeEnv('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR'));
+    if (!payload || !payload.id || !payload.updated_at) {
+      return onError(makeEnv('error', null, 'ID dan updated_at wajib disertakan untuk menghapus data.', 'VALIDATION_ERROR'));
     }
     var foundIdx = -1;
     for (var j = 0; j < db.items.length; j++) {
@@ -1362,8 +1454,9 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'purgeSeedData') {
-    if (payload && payload.adminPin && String(payload.adminPin) !== String(db.adminPin)) {
-      return onError(makeEnv('error', null, 'Akses ditolak. PIN Admin tidak sesuai.', 'FORBIDDEN'));
+    var mockAuth = authorizeMockAdmin_();
+    if (!mockAuth.allowed) {
+      return onError(makeEnv('error', null, mockAuth.message, 'FORBIDDEN'));
     }
     var beforeCount = db.items.length;
     db.items = db.items.filter(function(it) {
@@ -1372,6 +1465,14 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     var removed = beforeCount - db.items.length;
     saveMockDb_(db);
     return onSuccess(makeEnv('success', { removedCount: removed }, removed + ' data simulasi berhasil dibersihkan.', 'OK'));
+  }
+
+  if (actionName === 'runDiagnostics') {
+    var mockAuth = authorizeMockAdmin_();
+    if (!mockAuth.allowed) {
+      return onError(makeEnv('error', null, mockAuth.message, 'FORBIDDEN'));
+    }
+    return onSuccess(makeEnv('success', { ok: true, mode: 'sandbox' }, 'Diagnostik simulasi selesai.', 'OK'));
   }
 
   return onError(makeEnv('error', null, 'Action mock belum terdaftar: ' + actionName, 'INTERNAL_ERROR'));
