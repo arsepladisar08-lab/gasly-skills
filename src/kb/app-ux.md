@@ -48,3 +48,7 @@ Jangan menempelkan ornamen SaaS yang tidak memiliki fungsi nyata di aplikasi pen
 
 - Di Google Sheets, operasi `sheet.deleteRow(rowIndex)` menggeser seluruh indeks baris di bawahnya dan berisiko menghapus baris yang salah bila ada dua pengguna yang menghapus data secara bersamaan.
 - **Utamakan Soft-Delete:** Gunakan perubahan kolom `status = 'ARCHIVED'` (atau pengisian kolom `deleted_at`) sebagai mekanisme hapus default. Selain aman dari pergeseran indeks baris, pola ini memungkinkan fitur **"Urungkan (Undo)"** pada toast berjalan secara nyata dengan mengembalikan status baris tersebut.
+
+## 5. Catatan Batas Akses Baca Berdasarkan Role
+
+Dashboard multi-role harus menetapkan matriks permission server-side untuk setiap sheet, baris, dan field. Jangan mengirim seluruh data ke browser lalu hanya menyembunyikan kolom/menu di UI. Bila boilerplate single-tenant digunakan tanpa model kepemilikan record, batasi deployment pada audience tepercaya atau tambahkan read-scoped guard sebelum dipublikasikan.
