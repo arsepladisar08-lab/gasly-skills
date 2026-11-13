@@ -66,14 +66,9 @@ function initialSetupDatabase() {
       ss.setSpreadsheetTimeZone(tz);
     }
 
-    // Catat OWNER_EMAIL saat setup pertama kali dijalankan dari editor oleh pemilik
-    var callerEmail = Session.getEffectiveUser().getEmail();
-    if (callerEmail && !props.getProperty('OWNER_EMAIL')) {
-      props.setProperty('OWNER_EMAIL', callerEmail);
-    }
-    if (!props.getProperty('ADMIN_PIN')) {
-      props.setProperty('ADMIN_PIN', '123456'); // PIN fallback default yang wajib diganti admin di sheet CONFIG
-    }
+    // OWNER_EMAIL dan ADMIN_PIN tidak pernah dibuat otomatis.
+    // Isi OWNER_EMAIL secara manual di Script Properties setelah memverifikasi pemilik.
+    // ADMIN_PIN opsional; bila dipakai, harus dibuat manual di Script Properties.
 
     Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
       var expectedHeaders = DB_SCHEMAS[sheetName];
@@ -155,6 +150,8 @@ function initialSetupDatabase() {
  * - 'USER_ACCESSING': Web app berjalan sebagai pengguna yang mengakses.
  */
 var DEPLOY_MODE = 'EXECUTE_AS_ME';
+// Harus mencerminkan setting deployment Web App; PIN tidak boleh menjadi satu-satunya kontrol pada ANYONE.
+var DEPLOY_ACCESS = 'RESTRICTED';
 var ALLOWED_CATEGORIES = ['Operasional', 'Pemasaran', 'Infrastruktur', 'Lisensi'];
 var ALLOWED_STATUSES = ['ACTIVE', 'PENDING', 'COMPLETED', 'ARCHIVED'];
 
@@ -232,41 +229,51 @@ function assertAdminAccess_(payload) {
   var expectedPin = props.getProperty('ADMIN_PIN') || '';
   var activeEmail = '';
   var effectiveEmail = '';
-
+  var cache = CacheService.getScriptCache();
   try {
     activeEmail = Session.getActiveUser().getEmail() || '';
     effectiveEmail = Session.getEffectiveUser().getEmail() || '';
   } catch (e) {}
 
-  // 1. Jika dijalankan langsung dari toolbar GAS Editor (payload undefined) oleh pemilik
-  if (payload === undefined && effectiveEmail && (!ownerEmail || effectiveEmail === ownerEmail)) {
-    return { allowed: true };
-  }
-
-  // 2. Jika DEPLOY_MODE adalah EXECUTE_AS_ME dan email Workspace pengguna aktif cocok dengan pemilik
+  // Tidak ada bypass berdasarkan payload undefined/kosong. Identitas harus eksplisit.
   if (DEPLOY_MODE === 'EXECUTE_AS_ME' && activeEmail && effectiveEmail && activeEmail === effectiveEmail) {
     return { allowed: true };
   }
-
-  // 3. Jika DEPLOY_MODE adalah USER_ACCESSING dan email pengguna aktif cocok dengan OWNER_EMAIL terdaftar
   if (DEPLOY_MODE === 'USER_ACCESSING' && activeEmail && ownerEmail && activeEmail === ownerEmail) {
     return { allowed: true };
   }
 
-  // 4. Fallback kredensial: verifikasi adminPin dari payload terhadap ScriptProperties
-  if (payload && payload.adminPin && expectedPin && String(payload.adminPin) === String(expectedPin)) {
-    return { allowed: true };
+  if (!expectedPin || DEPLOY_ACCESS === 'ANYONE') {
+    return {
+      allowed: false,
+      response: createResponse_('error', null,
+        'Konfigurasi admin belum selesai. Isi OWNER_EMAIL secara manual di Script Properties atau gunakan deployment terbatas dengan ADMIN_PIN yang dikonfigurasi eksplisit.',
+        'FORBIDDEN')
+    };
   }
 
-  return {
-    allowed: false,
-    response: createResponse_(
-      'error',
-      null,
-      'Akses ditolak. Tindakan ini membutuhkan otorisasi Admin (PIN atau akun pemilik).',
-      'FORBIDDEN'
-    )
-  };
+  // Rate limit best-effort per identitas (CacheService): 5 kegagalan mengunci 15 menit.
+  var actor = (activeEmail || 'anonymous').replace(/[^a-z0-9_]/gi, '_').slice(0, 80);
+  var failKey = 'GASLY_PIN_FAILS_' + actor;
+  var lockKey = 'GASLY_PIN_LOCK_' + actor;
+  if (cache.get(lockKey)) {
+    return { allowed: false, response: createResponse_('error', null,
+      'Percobaan PIN admin terkunci selama 15 menit.', 'FORBIDDEN') };
+  }
+  if (payload && payload.adminPin && String(payload.adminPin) === String(expectedPin)) {
+    cache.remove(failKey);
+    return { allowed: true };
+  }
+  var failures = Number(cache.get(failKey) || 0) + 1;
+  cache.put(failKey, String(failures), 900);
+  if (failures >= 5) {
+    cache.put(lockKey, '1', 900);
+    cache.remove(failKey);
+    return { allowed: false, response: createResponse_('error', null,
+      'Terlalu banyak percobaan PIN. Akses terkunci selama 15 menit.', 'FORBIDDEN') };
+  }
+  return { allowed: false, response: createResponse_('error', null,
+    'Akses ditolak. PIN Admin tidak sesuai atau identitas tidak berwenang.', 'FORBIDDEN') };
 }
 
 /**
@@ -395,6 +402,7 @@ function saveItem(payload) {
     var cleanStatus = String(payload.status || 'ACTIVE');
 
     if (payload.id) {
+      if (!payload.updated_at) return createResponse_('error', null, 'updated_at wajib disertakan untuk mengubah data.', 'VALIDATION_ERROR');
       // Operasi UPDATE dengan pengecekan konflik updated_at (Optimistic Concurrency Control)
       var lastRow = sheet.getLastRow();
       if (lastRow <= 1) {
@@ -475,8 +483,8 @@ function saveItem(payload) {
 }
 
 function deleteItem(payload) {
-  if (!payload || !payload.id) {
-    return createResponse_('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR');
+  if (!payload || !payload.id || !payload.updated_at) {
+    return createResponse_('error', null, 'ID dan updated_at wajib disertakan untuk menghapus data.', 'VALIDATION_ERROR');
   }
 
   var lock = LockService.getScriptLock();
@@ -546,6 +554,7 @@ function purgeSeedData(payload) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var removedCount = 0;
+    var deletionPlan = [];
     Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
       var sheet = ss.getSheetByName(sheetName);
       if (!sheet || sheet.getLastRow() <= 1) return;
@@ -553,15 +562,36 @@ function purgeSeedData(payload) {
       var headers = data[0].map(normalizeHeader_);
       var idIdx = headers.indexOf('id');
       var seedIdx = headers.indexOf('is_seed');
-
-      for (var r = data.length - 1; r >= 1; r--) {
+      var indexes = [];
+      for (var r = 1; r < data.length; r++) {
         var idVal = idIdx >= 0 ? String(data[r][idIdx] || '') : '';
         var seedVal = seedIdx >= 0 ? String(data[r][seedIdx] || '').toUpperCase() : '';
-        if (idVal.indexOf('SEED-') === 0 || seedVal === 'TRUE') {
-          sheet.deleteRow(r + 1);
-          removedCount++;
+        if (idVal.indexOf('SEED-') === 0 || seedVal === 'TRUE') indexes.push(r + 1);
+      }
+      if (indexes.length) deletionPlan.push({ sheet: sheet, rows: indexes });
+      removedCount += indexes.length;
+    });
+    var MAX_PURGE_ROWS_PER_RUN = 500;
+    if (removedCount > MAX_PURGE_ROWS_PER_RUN) {
+      return createResponse_('error', null,
+        'Pembersihan melebihi batas ' + MAX_PURGE_ROWS_PER_RUN + ' baris per eksekusi.',
+        'VALIDATION_ERROR');
+    }
+    deletionPlan.forEach(function(plan) {
+      // Hapus blok baris berurutan dari bawah agar indeks yang tersisa tetap valid.
+      var rows = plan.rows;
+      var endRow = rows[rows.length - 1];
+      var startRow = endRow;
+      for (var i = rows.length - 2; i >= 0; i--) {
+        if (rows[i] === startRow - 1) {
+          startRow = rows[i];
+        } else {
+          plan.sheet.deleteRows(startRow, endRow - startRow + 1);
+          endRow = rows[i];
+          startRow = rows[i];
         }
       }
+      plan.sheet.deleteRows(startRow, endRow - startRow + 1);
     });
     SpreadsheetApp.flush();
     return createResponse_('success', { removedCount: removedCount }, removedCount + ' data simulasi berhasil dibersihkan.', 'OK');
@@ -580,29 +610,33 @@ function purgeSeedData(payload) {
 function runDiagnostics(payload) {
   var auth = assertAdminAccess_(payload);
   if (!auth.allowed) return auth.response;
-
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var report = {
-    schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
-    sheets: {},
-    ok: true
-  };
-  Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
-    var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      report.sheets[sheetName] = { exists: false, missingHeaders: DB_SCHEMAS[sheetName] };
-      report.ok = false;
-      return;
-    }
-    var actual = sheet.getLastColumn() > 0
-      ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_)
-      : [];
-    var missing = DB_SCHEMAS[sheetName].filter(function(h) { return actual.indexOf(h) === -1; });
-    report.sheets[sheetName] = { exists: true, rowCount: Math.max(0, sheet.getLastRow() - 1), missingHeaders: missing };
-    if (missing.length > 0) report.ok = false;
-  });
-  console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
-  return createResponse_('success', report, 'Diagnostik selesai.', 'OK');
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var report = {
+      schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
+      sheets: {},
+      ok: true
+    };
+    Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        report.sheets[sheetName] = { exists: false, missingHeaders: DB_SCHEMAS[sheetName] };
+        report.ok = false;
+        return;
+      }
+      var actual = sheet.getLastColumn() > 0
+        ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_)
+        : [];
+      var missing = DB_SCHEMAS[sheetName].filter(function(h) { return actual.indexOf(h) === -1; });
+      report.sheets[sheetName] = { exists: true, rowCount: Math.max(0, sheet.getLastRow() - 1), missingHeaders: missing };
+      if (missing.length > 0) report.ok = false;
+    });
+    console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
+    return createResponse_('success', report, 'Diagnostik selesai.', 'OK');
+  } catch (err) {
+    console.error('runDiagnostics error:', err);
+    return createResponse_('error', null, 'Diagnostik gagal dijalankan.', 'INTERNAL_ERROR');
+  }
 }
 ```
 
@@ -712,7 +746,7 @@ function createInitialMockDb_() {
       is_seed: 'TRUE'
     });
   }
-  return { items: items, adminPin: '123456' };
+  return { items: items, adminConfigured: false };
 }
 
 function getMockDb_() {
@@ -754,6 +788,16 @@ window.resetPreviewData = function() {
   if (typeof window.showToast === 'function') {
     window.showToast('Data simulasi preview berhasil di-reset ke kondisi awal.', 'info');
   }
+};
+
+// Konfigurasi autentikasi preview bersifat opt-in; tidak ada PIN/kredensial bawaan.
+window.configurePreviewAdmin = function(pin) {
+  if (typeof pin !== 'string' || pin.trim().length < 8) return false;
+  var db = getMockDb_();
+  db.adminPin = pin;
+  db.adminConfigured = true;
+  saveMockDb_(db);
+  return true;
 };
 
 // 5. Handler Simulasi Mock dengan Validasi, Cek Konflik, & Kode Error Identik Server
@@ -798,6 +842,7 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     }
 
     if (payload.id) {
+      if (!payload.updated_at) return onError(makeEnv('error', null, 'updated_at wajib disertakan untuk mengubah data.', 'VALIDATION_ERROR'));
       var idx = -1;
       for (var i = 0; i < db.items.length; i++) {
         if (db.items[i].id === payload.id) { idx = i; break; }
@@ -834,8 +879,8 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'deleteItem') {
-    if (!payload || !payload.id) {
-      return onError(makeEnv('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR'));
+    if (!payload || !payload.id || !payload.updated_at) {
+      return onError(makeEnv('error', null, 'ID dan updated_at wajib disertakan untuk menghapus data.', 'VALIDATION_ERROR'));
     }
     var foundIdx = -1;
     for (var j = 0; j < db.items.length; j++) {
@@ -854,8 +899,8 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'purgeSeedData') {
-    if (payload && payload.adminPin && String(payload.adminPin) !== String(db.adminPin)) {
-      return onError(makeEnv('error', null, 'Akses ditolak. PIN Admin tidak sesuai.', 'FORBIDDEN'));
+    if (!db.adminConfigured || !payload || !payload.adminPin || String(payload.adminPin) !== String(db.adminPin)) {
+      return onError(makeEnv('error', null, 'Konfigurasi admin belum selesai atau kredensial simulasi tidak valid.', 'FORBIDDEN'));
     }
     var beforeCount = db.items.length;
     db.items = db.items.filter(function(it) {
@@ -864,6 +909,13 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     var removed = beforeCount - db.items.length;
     saveMockDb_(db);
     return onSuccess(makeEnv('success', { removedCount: removed }, removed + ' data simulasi berhasil dibersihkan.', 'OK'));
+  }
+
+  if (actionName === 'runDiagnostics') {
+    if (!db.adminConfigured || !payload || !payload.adminPin || String(payload.adminPin) !== String(db.adminPin)) {
+      return onError(makeEnv('error', null, 'Konfigurasi admin belum selesai atau kredensial simulasi tidak valid.', 'FORBIDDEN'));
+    }
+    return onSuccess(makeEnv('success', { ok: true, mode: 'sandbox' }, 'Diagnostik simulasi selesai.', 'OK'));
   }
 
   return onError(makeEnv('error', null, 'Action mock belum terdaftar: ' + actionName, 'INTERNAL_ERROR'));
