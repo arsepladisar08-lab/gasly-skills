@@ -28,5 +28,12 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Execute GAS Node harness
         run: node tests/harness.js
+      - name: Capture generated distributions for exact rebuild review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gasly-dist
+          path: dist/
+          if-no-files-found: error
       - name: Verify deterministic generated artifacts
         run: git diff --exit-code -- dist
