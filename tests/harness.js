@@ -182,6 +182,14 @@ const diagnosticFailure = serverContext.runDiagnostics(undefined);
 expectCode(diagnosticFailure, "INTERNAL_ERROR", "structured diagnostics catch");
 assert.equal(diagnosticFailure.message, "Diagnostik gagal dijalankan.");
 spreadsheet.throwOnRead = false;
+// Guard infrastructure failures must be returned through the structured diagnostics envelope.
+const originalGetScriptCache = serverContext.CacheService.getScriptCache;
+serverContext.CacheService.getScriptCache = () => { throw new Error("cache infrastructure unavailable"); };
+state.active = "owner@example.test";
+state.effective = "owner@example.test";
+const guardInfrastructureFailure = serverContext.runDiagnostics(undefined);
+expectCode(guardInfrastructureFailure, "INTERNAL_ERROR", "diagnostics catches admin guard failure");
+serverContext.CacheService.getScriptCache = originalGetScriptCache;
 state.active = "";
 
 // Run the client mock block in a sandboxed browser-like context.

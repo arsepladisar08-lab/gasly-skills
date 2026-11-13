@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # GAS BACKEND SAFE ENGINE (DATA, CONCURRENCY, SECURITY & SCHEMA)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat pada setiap pembuatan atau modifikasi kode backend (`setup.gs` dan `code.gs`).

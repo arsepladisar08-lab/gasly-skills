@@ -67,7 +67,7 @@ class StaticRegressionTests(unittest.TestCase):
         self.assertNotIn("dist/manifest.json", generated)
         self.assertNotIn("compatibility", json.dumps(manifest).lower())
         self.assertEqual(manifest["product_version"], "0.2.1")
-        self.assertEqual(manifest["kb_version"], "2.2.0")
+        self.assertEqual(manifest["kb_version"], "2.3.0")
 
     def test_flat_lite_is_smaller_than_full_flat(self):
         self.assertLess(len(read("dist/flat-lite/gasly-pro/SKILL.md")), len(read("dist/flat/gasly-pro/SKILL.md")))
