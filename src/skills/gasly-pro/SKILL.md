@@ -39,15 +39,16 @@ Aturan keamanan dan integritas bisnis pada bagian ini adalah gerbang keras (*har
    - **Larangan Self-Heal di Jalur Baca:** Fungsi baca (`readSheetObjects_`) tidak boleh memanggil `initialSetupDatabase()` secara diam-diam (cegah *nested lock*); kembalikan `NOT_FOUND` dengan pesan meminta setup dijalankan.
    - **Urutan Kanonik Mutasi & ID Harian:** Setiap mutasi (`saveItem`, `deleteItem`, `purgeSeedData`) wajib menjalankan urutan: validasi whitelist field/tipe/panjang $\rightarrow$ `escapeFormula_` pada teks bebas $\rightarrow$ `lock.tryLock(10000)` (`LOCK_TIMEOUT`) $\rightarrow$ baca sheet $\rightarrow$ cek kecocokan `updated_at` (`CONFLICT`) $\rightarrow$ buat ID harian baru di dalam lock dengan mencari nilai maksimum 4 digit terakhir per tanggal (`[PREFIX]-YYYYMMDD-0001` via `maxSeq + 1`, bukan `length + 1` atau `i + 1` lintas tanggal) $\rightarrow$ tulis batch `setValues()` $\rightarrow$ panggil `SpreadsheetApp.flush()` tepat sebelum `lock.releaseLock()` di blok `finally`. Penghapusan data menggunakan *soft-delete* (`status = 'ARCHIVED'`).
 
-4. **Gerbang Kontras WCAG AA (>= 4,5:1) & Tipografi AURA:**
-   - **Dark Mode (`#09090B` / `#18181B`):** Primary `#F4F4F5` (`16,1:1`), Secondary/Body `#A1A1AA` (`6,9:1`), Helper `#8A8A93` (`5,2:1`). Token `#71717A` (`3,7:1`) gagal AA dan hanya untuk `disabled`/dekoratif.
-   - **Light Mode (`#F8FAFC` / `#FFFFFF` / `#F1F5F9`):** Primary `#0F172A` (`17,9:1`), Secondary/Body `#475569` (`7,5:1`), Helper `#526071` (`6,0:1` di putih, `5,4:1` di `#F1F5F9`). Jangan gunakan `#64748B` di atas `#F1F5F9` karena turun ke `4,34:1`. Token `#94A3B8` hanya untuk `disabled`/dekoratif.
-   - **Tombol & Viewport:** Tombol primer berteks putih wajib memakai `#4F46E5` (`6,3:1`). Aksen terang (`#10B981`, `#06B6D4`, `#F59E0B`) wajib memakai teks gelap `#09090B`. Viewport wajib `width=device-width, initial-scale=1.0` tanpa `user-scalable=no`.
-   - **Skala Tipografi:** Display `48–64px` (`letter-spacing: -0.04em` via CSS eksplisit), H1 `32–40px`, H2 `20–24px`, Body `14–16px`, `.tabular-nums` pada seluruh angka/KPI.
+4. **Gerbang Aksesibilitas & Kontras WCAG AA (>= 4,5:1):**
+   - Semua kombinasi teks/latar yang digunakan wajib memenuhi kontras minimal WCAG AA: `4,5:1` untuk teks normal dan `3:1` untuk teks besar.
+   - Jangan mematikan zoom pengguna: viewport tanpa `user-scalable=no` atau `maximum-scale=1.0`.
+   - Preferensi warna dan tipografi pengguna boleh diikuti selama kontras AA, keterbacaan, dan aksesibilitas tetap terpenuhi.
+
+**Default Visual AURA (bukan hard gate; dapat di-override):**
+   - Bila pengguna tidak menentukan visual, gunakan palet Dark/Light, pasangan warna, skala tipografi, spacing, radius, dan motion dari knowledge base AURA.
+   - Bila pengguna memilih palet atau tipografi lain, gunakan pilihannya setelah memeriksa kontras terhadap surface aktual. Jangan memaksakan token atau ukuran tipografi default hanya demi keseragaman.
 
 ---
-
-**Default Visual AURA (dapat di-override):** Palet, tipografi, grid, radius, dan motion AURA adalah default, bukan hard gate. Ikuti preferensi visual pengguna bila berbeda; pertahankan kontras minimum WCAG AA dan aksesibilitas.
 
 ## 2. PEMUATAN REFERENSI (ROUTING TABLE)
 

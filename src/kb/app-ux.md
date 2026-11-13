@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.1.0 -->
+<!-- KB_VERSION: 2.2.0 -->
 # SAAS APP ARCHITECTURE & TABLE UX
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Dimuat secara kondisional ketika membangun Web App, SaaS Dashboard, Portal Multi-Role, atau Internal Tool (tidak dimuat untuk Landing Page murni).
