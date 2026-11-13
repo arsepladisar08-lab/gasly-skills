@@ -69,6 +69,28 @@ class StaticRegressionTests(unittest.TestCase):
         self.assertEqual(manifest["product_version"], "0.2.1")
         self.assertEqual(manifest["kb_version"], "2.3.0")
 
+    def test_staged_publish_replaces_distribution_directory(self):
+        import importlib.util
+        import tempfile
+        from unittest.mock import patch
+
+        spec = importlib.util.spec_from_file_location("gasly_build", ROOT / "build_skills.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            dist = base / "dist"
+            stage = base / ".dist-staging"
+            dist.mkdir()
+            stage.mkdir()
+            (dist / "old.txt").write_text("old", encoding="utf-8")
+            (stage / "new.txt").write_text("new", encoding="utf-8")
+            with patch.object(module, "DIST", dist):
+                module.publish(stage)
+            self.assertTrue((dist / "new.txt").exists())
+            self.assertFalse((dist / "old.txt").exists())
+            self.assertFalse(stage.exists())
+
     def test_flat_lite_is_smaller_than_full_flat(self):
         self.assertLess(len(read("dist/flat-lite/gasly-pro/SKILL.md")), len(read("dist/flat/gasly-pro/SKILL.md")))
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministic GASLY skill compiler with staged, atomic distribution publishing."""
 from __future__ import annotations
-import argparse, hashlib, json, re, shutil, sys, tempfile
+import argparse, ctypes, errno, hashlib, json, os, re, shutil, sys, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -209,7 +209,32 @@ def build(stage, allow_missing):
     return manifest
 
 
+def _atomic_exchange_directories(left: Path, right: Path) -> bool:
+    """Atomically exchange two same-filesystem directories on Linux when supported."""
+    if not sys.platform.startswith("linux"):
+        return False
+    try:
+        renameat2 = ctypes.CDLL(None, use_errno=True).renameat2
+    except AttributeError:
+        return False
+    renameat2.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    renameat2.restype = ctypes.c_int
+    result = renameat2(-100, os.fsencode(left), -100, os.fsencode(right), 2)  # AT_FDCWD, RENAME_EXCHANGE
+    if result == 0:
+        return True
+    error = ctypes.get_errno()
+    if error in (errno.ENOSYS, errno.EINVAL, errno.ENOTSUP, errno.EXDEV):
+        return False
+    raise OSError(error, os.strerror(error))
+
+
 def publish(stage):
+    if DIST.exists() and _atomic_exchange_directories(stage, DIST):
+        # After the exchange, stage names the old dist tree. Keep the new dist live.
+        shutil.rmtree(stage, ignore_errors=True)
+        return
+
+    # Portable fallback: stage first, then replace with a rollback-capable backup.
     backup = DIST.with_name("dist.previous")
     if backup.exists():
         shutil.rmtree(backup)

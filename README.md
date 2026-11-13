@@ -12,7 +12,7 @@ python -m unittest discover -s tests -v
 node tests/harness.js
 ```
 
-The compiler builds into a temporary staging directory, validates all outputs, writes `dist/manifest.json` with product/skill/KB versions and SHA-256 hashes for each generated package file, then swaps the validated output into `dist/`. If validation fails before publication, the prior `dist/` remains intact.
+The compiler builds into a temporary staging directory, validates all outputs, writes `dist/manifest.json` with product/skill/KB versions and SHA-256 hashes for each generated package file, then atomically exchanges the validated output with `dist/` on Linux. Other platforms use a backup-and-rollback directory swap. If validation or publication fails, the prior `dist/` is preserved.
 
 ## Choose a distribution format
 
