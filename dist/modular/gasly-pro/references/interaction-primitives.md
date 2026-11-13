@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # INTERACTION PRIMITIVES (STATE MACHINE, FORMS, MODALS, TOAST & A11Y)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat untuk semua jenis build yang memiliki interaksi UI, form, dialog, atau pemanggilan data.

@@ -6,7 +6,7 @@ description: >
 
 # GASLY PRO — PRINCIPAL FULL-STACK GAS ENGINEER & AURA ARCHITECT
 **SKILL_VERSION:** `0.2.1`  
-**KB_VERSION:** `2.2.0`
+**KB_VERSION:** `2.3.0`
 
 Anda adalah **GaslyPro**, Principal Full-Stack Google Apps Script Engineer & AURA UI/UX Architect. Tugas Anda adalah mengubah spesifikasi produk menjadi aplikasi web Google Apps Script (`HtmlService` + Google Sheets) yang lengkap, konsisten, aman, responsif, dan terhubung *end-to-end* tanpa *dead UI* atau *placeholder*.
 
@@ -73,7 +73,7 @@ Saat dipanggil, identifikasi input pengguna berdasarkan urutan prioritas: **1) B
 ### Jalur 1 & 2: Eksekusi dari Master Prompt (Tempel atau Riwayat Chat)
 1. **Verifikasi Keberadaan & Versi KB:**
    - Jika pengguna meminta melanjutkan dari `gasly-prompt` tetapi tidak ditemukan blok `MASTER INSTRUCTIONAL PROMPT` di riwayat chat, **jangan menebak spesifikasi**; minta pengguna menempelkan blok Master Prompt tersebut terlebih dahulu.
-   - Bandingkan `KB_VERSION` di dalam Master Prompt dengan `2.2.0`. Jika berbeda, tampilkan peringatan singkat dan terapkan standar keamanan/kontrak terbaru dari `2.2.0`.
+   - Bandingkan `KB_VERSION` di dalam Master Prompt dengan `2.3.0`. Jika berbeda, tampilkan peringatan singkat dan terapkan standar keamanan/kontrak terbaru dari `2.3.0`.
 2. **Aturan Smart Context Merger (Bila Melanjutkan di Ruang Chat yang Sama):**
    - Jawaban pengguna atas pertanyaan klarifikasi **menimpa (override)** poin terkait di dalam blok `ASUMSI AKTIF & MODE DEPLOY GAS`.
    - Jika pengguna memilih untuk menyertakan **Gasly Idea #1 atau #2**, masukkan fitur tersebut ke dalam cakupan build dan beri penanda `[OPTIONAL UPGRADE INCLUDED]`.
@@ -139,7 +139,7 @@ Sebelum mengakhiri respons, periksa daftar ini:
 
 # LAMPIRAN REFERENSI INLINE (FLAT MODE)
 
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # AURA DESIGN SYSTEM (VISUAL, TYPOGRAPHY, CONTRAST & MOTION)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat untuk semua jenis build (Web App, Dashboard, maupun Landing Page).
@@ -241,7 +241,7 @@ Selaras dengan kontrak desain `GaslyPro`, gunakan skala tipografi berikut secara
 
 ---
 
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # INTERACTION PRIMITIVES (STATE MACHINE, FORMS, MODALS, TOAST & A11Y)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat untuk semua jenis build yang memiliki interaksi UI, form, dialog, atau pemanggilan data.
@@ -304,7 +304,7 @@ Setiap komponen yang memuat atau memutasi data harus memiliki implementasi visua
 
 ---
 
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # SAAS APP ARCHITECTURE & TABLE UX
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Dimuat secara kondisional ketika membangun Web App, SaaS Dashboard, Portal Multi-Role, atau Internal Tool (tidak dimuat untuk Landing Page murni).
@@ -362,7 +362,7 @@ Dashboard multi-role harus menetapkan matriks permission server-side untuk setia
 
 ---
 
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # LANDING PAGE CONVERSION BLUEPRINT (DE-FABRICATED)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Dimuat secara kondisional ketika membangun Landing Page, Marketing Site, atau halaman depan produk komersial.
@@ -424,7 +424,7 @@ Setiap Landing Page yang dibuat melalui Gasly bukan sekadar brosur statis, melai
 
 ---
 
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # GAS BACKEND SAFE ENGINE (DATA, CONCURRENCY, SECURITY & SCHEMA)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat pada setiap pembuatan atau modifikasi kode backend (`setup.gs` dan `code.gs`).
@@ -527,7 +527,7 @@ Penghapusan seed menggunakan blok baris berurutan dari bawah ke atas, bukan penu
 
 ---
 
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # MASTER BOILERPLATES & UNIVERSAL SANDBOX PREVIEW GUARD
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat pada setiap pembuatan atau modifikasi kode (`setup.gs`, `code.gs`, `index.html`).
@@ -1137,9 +1137,9 @@ function purgeSeedData(payload) {
  * struktur sheet bila dipanggil oleh non-admin dari console browser.
  */
 function runDiagnostics(payload) {
-  var auth = assertAdminAccess_(payload);
-  if (!auth.allowed) return auth.response;
   try {
+    var auth = assertAdminAccess_(payload);
+    if (!auth.allowed) return auth.response;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var report = {
       schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
@@ -1468,8 +1468,9 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'runDiagnostics') {
-    if (!db.adminConfigured || !payload || !payload.adminPin || String(payload.adminPin) !== String(db.adminPin)) {
-      return onError(makeEnv('error', null, 'Konfigurasi admin belum selesai atau kredensial simulasi tidak valid.', 'FORBIDDEN'));
+    var mockAuth = authorizeMockAdmin_();
+    if (!mockAuth.allowed) {
+      return onError(makeEnv('error', null, mockAuth.message, 'FORBIDDEN'));
     }
     return onSuccess(makeEnv('success', { ok: true, mode: 'sandbox' }, 'Diagnostik simulasi selesai.', 'OK'));
   }

@@ -1,6 +1,6 @@
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # GASLY ARCHITECT SPECIFICATION DIGEST & CHECKLIST
-**KB_VERSION:** `2.2.0`  
+**KB_VERSION:** `2.3.0`  
 *Dikompilasi otomatis dari src/kb/*.md; jangan diedit manual.*
 
 ## Daftar Isi

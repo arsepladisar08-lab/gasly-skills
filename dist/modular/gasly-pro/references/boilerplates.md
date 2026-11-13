@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # MASTER BOILERPLATES & UNIVERSAL SANDBOX PREVIEW GUARD
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat pada setiap pembuatan atau modifikasi kode (`setup.gs`, `code.gs`, `index.html`).
@@ -608,9 +608,9 @@ function purgeSeedData(payload) {
  * struktur sheet bila dipanggil oleh non-admin dari console browser.
  */
 function runDiagnostics(payload) {
-  var auth = assertAdminAccess_(payload);
-  if (!auth.allowed) return auth.response;
   try {
+    var auth = assertAdminAccess_(payload);
+    if (!auth.allowed) return auth.response;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var report = {
       schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
@@ -939,8 +939,9 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'runDiagnostics') {
-    if (!db.adminConfigured || !payload || !payload.adminPin || String(payload.adminPin) !== String(db.adminPin)) {
-      return onError(makeEnv('error', null, 'Konfigurasi admin belum selesai atau kredensial simulasi tidak valid.', 'FORBIDDEN'));
+    var mockAuth = authorizeMockAdmin_();
+    if (!mockAuth.allowed) {
+      return onError(makeEnv('error', null, mockAuth.message, 'FORBIDDEN'));
     }
     return onSuccess(makeEnv('success', { ok: true, mode: 'sandbox' }, 'Diagnostik simulasi selesai.', 'OK'));
   }

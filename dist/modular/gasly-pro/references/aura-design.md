@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.2.0 -->
+<!-- KB_VERSION: 2.3.0 -->
 # AURA DESIGN SYSTEM (VISUAL, TYPOGRAPHY, CONTRAST & MOTION)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Selalu dimuat untuk semua jenis build (Web App, Dashboard, maupun Landing Page).
