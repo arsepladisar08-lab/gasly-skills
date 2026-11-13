@@ -31,9 +31,9 @@ def read_version(text, name):
 
 
 def read_skill_version(text, name):
-    for line in text.splitlines():
-        if line.startswith("**SKILL_VERSION:**"):
-            return line.split(":", 1)[1].strip().strip(TICK)
+    match = re.search(r"^\\*\\*SKILL_VERSION:\\*\\*\\s*(.+)$", text, re.M)
+    if match:
+        return match.group(1).strip().strip(TICK)
     raise ValueError("SKILL_VERSION missing: " + name)
 
 
