@@ -31,9 +31,9 @@ def read_version(text, name):
 
 
 def read_skill_version(text, name):
-    match = re.search(r"^\\*\\*SKILL_VERSION:\\*\\*\\s*(.+)$", text, re.M)
-    if match:
-        return match.group(1).strip().strip(TICK)
+    for line in text.splitlines():
+        if line.startswith("**SKILL_VERSION:**"):
+            return line.split(":", 1)[1].strip().strip(TICK).strip()
     raise ValueError("SKILL_VERSION missing: " + name)
 
 
@@ -203,7 +203,7 @@ def build(stage, allow_missing):
             check_flat("flat/" + name, flat)
 
     for path in sorted(p for p in stage.rglob("*") if p.is_file()):
-        rel = path.relative_to(stage).as_posix()
+        rel = "dist/" + path.relative_to(stage).as_posix()
         manifest["generated_files"][rel] = hashlib.sha256(path.read_bytes()).hexdigest()
     write_text(stage / "manifest.json", json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
     return manifest
