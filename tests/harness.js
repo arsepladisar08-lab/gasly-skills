@@ -94,6 +94,7 @@ const cache = {
 const serverContext = {
   SCHEMA_VERSION: "1.0.0",
   DEFAULT_TZ: "Asia/Jakarta",
+  DB_SCHEMAS: { ITEMS: ["id", "created_at", "updated_at", "title", "category", "amount", "status", "is_seed"], CONFIG: ["config_key", "config_value", "updated_at"] },
   Date: FixedDate,
   Session: {
     getActiveUser: () => ({ getEmail: () => state.active }),
