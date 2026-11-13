@@ -13,17 +13,17 @@
     }
   },
   "generated_files": {
-    "dist/flat-lite/gasly-pro/SKILL.md": "d42acd724ba7eb36ad3419e1f14b35358caaabe13d04f3f53d33bc9615a14aef",
-    "dist/flat/gasly-pro/SKILL.md": "20b6cf74d6508971ad34f6d8b1ee9a48ba94a10adb9f3d76b09d9adbb19dcb28",
-    "dist/flat/gasly-prompt/SKILL.md": "33e69e2a5adcd4cf04ce211c6338f73d4cae8165ef57cfa71d232e72963012df",
-    "dist/modular/gasly-pro/SKILL.md": "77ec27943628dfe646b4992b24bc60d8401a9b322a0c23c9d13454c45600c195",
-    "dist/modular/gasly-pro/references/app-ux.md": "9cacaa1b3c5bb83918f32e322c4c6ec403275d2964c9242422df4d3dfe54c3a5",
-    "dist/modular/gasly-pro/references/aura-design.md": "0811b4ac171b379ccb299d4487cc3698ad67594e72f713294a04bdf781cc69da",
-    "dist/modular/gasly-pro/references/boilerplates.md": "6751ee3bbb6cc7d95f6723c9eb7daeb5c764e5c3c90324d5dc129dcde20add6f",
-    "dist/modular/gasly-pro/references/gas-backend.md": "6969eb99250d50010c55dccf11b9b164b3fa0347733c599a767934d1d62b9c6b",
-    "dist/modular/gasly-pro/references/interaction-primitives.md": "7ede10efa8360b6713831a32cab145eb7ff3998c038754f19ba75316f553d684",
-    "dist/modular/gasly-pro/references/landing-conversion.md": "cae201d0557019dd9a69cb2e82ae35aa441e264e8eed9c225869a86836a7e042",
-    "dist/modular/gasly-prompt/SKILL.md": "094e6cb319d81544798eb5c11b7c988b1baf5900088d17acd158a1d962436328",
-    "dist/modular/gasly-prompt/references/spec-digest.md": "b9858474d195063b1a708e920e281e278b92ef6272fe0d2d8b7219895217660d"
+    "dist/flat-lite/gasly-pro/SKILL.md": "584684b27df6ba99aa41a5522c02f97db0d82de6aeb87aaee80162b520cae24c",
+    "dist/flat/gasly-pro/SKILL.md": "cc8664f315ab061f6e380560a7a3fa5a79eb81be3edd1c300bf38bef48e583ea",
+    "dist/flat/gasly-prompt/SKILL.md": "95aeeef278e5f63a05e68af9d316e2ebf13300e8f73862042277691c3dfe8ba4",
+    "dist/modular/gasly-pro/SKILL.md": "69d6f0d898c136710d7e37f1218f8bc1f0daa4cf40e39465b6f6964778be4c39",
+    "dist/modular/gasly-pro/references/app-ux.md": "69679df4b1a7dd49ae64b9f02733d8f970dce043bdf9be2871f35213914ba2f8",
+    "dist/modular/gasly-pro/references/aura-design.md": "46a4b2490c8a3e797932f4b38c01966a6d9dc65e4075376104f9135fbca42631",
+    "dist/modular/gasly-pro/references/boilerplates.md": "d3bc3ee4ae647f6a62127bb07b6d51dcbe35839aec58fa44e020cef858d2f651",
+    "dist/modular/gasly-pro/references/gas-backend.md": "5e126e411a3823454492ae930b257ae49d8b5472cbbcc3c7fd04e444ab70fd13",
+    "dist/modular/gasly-pro/references/interaction-primitives.md": "1a0be526af4e1952c7ce87c418b7c5c25a86a72e6e717fb0b225fc48d7c8f84c",
+    "dist/modular/gasly-pro/references/landing-conversion.md": "008ebc9cb1fcd8b52a15cd0a8f84d1dcff8f4a9617ad8425e1b436ecb4375ed8",
+    "dist/modular/gasly-prompt/SKILL.md": "a70ce74aa4da70cc50855315f4398acf6e63f737784a69e63815b4cc375ab260",
+    "dist/modular/gasly-prompt/references/spec-digest.md": "d33d72dd4949f59a74279513dc279c9abdef8896424f156aa506f7cb1a275dd2"
   }
 }

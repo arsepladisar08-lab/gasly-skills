@@ -129,7 +129,7 @@ Sebelum mengirim respons, pastikan:
 <!-- KB_VERSION: 2.1.0 -->
 # GASLY ARCHITECT SPECIFICATION DIGEST & CHECKLIST
 **KB_VERSION:** `2.1.0`  
-*File ini dikompilasi otomatis oleh `build_skills.py` dari sumber tunggal `src/kb/*.md`. Jangan diedit secara manual.*
+*Dikompilasi otomatis dari src/kb/*.md; jangan diedit manual.*
 
 ## Daftar Isi
 1. [AURA DESIGN SYSTEM (VISUAL, TYPOGRAPHY, CONTRAST & MOTION)](#1-aura-design-system-visual-typography-contrast-motion)
@@ -138,18 +138,18 @@ Sebelum mengirim respons, pastikan:
 4. [LANDING PAGE CONVERSION BLUEPRINT (DE-FABRICATED)](#4-landing-page-conversion-blueprint-de-fabricated)
 5. [GAS BACKEND SAFE ENGINE (DATA, CONCURRENCY, SECURITY & SCHEMA)](#5-gas-backend-safe-engine-data-concurrency-security-schema)
 6. [MASTER BOILERPLATES & UNIVERSAL SANDBOX PREVIEW GUARD](#6-master-boilerplates-universal-sandbox-preview-guard)
-7. [Checklist Keputusan Spesifikasi](#7-checklist-keputusan-spesifikasi)
+7. [7. Checklist Keputusan Spesifikasi](#7-checklist-keputusan-spesifikasi)
 
 ---
 
 ## 1. AURA DESIGN SYSTEM (VISUAL, TYPOGRAPHY, CONTRAST & MOTION)
 *(Sumber: `aura-design.md`)*
 
-### 1. Palet Warna Semantik & Rasio Kontras WCAG AA
+## 1. Palet Warna Semantik & Rasio Kontras WCAG AA
 
 Setiap kombinasi teks dan latar wajib memenuhi rasio kontras minimum **WCAG AA (4,5:1 untuk teks normal, 3:1 untuk teks besar/komponen UI)** di seluruh permukaan (*base*, *elevated card*, maupun *interactive hover*).
 
-#### A. Dark Mode (Modern SaaS Default)
+### A. Dark Mode (Modern SaaS Default)
 - **Base Background:** `#09090B` (Zinc-950) atau `#030712` (Gray-950). Hindari hitam murni `#000000` karena menimbulkan *halation* pada layar OLED.
 - **Elevated Surface / Card:** `#18181B` (Zinc-900) dengan hairline border `1px solid rgba(255, 255, 255, 0.08)`.
 - **Interactive / Hover Surface:** `#27272A` (Zinc-800).
@@ -159,7 +159,7 @@ Setiap kombinasi teks dan latar wajib memenuhi rasio kontras minimum **WCAG AA (
   - **Helper / Caption Text:** `#8A8A93` (rasio `5,2:1` di atas `#18181B` dan `4,5:1` di atas `#27272A`) — batas aman terendah untuk teks bantuan/keterangan kecil di Dark Mode.
   - **Disabled / Decorative Only:** `#71717A` (Zinc-500, rasio `3,7:1` di atas `#18181B`) — **gagal standar 4,5:1**, sehingga khusus untuk elemen `disabled`, garis dekoratif, atau teks non-esensial.
 
-#### B. Light Mode (Clean B2B SaaS)
+### B. Light Mode (Clean B2B SaaS)
 - **Base Background:** `#F8FAFC` (Slate-50) atau `#FAFAFA` (Zinc-50).
 - **Elevated Surface / Card:** `#FFFFFF` dengan border `1px solid #E2E8F0` dan `box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04)`.
 - **Interactive / Hover Surface:** `#F1F5F9` (Slate-100).
@@ -169,7 +169,7 @@ Setiap kombinasi teks dan latar wajib memenuhi rasio kontras minimum **WCAG AA (
   - **Helper / Caption Text:** `#526071` (rasio `6,0:1` di atas `#FFFFFF` dan `5,4:1` di atas `#F1F5F9`) — lulus standar WCAG AA di seluruh surface Light Mode. *(Catatan: `#64748B` memiliki rasio `4,76:1` di atas `#FFFFFF`, tetapi turun menjadi `4,34:1` [gagal AA] saat berada di atas surface `#F1F5F9`, sehingga jangan gunakan `#64748B` di atas latar abu-abu muda).*
   - **Disabled / Decorative Only:** `#94A3B8` (Slate-400, rasio `2,6:1` di atas `#FFFFFF`) — khusus elemen `disabled` atau dekoratif.
 
-#### C. Aksen & Warna Status (Aturan Kontras Teks Tombol)
+### C. Aksen & Warna Status (Aturan Kontras Teks Tombol)
 - **Primary Brand (Indigo/Violet):**
   - Gunakan `#4F46E5` (Indigo-600, rasio `6,3:1` dengan teks putih `#FFFFFF`) sebagai latar tombol primer berteks putih.
   - Gunakan `#6366F1` (Indigo-500, rasio `4,47:1` dengan putih) hanya untuk border aktif, *focus ring*, ikon, atau aksen pada Dark Mode.
@@ -182,7 +182,7 @@ Setiap kombinasi teks dan latar wajib memenuhi rasio kontras minimum **WCAG AA (
 
 ---
 
-### 2. Skala Tipografi & Angka Tabular
+## 2. Skala Tipografi & Angka Tabular
 
 Selaras dengan kontrak desain `GaslyPro`, gunakan skala tipografi berikut secara konsisten:
 
@@ -199,7 +199,7 @@ Selaras dengan kontrak desain `GaslyPro`, gunakan skala tipografi berikut secara
 ## 2. INTERACTION PRIMITIVES (STATE MACHINE, FORMS, MODALS, TOAST & A11Y)
 *(Sumber: `interaction-primitives.md`)*
 
-### 1. Model State UI Wajib
+## 1. Model State UI Wajib
 
 Setiap komponen yang memuat atau memutasi data harus memiliki implementasi visual untuk seluruh jalur state berikut:
 - `INITIAL → LOADING → SUCCESS`: Saat mengambil data awal, tampilkan *skeleton loader* yang ukurannya mengikuti bentuk tabel/kartu (bukan sekadar teks "Loading...").
@@ -213,7 +213,7 @@ Setiap komponen yang memuat atau memutasi data harus memiliki implementasi visua
 ## 3. SAAS APP ARCHITECTURE & TABLE UX
 *(Sumber: `app-ux.md`)*
 
-### 1. Arsitektur App Shell & Navigasi Responsif
+## 1. Arsitektur App Shell & Navigasi Responsif
 
 - **Sidebar Desktop & Drawer Mobile:**
   - Pada layar `>=1024px`, tampilkan sidebar navigasi di sisi kiri berisi daftar tampilan/modul yang benar-benar ada di dalam aplikasi.
@@ -223,7 +223,7 @@ Setiap komponen yang memuat atau memutasi data harus memiliki implementasi visua
 
 ---
 
-### 2. Komponen Kontekstual Opsional (Jangan Buat Dead UI)
+## 2. Komponen Kontekstual Opsional (Jangan Buat Dead UI)
 
 Jangan menempelkan ornamen SaaS yang tidak memiliki fungsi nyata di aplikasi pengguna:
 - **Badge Paket (mis. "$49 Pro Plan"), Switcher Workspace/Cabang, atau Ikon Lonceng Notifikasi:** Hanya boleh ditampilkan apabila brief memang meminta fitur multi-cabang, manajemen langganan, atau sistem pusat notifikasi. Untuk *internal tool* biasa, ganti area footer sidebar dengan informasi berguna seperti **Status Koneksi Database**, **Versi Skema (`SCHEMA_VERSION`)**, atau tombol **Bersihkan Data Simulasi (`Purge Seed`)**.
@@ -234,7 +234,7 @@ Jangan menempelkan ornamen SaaS yang tidak memiliki fungsi nyata di aplikasi pen
 ## 4. LANDING PAGE CONVERSION BLUEPRINT (DE-FABRICATED)
 *(Sumber: `landing-conversion.md`)*
 
-### 1. Aturan Kejujuran Klaim & Slot Data Bukti
+## 1. Aturan Kejujuran Klaim & Slot Data Bukti
 
 Landing page yang kredibel menjual kejelasan solusi dan hasil kerja (*outcome*), bukan angka karangan.
 - **Larangan Fabrikasi:** Jangan pernah mengarang jumlah pengguna, logo perusahaan klien, nama/foto pemberi testimoni, badge *verified*, persentase peningkatan ROI/efisiensi, klaim biaya/kuota akun (seperti klaim mutlak bebas biaya server), kebijakan *refund* atau *free trial*, maupun integrasi pihak ketiga (seperti WhatsApp/Payment Gateway) yang tidak disebutkan di dalam brief pengguna.
@@ -244,7 +244,7 @@ Landing page yang kredibel menjual kejelasan solusi dan hasil kerja (*outcome*),
 
 ---
 
-### 2. Anatomi 9-Section Baseline (Adaptif sesuai Funnel)
+## 2. Anatomi 9-Section Baseline (Adaptif sesuai Funnel)
 
 Gunakan 9 section berikut sebagai kerangka dasar yang dapat digabung atau disesuaikan dengan tujuan konversi:
 
@@ -278,7 +278,7 @@ Gunakan 9 section berikut sebagai kerangka dasar yang dapat digabung atau disesu
 ## 5. GAS BACKEND SAFE ENGINE (DATA, CONCURRENCY, SECURITY & SCHEMA)
 *(Sumber: `gas-backend.md`)*
 
-### 1. Strategi Baca/Tulis Data, Anti-Null Date & Anti-Locale Bug
+## 1. Strategi Baca/Tulis Data, Anti-Null Date & Anti-Locale Bug
 
 1. **Mengapa Objek `Date` Wajib Diserialisasi (`Anti-Null Bug`):**
    Protokol serialisasi `google.script.run` di Google Apps Script tidak mendukung pengiriman objek `Date` native JavaScript. Jika fungsi server mengembalikan objek atau array yang masih mengandung instance `Date` (hasil `sheet.getValues()` pada sel tanggal), `google.script.run` gagal secara diam-diam dan mengirimkan `null` ke client.
@@ -292,7 +292,7 @@ Gunakan 9 section berikut sebagai kerangka dasar yang dapat digabung atau disesu
 
 ---
 
-### 2. Konkurensi, LockService, Flush & Penomoran ID Harian
+## 2. Konkurensi, LockService, Flush & Penomoran ID Harian
 
 1. **Aturan `LockService` dan `SpreadsheetApp.flush()`:**
    Dokumentasi resmi `Lock.releaseLock()` menyarankan pemanggilan `SpreadsheetApp.flush()` sebelum melepas lock agar perubahan tertunda langsung tertulis selagi akses eksklusif masih dipegang.
@@ -305,7 +305,7 @@ Gunakan 9 section berikut sebagai kerangka dasar yang dapat digabung atau disesu
 
 ---
 
-### 3. Kontrak Response Envelope & Taksonomi Kode Error
+## 3. Kontrak Response Envelope & Taksonomi Kode Error
 
 Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus mengembalikan struktur kanonik berikut:
 ```json
@@ -321,7 +321,7 @@ Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus
 
 ---
 
-### 4. Batas Keamanan GAS, Fungsi Private (`_`) & Mode Deploy
+## 4. Batas Keamanan GAS, Fungsi Private (`_`) & Mode Deploy
 
 1. **Eksposur Fungsi Top-Level & Guard Fungsi Admin Publik:**
    Di Google Apps Script, semua fungsi *top-level* tanpa akhiran underscore (`_`) dapat dipanggil dari Console DevTools browser melalui `google.script.run`.
@@ -331,25 +331,25 @@ Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus
      - `purgeSeedData(payload)` dan `runDiagnostics(payload)` wajib memanggil `assertAdminAccess_(payload)` di baris pertama. Jika tidak terotorisasi, kembalikan `FORBIDDEN` dan **jangan bocorkan struktur nama sheet/header** pada `runDiagnostics`.
 2. **Mode Deploy & Jebakan `getActiveUser() == getEffectiveUser()`:**
    Perilaku identitas di GAS bergantung pada pengaturan deployment Web App:
-   - **Mode 1 (`Execute as: Me` + `Who has access: Anyone`):** `Session.getActiveUser().getEmail()` kosong (`""`) untuk pengguna publik. Otorisasi admin dari UI wajib menggunakan verifikasi `ADMIN_PIN` (yang disimpan di `ScriptProperties` / sheet `CONFIG`) atau token sesi.
+   - **Mode 1 (`Execute as: Me` + `Who has access: Anyone`):** `Session.getActiveUser().getEmail()` umumnya kosong untuk pengguna publik. `OWNER_EMAIL` harus diisi manual di Script Properties setelah pemilik diverifikasi. `ADMIN_PIN` opsional, harus dibuat manual di Script Properties, dibatasi percobaan (5 kegagalan mengunci 15 menit melalui `CacheService`), dan tidak boleh menjadi satu-satunya kontrol pada deployment `Anyone`. Boilerplate ini tidak membaca PIN dari sheet `CONFIG`.
    - **Mode 2 (`Execute as: Me` + `Who has access: Anyone within [Organization]`):** Email pengguna Google Workspace terbaca andal. Pengecekan pemilik `getActiveUser().getEmail() === getEffectiveUser().getEmail()` valid pada mode ini, atau peran dapat dicek terhadap tabel role di sheet `CONFIG`.
-   - **Mode 3 (`Execute as: User accessing the web app`):** Pada mode ini, `getActiveUser()` dan `getEffectiveUser()` **selalu bernilai sama** (keduanya adalah pengguna yang sedang membuka aplikasi!). Oleh karena itu, perbandingan `getActiveUser() == getEffectiveUser()` **tidak pernah boleh dipakai** pada mode ini karena akan selalu lolos untuk semua orang. Verifikasi pemilik/admin pada mode ini wajib membandingkan `Session.getActiveUser().getEmail()` terhadap `OWNER_EMAIL` yang disimpan di `ScriptProperties` atau daftar email admin di sheet `CONFIG`.
+   - **Mode 3 (`Execute as: User accessing the web app`):** Pada mode ini, `getActiveUser()` dan `getEffectiveUser()` **selalu bernilai sama** (keduanya adalah pengguna yang sedang membuka aplikasi!). Oleh karena itu, perbandingan `getActiveUser() == getEffectiveUser()` **tidak pernah boleh dipakai** pada mode ini karena akan selalu lolos untuk semua orang. Verifikasi pemilik/admin pada mode ini wajib membandingkan `Session.getActiveUser().getEmail()` terhadap `OWNER_EMAIL` yang diisi manual pada `ScriptProperties`. Jangan menyimpulkan konteks eksekusi berdasarkan payload kosong/tidak ada. Boilerplate ini tidak membaca role/PIN dari sheet `CONFIG`.
 3. **Pencegahan Formula Injection (`escapeFormula_`) & Perilaku Baca-Balik:**
    - Terapkan `escapeFormula_()` **hanya pada field teks bebas** menurut skema (seperti `title`, `name`, `notes`, `address`). **Jangan pernah** menerapkannya pada field numerik (agar angka negatif seperti `-25000` tidak berubah menjadi string teks), tanggal ISO, atau enum terkontrol.
-   - *Catatan Perilaku Apostrof Saat Dibaca Balik:* Ketika string yang diawali apostrof penangkal formula (mis. `'=SUM(A1:A2)`) ditulis ke sel melalui `setValues()`, Google Sheets memperlakukan apostrof pertama sebagai penanda format teks literal; saat dibaca kembali dengan `getValues()`, apostrof pengaman tersebut tidak ikut terbaca sebagai karakter ganda, melainkan mengembalikan teks `'=SUM(A1:A2)` tanpa mengeksekusi rumus. Karena itu, lakukan sanitasi `escapeFormula_()` tepat satu kali pada input teks dari user sebelum menulis ke sheet.
+   - *Catatan Perilaku Apostrof Saat Dibaca Balik:* Ketika string yang diawali apostrof penangkal formula (mis. `'=SUM(A1:A2)`) ditulis ke sel melalui `setValues()`, Google Sheets memperlakukan apostrof pertama sebagai penanda format teks literal; saat dibaca kembali dengan `getValues()`, apostrof pengaman tersebut tidak ikut terbaca sebagai karakter ganda, melainkan mengembalikan teks `'=SUM(A1:A2)` tanpa mengeksekusi rumus. Perilaku apostrof saat tulis/baca balik pada Google Sheets sungguhan **belum diverifikasi**; jangan anggap catatan ini sebagai hasil pengujian. Lakukan uji langsung pada Spreadsheet sebelum menyatakan perilakunya terkonfirmasi.
 
 ---
 
 ## 6. MASTER BOILERPLATES & UNIVERSAL SANDBOX PREVIEW GUARD
 *(Sumber: `boilerplates.md`)*
 
-### 1. Keputusan Arsitektur 3-File vs 6-File Modular
+## 1. Keputusan Arsitektur 3-File vs 6-File Modular
 
-#### A. Standar Default: 3-File Monolithic (`setup.gs`, `code.gs`, `index.html`)
+### A. Standar Default: 3-File Monolithic (`setup.gs`, `code.gs`, `index.html`)
 - Gunakan struktur 3-file sebagai default karena seluruh kode HTML, CSS, dan JS berada di dalam satu file `index.html` utuh. Hal ini memastikan aplikasi dapat langsung dijalankan pada pratinjau sandbox browser (Claude Artifacts, ChatGPT Canvas, Gemini Canvas, maupun file HTML lokal) yang tidak memiliki mesin kompilator scriptlet server `<?!= include(...) ?>` milik Google Apps Script.
 - Pada mode 3-file, `doGet(e)` menggunakan `HtmlService.createHtmlOutputFromFile('index')` yang lebih cepat dan bebas dari benturan karakter tag scriptlet `<?` di dalam kode JS/CSS.
 
-#### B. Opsi 6-File Modular (`setup.gs`, `code.gs`, `index.html`, `styles.html`, `modals.html`, `scripts.html`)
+### B. Opsi 6-File Modular (`setup.gs`, `code.gs`, `index.html`, `styles.html`, `modals.html`, `scripts.html`)
 - Gunakan **hanya** apabila pengguna secara eksplisit meminta arsitektur modular multi-file untuk dikelola langsung di dalam editor Google Apps Script.
 - Karena mode 6-file menggunakan tag scriptlet `<?!= include('styles'); ?>` di dalam `index.html`, fungsi `doGet(e)` di `code.gs` **harus** menggunakan `HtmlService.createTemplateFromFile('index').evaluate()` beserta fungsi helper `include(filename)`:
   ```javascript
@@ -368,9 +368,9 @@ Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus
 ---
 
 ## 7. Checklist Keputusan Spesifikasi
-- [ ] **Versi KB Tercantum:** Header `KB_VERSION` ditulis eksplisit di dalam Master Prompt.
-- [ ] **Mode Deploy & Identitas:** Kombinasi `Execute as` dan `Who has access` ditetapkan sesuai kebutuhan role/permission; verifikasi admin tidak menyalahgunakan `getActiveUser() == getEffectiveUser()` pada mode `USER_ACCESSING`.
-- [ ] **Skema & Seed Idempoten:** Semua nama kolom menggunakan `snake_case`, tipe data mentah (Number & ISO Date ber-offset), penomoran urut per-hari, serta penanda `SEED-` + `SCHEMA_VERSION`.
-- [ ] **Kontrak Konkurensi:** Setiap pembuatan ID harian atau mutasi data sensitif ditandai membutuhkan `LockService` + pengecekan `updated_at` (`CONFLICT`) + `SpreadsheetApp.flush()` sebelum `releaseLock()`.
-- [ ] **De-Fabrikasi Bukti Bisnis:** Tidak ada angka klaim pelanggan, testimoni, logo, klaim bebas biaya server, atau harga tetap yang dikarang sendiri; semuanya memakai data pengguna atau slot `{...}`.
-- [ ] **Kepatuhan Kontras & Aksesibilitas:** Teks body memakai token Primary/Secondary (`>= 4.5:1`), helper memakai `#8A8A93` (Dark) / `#526071` (Light), tombol putih memakai `#4F46E5`, dan viewport tidak mematikan zoom.
+- [ ] Versi KB tercantum di dalam Master Prompt.
+- [ ] Mode deployment dan identitas admin ditetapkan; operasi admin tidak memiliki bypass tanpa argumen.
+- [ ] Nama kolom snake_case, tipe data mentah, penomoran per hari, dan penanda SEED- + SCHEMA_VERSION.
+- [ ] Mutasi sensitif memakai LockService, updated_at wajib, dan SpreadsheetApp.flush() sebelum releaseLock().
+- [ ] Tidak ada klaim pelanggan, testimoni, logo, biaya, atau harga yang dikarang.
+- [ ] Kontras teks normal memenuhi WCAG AA (>= 4.5:1) dan viewport tidak mematikan zoom.
