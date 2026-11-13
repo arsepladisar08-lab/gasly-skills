@@ -74,7 +74,7 @@ class FixedDate extends NativeDate {
   constructor(...args) { super(...(args.length ? args : [state.now])); }
   static now() { return new NativeDate(state.now).getTime(); }
 }
-function formatDate(date, pattern) {
+function formatDate(date, timeZone, pattern) {
   const local = new NativeDate(new NativeDate(date).getTime() + 7 * 60 * 60 * 1000);
   const pad = n => String(n).padStart(2, "0");
   const y = local.getUTCFullYear(), m = pad(local.getUTCMonth() + 1), d = pad(local.getUTCDate());
