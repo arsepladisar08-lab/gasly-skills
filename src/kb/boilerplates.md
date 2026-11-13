@@ -746,7 +746,7 @@ function createInitialMockDb_() {
       is_seed: 'TRUE'
     });
   }
-  return { items: items, adminPin: '123456' };
+  return { items: items, adminConfigured: false };
 }
 
 function getMockDb_() {
@@ -788,6 +788,16 @@ window.resetPreviewData = function() {
   if (typeof window.showToast === 'function') {
     window.showToast('Data simulasi preview berhasil di-reset ke kondisi awal.', 'info');
   }
+};
+
+// Konfigurasi autentikasi preview bersifat opt-in; tidak ada PIN/kredensial bawaan.
+window.configurePreviewAdmin = function(pin) {
+  if (typeof pin !== 'string' || pin.trim().length < 8) return false;
+  var db = getMockDb_();
+  db.adminPin = pin;
+  db.adminConfigured = true;
+  saveMockDb_(db);
+  return true;
 };
 
 // 5. Handler Simulasi Mock dengan Validasi, Cek Konflik, & Kode Error Identik Server
@@ -832,6 +842,7 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     }
 
     if (payload.id) {
+      if (!payload.updated_at) return onError(makeEnv('error', null, 'updated_at wajib disertakan untuk mengubah data.', 'VALIDATION_ERROR'));
       var idx = -1;
       for (var i = 0; i < db.items.length; i++) {
         if (db.items[i].id === payload.id) { idx = i; break; }
@@ -868,8 +879,8 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'deleteItem') {
-    if (!payload || !payload.id) {
-      return onError(makeEnv('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR'));
+    if (!payload || !payload.id || !payload.updated_at) {
+      return onError(makeEnv('error', null, 'ID dan updated_at wajib disertakan untuk menghapus data.', 'VALIDATION_ERROR'));
     }
     var foundIdx = -1;
     for (var j = 0; j < db.items.length; j++) {
@@ -888,8 +899,8 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'purgeSeedData') {
-    if (payload && payload.adminPin && String(payload.adminPin) !== String(db.adminPin)) {
-      return onError(makeEnv('error', null, 'Akses ditolak. PIN Admin tidak sesuai.', 'FORBIDDEN'));
+    if (!db.adminConfigured || !payload || !payload.adminPin || String(payload.adminPin) !== String(db.adminPin)) {
+      return onError(makeEnv('error', null, 'Konfigurasi admin belum selesai atau kredensial simulasi tidak valid.', 'FORBIDDEN'));
     }
     var beforeCount = db.items.length;
     db.items = db.items.filter(function(it) {
@@ -898,6 +909,13 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     var removed = beforeCount - db.items.length;
     saveMockDb_(db);
     return onSuccess(makeEnv('success', { removedCount: removed }, removed + ' data simulasi berhasil dibersihkan.', 'OK'));
+  }
+
+  if (actionName === 'runDiagnostics') {
+    if (!db.adminConfigured || !payload || !payload.adminPin || String(payload.adminPin) !== String(db.adminPin)) {
+      return onError(makeEnv('error', null, 'Konfigurasi admin belum selesai atau kredensial simulasi tidak valid.', 'FORBIDDEN'));
+    }
+    return onSuccess(makeEnv('success', { ok: true, mode: 'sandbox' }, 'Diagnostik simulasi selesai.', 'OK'));
   }
 
   return onError(makeEnv('error', null, 'Action mock belum terdaftar: ' + actionName, 'INTERNAL_ERROR'));
