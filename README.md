@@ -2,6 +2,22 @@
 
 GASLY is a compact skill set for planning and implementing Google Apps Script web applications backed by Google Sheets. Source-of-truth files live under `src/`; generated distribution packages live under `dist/`.
 
+## Start here
+
+- **[Skill catalog](CATALOG.md):** choose GASLY Prompt or GASLY Pro and understand the package formats.
+- **[Contributing](CONTRIBUTING.md):** development setup, tests, and pull request checklist.
+- **[Security policy](SECURITY.md):** responsible vulnerability reporting and deployment boundaries.
+- **[Code of Conduct](CODE_OF_CONDUCT.md):** expectations for community participation.
+- **[AI/LLM entry point](llms.txt):** concise index for assistants, agents, and crawlers.
+- **[Distribution manifest](dist/manifest.json):** package versions and generated-file SHA-256 hashes.
+
+## Project overview
+
+- **GASLY Prompt** turns early-stage ideas into structured product requirements and implementation-ready specifications.
+- **GASLY Pro** implements and revises Google Apps Script web applications using HtmlService and Google Sheets.
+
+The skills are complementary: Prompt is for planning; Pro is for implementation. See [CATALOG.md](CATALOG.md) for exact use cases and package paths.
+
 ## Build and test
 
 Requires Python 3.10+ and Node.js 22+ for the execution harness.
@@ -89,6 +105,10 @@ CI executes the compiler, static regression checks, and the Node GAS-stub harnes
 The included CRUD boilerplate is a **single-tenant baseline**. It has no per-record `owner_id`/`tenant_id` model and does not filter reads per role. It is suitable only where every user admitted to the deployment may read the same records. Restrict the web app audience, or implement server-side authentication, read-scoped authorization, and write guards before broader exposure. An `Anyone` deployment is not safe by default.
 
 Set `OWNER_EMAIL` manually in Apps Script Script Properties after verifying the owner. `ADMIN_PIN` is optional and must also be configured manually; the boilerplate does not read it from the `CONFIG` sheet. Do not use a PIN as the only control for a deployment exposed to Anyone.
+
+## Contributing, security, and community
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Security issues should be reported using [SECURITY.md](SECURITY.md), not in public issue reports. Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

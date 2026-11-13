@@ -1,0 +1,34 @@
+# GASLY Skills
+
+> Open-source agent skills for planning and implementing Google Apps Script web applications with HtmlService and Google Sheets.
+
+- Project: https://github.com/arsepladisar08-lab/gasly-skills
+- License: MIT (see https://github.com/arsepladisar08-lab/gasly-skills/blob/SOWAN/LICENSE)
+- Catalog: https://github.com/arsepladisar08-lab/gasly-skills/blob/SOWAN/CATALOG.md
+- Human and platform setup guide: https://github.com/arsepladisar08-lab/gasly-skills/blob/SOWAN/README.md
+- Security policy: https://github.com/arsepladisar08-lab/gasly-skills/blob/SOWAN/SECURITY.md
+
+## Choose a skill
+
+- GASLY Prompt: planning, product requirements, workflows, spreadsheet data models, AURA UI/UX direction, and implementation-ready specifications.
+  - Entry file: https://raw.githubusercontent.com/arsepladisar08-lab/gasly-skills/SOWAN/dist/modular/gasly-prompt/SKILL.md
+  - References directory: https://github.com/arsepladisar08-lab/gasly-skills/tree/SOWAN/dist/modular/gasly-prompt/references
+- GASLY Pro: implementing and revising Google Apps Script web applications using HtmlService and Google Sheets.
+  - Entry file: https://raw.githubusercontent.com/arsepladisar08-lab/gasly-skills/SOWAN/dist/modular/gasly-pro/SKILL.md
+  - References directory: https://github.com/arsepladisar08-lab/gasly-skills/tree/SOWAN/dist/modular/gasly-pro/references
+
+## Instructions for consuming agents
+
+- Read CATALOG.md first to choose the appropriate skill.
+- Read the selected modular SKILL.md and every Markdown reference file in its adjacent references directory. The SKILL.md is not a complete package by itself.
+- Treat dist/ as generated output. Prefer src/ for reviewing or changing canonical instructions.
+- Consult dist/manifest.json for versions and generated-file hashes.
+- Do not assume a model has automatically indexed or loaded this repository. Retrieve the files explicitly or clone the repository.
+- Do not claim tests passed unless you have run the documented checks. Static tests and the Node stub harness are not live production Apps Script tests, penetration tests, or LLM evaluations.
+- Observe SECURITY.md. Do not expose credentials or use the example CRUD boilerplate as a multi-tenant security solution without additional server-side controls.
+
+## Clone
+
+```bash
+git clone https://github.com/arsepladisar08-lab/gasly-skills.git
+```
