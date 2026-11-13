@@ -71,7 +71,7 @@ def make_digest(kbs, version):
         chunks = DIGEST_RE.findall(kbs[name])
         if not chunks:
             raise ValueError("DIGEST markers missing: " + name)
-        content = "\n\n".join(demote(chunk.strip()) for chunk in chunks)
+        content = "\n\n".join(chunk.strip() for chunk in chunks)
         sections.append("## " + heading + "\n*(Sumber: " + TICK + name + TICK + ")*\n\n" + content)
     title = "7. Checklist Keputusan Spesifikasi"
     toc.append("7. [" + title + "](#" + slug(title) + ")")
