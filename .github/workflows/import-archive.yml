@@ -54,14 +54,21 @@ jobs:
             echo "tests/harness.js not included in source archive; skipping Node harness."
           fi
 
-      - name: Replace branch contents with archive contents
+      - name: Replace project files while preserving workflow files for direct update
         shell: bash
         run: |
           set -euo pipefail
           source_dir="$RUNNER_TEMP/gasly-source/gasly-skills"
+          mkdir -p "$RUNNER_TEMP/preserved-workflows"
+          cp .github/workflows/import-archive.yml "$RUNNER_TEMP/preserved-workflows/import-archive.yml"
+          cp .github/workflows/validate.yml "$RUNNER_TEMP/preserved-workflows/validate.yml"
           find "$GITHUB_WORKSPACE" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf -- {} +
           cp -a "$source_dir/." "$GITHUB_WORKSPACE/"
-          test "$(find . -path './.git' -prune -o -type f -print | wc -l | tr -d ' ')" = "97"
+          mkdir -p .github/workflows
+          cp "$RUNNER_TEMP/preserved-workflows/import-archive.yml" .github/workflows/import-archive.yml
+          cp "$RUNNER_TEMP/preserved-workflows/validate.yml" .github/workflows/validate.yml
+          file_count="$(find . -path './.git' -prune -o -path './.github/workflows/import-archive.yml' -prune -o -type f -print | wc -l | tr -d ' ')"
+          test "$file_count" = "97"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add --all
