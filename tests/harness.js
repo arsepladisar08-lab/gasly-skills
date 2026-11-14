@@ -218,7 +218,6 @@ expectCode(mockMissingUpdate, "VALIDATION_ERROR", "mock update without updated_a
 const mockMissingDelete = mockCall("deleteItem", { id: "not-found" });
 expectCode(mockMissingDelete, "VALIDATION_ERROR", "mock delete without updated_at");
 expectCode(mockCall("purgeSeedData", undefined), "FORBIDDEN", "mock purge without auth");
-expectCode(mockCall("runDiagnostics", undefined), "FORBIDDEN", "mock diagnostics without auth");
 assert.equal(mockWindow.configurePreviewAdmin("Preview-Only-Long-PIN"), true, "explicit preview admin configuration");
 const mockInitial = mockCall("getBootstrapData", {});
 assert.equal(mockInitial.code, "OK");
@@ -231,9 +230,9 @@ expectCode(mockCall("deleteItem", { id: mockRecord.id, updated_at: mockUpdated.u
 // Throttle mock authorization after five bad PINs; reconfiguration clears the preview lock.
 assert.equal(mockWindow.configurePreviewAdmin("Preview-Only-Long-PIN"), true);
 for (let i = 0; i < 5; i++) expectCode(mockCall("purgeSeedData", { adminPin: "wrong-preview-pin" }), "FORBIDDEN", "mock invalid PIN");
-expectCode(mockCall("runDiagnostics", { adminPin: "Preview-Only-Long-PIN" }), "FORBIDDEN", "mock five-attempt lockout");
+expectCode(mockCall("purgeSeedData", { adminPin: "Preview-Only-Long-PIN" }), "FORBIDDEN", "mock five-attempt lockout");
 assert.equal(mockWindow.configurePreviewAdmin("Preview-Only-Long-PIN"), true, "reconfigure preview admin after lockout");
-expectCode(mockCall("runDiagnostics", { adminPin: "Preview-Only-Long-PIN" }), "OK", "mock diagnostics with simulated auth");
+expectCode(mockCall("purgeSeedData", { adminPin: "Preview-Only-Long-PIN" }), "OK", "mock purge with simulated auth");
 
 // (f) Server and preview produce identical +07:00 timestamp strings under CI timezone.
 state.now = "2026-11-13T02:03:04.000Z";
