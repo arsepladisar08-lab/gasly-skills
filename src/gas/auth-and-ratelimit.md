@@ -328,8 +328,11 @@ function handleAuthGoogle_(req) {
   var tokenInfo = JSON.parse(httpRes.getContentText());
   var nowSec = Math.floor(new Date().getTime() / 1000);
   var emailVerified = tokenInfo.email_verified === true || tokenInfo.email_verified === 'true';
+  var issuer = String(tokenInfo.iss || '');
+  var validIssuer = issuer === 'https://accounts.google.com' || issuer === 'accounts.google.com';
 
   if (
+    !validIssuer ||
     tokenInfo.aud !== expectedClientId ||
     !emailVerified ||
     !tokenInfo.email ||
