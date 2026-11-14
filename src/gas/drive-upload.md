@@ -14,10 +14,11 @@
 ## 1. Arsitektur `file.ticket` dan `file.upload`
 
 Laporan komunitas menunjukkan bahwa `multipart/form-data` tidak dapat di-parse secara native di dalam `doPost(e)` Google Apps Script, sehingga file foto harus dikompres oleh browser ke ukuran sekitar `1 MB` dan dikirim sebagai string **Base64** di dalam payload JSON:
-1. **Tiket Sekali Pakai (`file.ticket`):**
-   - Pada profil `P3` (`public-plus-admin`), pengunjung publik tidak memiliki session token, sehingga rentan menyalahgunakan endpoint upload.
-   - Sebelum mengunggah, browser meminta tiket berumur pendek (mis. 5 menit) melalui `action: "file.ticket"`. Server membatasi penerbitan tiket secara global di `CacheService` (mis. maksimal 15 tiket per menit) dan mengembalikan `{ ticket: "<uuid>" }`.
-   - Saat `file.upload` dipanggil oleh publik, tiket tersebut langsung dihapus dari `CacheService` (sekali pakai).
+1. **Tiket Sekali Pakai yang Terikat pada Record (`file.ticket`):**
+   - Setelah `items.create`, server menyimpan `upload_nonce` acak pada kolom internal Sheet dan mengembalikan nilainya sebagai `uploadNonce` hanya pada respons create. Fungsi list/get tidak boleh mengekspos kolom ini.
+   - Browser meminta `action: "file.ticket"` dengan `{ entity, entityId, uploadNonce }`. Server hanya menerbitkan tiket jika nonce cocok, record dibuat maksimal 15 menit sebelumnya, record belum diarsipkan, dan `file_id`/`file_url` masih kosong.
+   - Tiket berisi scope `entity + entityId + uploadNonce`, berlaku 5 menit, dan dikonsumsi di dalam `LockService` ketika upload diproses. Tiket tidak boleh dipakai untuk record lain atau dipakai ulang.
+   - Pengunggah tanpa sesi terautentikasi tidak boleh menimpa file yang sudah ada. Hanya sesi bertanda tangan dengan role `ADMIN` atau `STAFF` yang boleh mengganti attachment.
 2. **Struktur Folder & Klasifikasi Berbagi (`public` vs `private`):**
    - File disimpan ke dalam sub-folder `ROOT/<entity>/<yyyy-mm>` di bawah folder `DRIVE_ROOT_FOLDER_ID`.
    - Jika klasifikasi entitas adalah `public` (mis. foto katalog produk), izin file disetel ke `DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW`.
@@ -136,7 +137,7 @@ function resolveUploadFolder_(entityKey) {
 }
 
 /**
- * Handler: file.ticket (Issues a short-lived one-time upload ticket, globally rate-limited)
+ * Handler: file.ticket (Issues a scoped one-time ticket for a recently created record)
  */
 function handleFileTicket_(req) {
   var p = req.payload || {};
@@ -240,7 +241,8 @@ function handleFileTicket_(req) {
 
 /**
  * Handler: file.upload
- * Expects payload: { entity, entityId, fileName, mimeType, base64, ticket }
+ * Expects payload: { entity, entityId, fileName, mimeType, base64, ticket }.
+ * Public tickets are scoped to a matching entityId and hidden upload_nonce.
  */
 function handleFileUpload_(req) {
   var p = req.payload || {};
