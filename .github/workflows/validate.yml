@@ -18,7 +18,7 @@ jobs:
           python-version: "3.12" # <<PIN_VERSION>> recorded in VERIFY.md
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: "22" # <<PIN_VERSION>> recorded in VERIFY.md
 
