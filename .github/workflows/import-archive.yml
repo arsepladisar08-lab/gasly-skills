@@ -1,0 +1,73 @@
+name: Restore gasly-skills archive
+
+on:
+  push:
+    branches:
+      - SOWAN
+    paths:
+      - ".gasly-import/**"
+      - ".github/workflows/import-archive.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Extract exact archive and validate in an isolated copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -tq .gasly-import/gasly-skills.zip
+          mkdir -p "$RUNNER_TEMP/gasly-source" "$RUNNER_TEMP/gasly-validation"
+          unzip -q .gasly-import/gasly-skills.zip -d "$RUNNER_TEMP/gasly-source"
+          source_dir="$RUNNER_TEMP/gasly-source/gasly-skills"
+          test -d "$source_dir"
+          file_count="$(find "$source_dir" -type f | wc -l | tr -d ' ')"
+          test "$file_count" = "97"
+          cp -a "$source_dir/." "$RUNNER_TEMP/gasly-validation/"
+          cd "$RUNNER_TEMP/gasly-validation"
+          export PYTHONDONTWRITEBYTECODE=1
+          python build_skills.py
+          python tools/check_contrast.py
+          python -m unittest discover -s tests -v
+          if [ -f tests/harness.js ]; then
+            node tests/harness.js
+          else
+            echo "tests/harness.js not included in source archive; skipping Node harness."
+          fi
+
+      - name: Replace branch contents with archive contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$RUNNER_TEMP/gasly-source/gasly-skills"
+          find "$GITHUB_WORKSPACE" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf -- {} +
+          cp -a "$source_dir/." "$GITHUB_WORKSPACE/"
+          test "$(find . -type f | wc -l | tr -d ' ')" = "97"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Archive contents already match the branch."
+            exit 0
+          fi
+          git commit -m "chore: overwrite repository from gasly-skills.zip"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
