@@ -622,28 +622,34 @@ function runDiagnostics(payload) {
   var auth = assertAdminAccess_(payload);
   if (!auth.allowed) return auth.response;
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var report = {
-    schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
-    sheets: {},
-    ok: true
-  };
-  Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
-    var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      report.sheets[sheetName] = { exists: false, missingHeaders: DB_SCHEMAS[sheetName] };
-      report.ok = false;
-      return;
-    }
-    var actual = sheet.getLastColumn() > 0
-      ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_)
-      : [];
-    var missing = DB_SCHEMAS[sheetName].filter(function(h) { return actual.indexOf(h) === -1; });
-    report.sheets[sheetName] = { exists: true, rowCount: Math.max(0, sheet.getLastRow() - 1), missingHeaders: missing };
-    if (missing.length > 0) report.ok = false;
-  });
-  console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
-  return createResponse_('success', report, 'Diagnostik selesai.', 'OK');
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var report = {
+      schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
+      sheets: {},
+      ok: true
+    };
+    Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        report.sheets[sheetName] = { exists: false, missingHeaders: DB_SCHEMAS[sheetName] };
+        report.ok = false;
+        return;
+      }
+      var actual = sheet.getLastColumn() > 0
+        ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_)
+        : [];
+      var missing = DB_SCHEMAS[sheetName].filter(function(h) { return actual.indexOf(h) === -1; });
+      report.sheets[sheetName] = { exists: true, rowCount: Math.max(0, sheet.getLastRow() - 1), missingHeaders: missing };
+      if (missing.length > 0) report.ok = false;
+    });
+    console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
+    return createResponse_('success', report, 'Diagnostik selesai.', 'OK');
+  } catch (err) {
+    console.error('runDiagnostics error:', err);
+    return createResponse_('error', null, 'Diagnostik gagal dijalankan.', 'INTERNAL_ERROR');
+  }
+}
 }
 ```
 
