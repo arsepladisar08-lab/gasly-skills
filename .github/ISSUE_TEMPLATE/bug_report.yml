@@ -1,0 +1,43 @@
+name: Bug report
+description: Report a reproducible problem in a GASLY skill, reference, compiler, or generated package.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include API keys, passwords, OAuth tokens, real customer data, or private spreadsheet contents. For security vulnerabilities, follow SECURITY.md instead.
+  - type: input
+    id: version
+    attributes:
+      label: GASLY version
+      description: Check dist/manifest.json.
+      placeholder: "0.2.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected package
+      options:
+        - gasly-pro
+        - gasly-prompt
+        - build/compiler
+        - documentation
+        - generated distribution
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest reproducible example and expected versus actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, Python/Node versions, and host platform when relevant.
+    validations:
+      required: false
