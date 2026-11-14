@@ -2,7 +2,7 @@
 
 Dokumen ini merupakan konsolidasi akhir dari seluruh penanda versi (`<<PIN_VERSION>>`), asumsi perilaku platform Google Apps Script & browser yang belum dapat diverifikasi di dalam ruang chat statis, dokumentasi pemeriksaan CI opsional, serta perintah dan daftar periksa pengujian manual bagi pemilik repositori.
 
-> **Status Eksekusi Saat Ini:** `NOT RUN` — Seluruh file kode, skrip kompilasi, dan rangkaian pengujian ditulis secara statis di dalam percakapan ini dan belum dijalankan pada mesin lokal maupun runtime Google Apps Script.
+> **Status Verifikasi:** CI GitHub menjalankan build, pemeriksaan WCAG AA, unit test Python, dan Node stub harness pada setiap push/PR (lihat [workflow runs](../../actions)). Status lulus/gagal harus dinilai dari run untuk commit terbaru. **Status Runtime Google Apps Script:** `NOT RUN` — belum ada bukti eksekusi di deployment GAS, Google Sheets, atau Google Drive yang sebenarnya.
 
 ---
 
