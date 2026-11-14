@@ -39,7 +39,7 @@ Seluruh rahasia dan parameter konfigurasi lingkungan disimpan di dalam `Properti
 // FILE: setup.gs
 // Runtime: Google Apps Script V8
 
-var SCHEMA_VERSION = '1.0.0';
+var SCHEMA_VERSION = '1.1.0';
 var DEFAULT_TZ = 'Asia/Jakarta';
 var ACCESS_PROFILE = 'P3'; // 'P1' | 'P3' | 'P4'
 
@@ -54,6 +54,7 @@ var DB_SCHEMAS = {
     'status',
     'file_id',
     'file_url',
+    'upload_nonce',
     'is_seed'
   ],
   ALLOWLIST: [
@@ -175,6 +176,7 @@ function initialSetupDatabase() {
           categories[i % categories.length],
           (i + 1) * 125000,
           statuses[i % statuses.length],
+          '',
           '',
           '',
           'TRUE'
