@@ -186,11 +186,15 @@ spreadsheet.throwOnRead = false;
 // Guard infrastructure failures must be returned through the structured diagnostics envelope.
 const originalGetScriptCache = serverContext.CacheService.getScriptCache;
 serverContext.CacheService.getScriptCache = () => { throw new Error("cache infrastructure unavailable"); };
-state.active = "owner@example.test";
+state.active = "";
 state.effective = "owner@example.test";
-const guardInfrastructureFailure = serverContext.runDiagnostics(undefined);
+serverContext.DEPLOY_MODE = "EXECUTE_AS_ME";
+serverContext.DEPLOY_ACCESS = "RESTRICTED";
+propsData.ADMIN_PIN = "non-default-admin-pin";
+const guardInfrastructureFailure = serverContext.runDiagnostics({ adminPin: "non-default-admin-pin" });
 expectCode(guardInfrastructureFailure, "INTERNAL_ERROR", "diagnostics catches admin guard failure");
 serverContext.CacheService.getScriptCache = originalGetScriptCache;
+delete propsData.ADMIN_PIN;
 state.active = "";
 
 // Run the client mock block in a sandboxed browser-like context.
