@@ -619,10 +619,10 @@ function purgeSeedData(payload) {
  * struktur sheet bila dipanggil oleh non-admin dari console browser.
  */
 function runDiagnostics(payload) {
-  var auth = assertAdminAccess_(payload);
-  if (!auth.allowed) return auth.response;
-
   try {
+    var auth = assertAdminAccess_(payload);
+    if (!auth.allowed) return auth.response;
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var report = {
       schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
