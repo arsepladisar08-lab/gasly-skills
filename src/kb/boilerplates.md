@@ -267,9 +267,30 @@ function assertAdminAccess_(payload) {
     };
   }
 
-  // 5. Fallback kredensial: verifikasi adminPin hanya pada deployment terbatas
-  if (payload && payload.adminPin && expectedPin && String(payload.adminPin) === String(expectedPin)) {
-    return { allowed: true };
+  // 5. Fallback PIN hanya pada deployment terbatas; lima kegagalan mengunci jalur PIN selama 15 menit.
+  if (payload && payload.adminPin) {
+    var pinCache = CacheService.getScriptCache();
+    var pinFailureKey = 'legacy:admin-pin:failures';
+    var pinFailureCount = Number(pinCache.get(pinFailureKey) || 0);
+    var pinLockoutSeconds = Number(PropertiesService.getScriptProperties().getProperty('LOCKOUT_DURATION_SEC') || 900);
+
+    if (pinFailureCount >= 5) {
+      return {
+        allowed: false,
+        response: createResponse_('error', null, 'Terlalu banyak percobaan PIN. Silakan tunggu sebelum mencoba lagi.', 'FORBIDDEN', { retryAfterSeconds: pinLockoutSeconds })
+      };
+    }
+
+    if (expectedPin && String(payload.adminPin) === String(expectedPin)) {
+      pinCache.remove(pinFailureKey);
+      return { allowed: true };
+    }
+
+    pinCache.put(pinFailureKey, String(pinFailureCount + 1), pinLockoutSeconds);
+    return {
+      allowed: false,
+      response: createResponse_('error', null, 'Akses ditolak. Tindakan ini membutuhkan otorisasi Admin (PIN atau akun pemilik).', 'FORBIDDEN')
+    };
   }
 
   return {
