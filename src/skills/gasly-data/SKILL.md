@@ -34,7 +34,9 @@ Aturan pada bagian ini adalah gerbang keras (*hard gates*) yang berada **di atas
 
 4. **Gerbang Upload Foto ke Google Drive (`G-09`):**
    - Aksi `file.upload` menerima `{ entity, entityId, fileName, mimeType, base64, ticket }`.
-   - Untuk pengunggah publik pada profil `P3`, wajibkan kepemilikan `ticket` sekali pakai berumur pendek yang diterbitkan oleh aksi `file.ticket` (yang dilindungi *global rate-limit*).
+   - Setelah `items.create`, simpan nonce acak pada kolom internal `upload_nonce` dan kembalikan sebagai `uploadNonce` hanya pada respons create; jangan pernah mengeksposnya melalui list/get.
+   - Untuk upload publik, `file.ticket` wajib menerima `{ entity, entityId, uploadNonce }`, memverifikasi nonce terhadap record baru (maksimal 15 menit, belum diarsipkan, belum memiliki file), lalu menerbitkan tiket 5 menit yang terikat pada `entity + entityId + uploadNonce`.
+   - `file.upload` wajib memverifikasi scope dan mengonsumsi tiket sekali pakai di dalam lock. Pengunggah publik tidak boleh menimpa `file_id/file_url` yang telah terisi; penggantian hanya boleh oleh sesi HMAC terverifikasi dengan role `ADMIN` atau `STAFF`.
    - Sebelum membuat file di Drive, validasi ukuran byte hasil decode (default `<= 5 MB`, dapat dikonfigurasi), periksa `mimeType` terhadap allowlist (`image/jpeg`, `image/png`, `image/webp`) **sekaligus periksa kecocokan *magic bytes* biner** (JPEG `FF D8 FF`, PNG `89 50 4E 47`, WebP `RIFF....WEBP`), dan sanitasi `fileName`.
    - Simpan file ke struktur folder `ROOT/<entity>/<yyyy-mm>`. Atur akses berbagi berdasarkan klasifikasi: `public` -> *"Anyone with link can view"*, `private` -> tanpa sharing publik (hanya dapat diakses admin melalui Apps Script).
    - Dalam **satu operasi ber-lock**, tulis `file_id` dan `file_url` kanonik (`https://drive.google.com/file/d/<id>/view`) ke baris Sheet terkait; jika penulisan Sheet gagal, hapus (*trash*) file Drive yang baru dibuat agar tidak meninggalkan file yatim.
