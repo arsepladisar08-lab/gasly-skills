@@ -1,16 +1,16 @@
 {
   "files": {
     "flat-lite/gasly-pro/SKILL.md": {
-      "bytes": 41712,
-      "sha256": "5dca1d34d6b15440e26abd41285becc8c727b08279df4af7409c3b4c36ed0b38"
+      "bytes": 42262,
+      "sha256": "f3d8ba207237094d59bf33e256daeeb9a72b6fb07ba7a1590acdeb391c0b59db"
     },
     "flat/gasly-pro/SKILL.md": {
-      "bytes": 81253,
-      "sha256": "098a019cc70661f1421554290195f48ebd32d25dea9f470af707eb685493bfca"
+      "bytes": 81940,
+      "sha256": "00e550b3c19d2bbab70683ce24bfc3ea15fc5eab199ed39de9aade32ac8d03f7"
     },
     "flat/gasly-prompt/SKILL.md": {
-      "bytes": 47386,
-      "sha256": "e1511a724f23cfe92954f881ea5ea3703f2d3e975ae0bf2ef4ce91ace96107fd"
+      "bytes": 47699,
+      "sha256": "2da9a7877b7fba5ffec0bc98ba795d84dd58c0139995d9f8de4b5b657028e98d"
     },
     "modular/gasly-data/SKILL.md": {
       "bytes": 10902,
@@ -53,8 +53,8 @@
       "sha256": "7ed2013b6b260ab9c9c70f5c28649def85ec0ea29d47136de705bc77fed376a6"
     },
     "modular/gasly-pro/SKILL.md": {
-      "bytes": 12367,
-      "sha256": "020e651a2b32a578a2eed5fdd220515e4e84aeb7240fef7ad587f6d9aa1106c8"
+      "bytes": 12604,
+      "sha256": "57287594e67aeea91d535d8584308820ebe05d02847fe2fb984ba2ffcf5cb28e"
     },
     "modular/gasly-pro/references/app-ux.md": {
       "bytes": 3508,
@@ -65,12 +65,12 @@
       "sha256": "1abd448972bf4cae13a35ea3e4922f5bf9e6b38c222c10089cf4d046b6334956"
     },
     "modular/gasly-pro/references/boilerplates.md": {
-      "bytes": 39407,
-      "sha256": "c30019863e6ebe729f39521148abb29c04a756df3a0bdb7b3fea89a8fcfc653a"
+      "bytes": 39544,
+      "sha256": "515e3e4aba92042b5ab4a3a6031be78c9889f77e29fdc2d4069acb32c018498e"
     },
     "modular/gasly-pro/references/gas-backend.md": {
-      "bytes": 9030,
-      "sha256": "bd1320d7994045d6d38de2a8efc54a535a9de80ca5356a3dd2f2a65577fc240a"
+      "bytes": 9343,
+      "sha256": "7a8daeded13338ed64d5f461809a29c40eb16eabf7919c1ee318de0aba0f307a"
     },
     "modular/gasly-pro/references/interaction-primitives.md": {
       "bytes": 4835,
@@ -105,8 +105,8 @@
       "sha256": "e0e0713c826de0e6bd44597fdaa0de5c937352cf2004be8ca0ca58cff70d630b"
     },
     "modular/gasly-prompt/references/spec-digest.md": {
-      "bytes": 22708,
-      "sha256": "e3fa09d9384e14675244c8b74182c8b5e3f28b3d81212fae488b23797d0a18ad"
+      "bytes": 23021,
+      "sha256": "19c2b978fcc6fbd9b60736902363006d5e8c58553f89f1d170327d7329c45e0d"
     },
     "modular/gasly-ui/SKILL.md": {
       "bytes": 8608,

@@ -71,9 +71,9 @@ function initialSetupDatabase() {
     if (callerEmail && !props.getProperty('OWNER_EMAIL')) {
       props.setProperty('OWNER_EMAIL', callerEmail);
     }
-    if (!props.getProperty('ADMIN_PIN')) {
-      props.setProperty('ADMIN_PIN', '123456'); // PIN fallback default yang wajib diganti admin di sheet CONFIG
-    }
+    // Jangan memasang PIN default. Opsional ADMIN_PIN harus dibuat manual oleh pemilik
+    // sebagai secret acak minimal 16 karakter di Project Settings > Script Properties.
+    // Deployment "Anyone" tetap menolak PIN sebagai satu-satunya faktor admin.
 
     Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
       var expectedHeaders = DB_SCHEMAS[sheetName];
@@ -281,7 +281,7 @@ function assertAdminAccess_(payload) {
       };
     }
 
-    if (expectedPin && String(payload.adminPin) === String(expectedPin)) {
+    if (expectedPin && String(expectedPin).trim().length >= 16 && String(payload.adminPin) === String(expectedPin)) {
       pinCache.remove(pinFailureKey);
       return { allowed: true };
     }
@@ -727,7 +727,7 @@ var PREVIEW_ADMIN_FAILURES_ = 0;
 var PREVIEW_ADMIN_LOCK_UNTIL_ = 0;
 
 window.configurePreviewAdmin = function(pin) {
-  if (typeof pin !== 'string' || pin.trim().length < 12) return false;
+  if (typeof pin !== 'string' || pin.trim().length < 16) return false;
   PREVIEW_ADMIN_PIN_ = pin.trim();
   PREVIEW_ADMIN_FAILURES_ = 0;
   PREVIEW_ADMIN_LOCK_UNTIL_ = 0;
