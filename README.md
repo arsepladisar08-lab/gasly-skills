@@ -62,7 +62,7 @@ Payment / External Webhook
 
 ## Build, Verifikasi Kontras & Pengujian
 
-> **Status Eksekusi di Chat:** `NOT RUN` — Jalankan perintah berikut di terminal lokal Anda (membutuhkan Python 3.10+ dan Node.js 22+ untuk harness):
+> **Status Validasi Otomatis:** Build, pemeriksaan kontras, unit test Python, dan Node harness dijalankan oleh [GitHub Actions](.github/workflows/validate.yml) pada setiap push/PR. Periksa tab Actions untuk hasil commit terbaru. **Status Runtime Apps Script:** `NOT RUN` — checklist manual pada `VERIFY.md` tetap harus dijalankan pada deployment GAS sebenarnya.
 
 ```bash
 # 1. Kompilasi seluruh paket skill ke dist/ dan verifikasi kontrak RPC + manifest SHA-256
@@ -74,7 +74,7 @@ python tools/check_contrast.py
 # 3. Jalankan unit test Python (frontmatter, <=1000 char description, cross-refs, schema, flat limits)
 python -m unittest discover -s tests -v
 
-# 4. Jalankan Node execution harness (bila tersedia di lingkungan Anda)
+# 4. Jalankan Node execution harness
 node tests/harness.js
 ```
 
