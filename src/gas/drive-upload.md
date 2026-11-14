@@ -139,25 +139,103 @@ function resolveUploadFolder_(entityKey) {
  * Handler: file.ticket (Issues a short-lived one-time upload ticket, globally rate-limited)
  */
 function handleFileTicket_(req) {
-  var cache = CacheService.getScriptCache();
-  var globalRateKey = 'rl:ticket:global';
-  var issuedCount = Number(cache.get(globalRateKey) || 0);
+  var p = req.payload || {};
+  var entityKey = String(p.entity || 'ITEMS').trim().toUpperCase();
+  var entityId = String(p.entityId || '').trim();
+  var uploadNonce = String(p.uploadNonce || '').trim();
+  var entityCfg = ENTITY_UPLOAD_CONFIG_[entityKey];
 
-  if (issuedCount >= 15) {
-    return createResponse_(
-      'error',
-      null,
-      'Batas antrean unggah tercapai. Silakan coba lagi dalam 1 menit.',
-      'FORBIDDEN',
-      { retryAfterSeconds: 60 }
-    );
+  if (!entityCfg || !entityId || !uploadNonce) {
+    return createResponse_('error', null, 'Entitas, entityId, dan uploadNonce dari respons items.create wajib disertakan.', 'VALIDATION_ERROR');
   }
 
-  cache.put(globalRateKey, String(issuedCount + 1), 60);
-  var ticket = Utilities.getUuid();
-  cache.put('ticket:' + ticket, 'VALID', 300); // Valid for 5 minutes
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    return createResponse_('error', null, 'Server sedang sibuk. Silakan coba lagi.', 'LOCK_TIMEOUT');
+  }
 
-  return createResponse_('success', { ticket: ticket, expiresInSeconds: 300 }, 'Tiket unggah diterbitkan.', 'OK');
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(entityCfg.sheetName);
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return createResponse_('error', null, 'Tabel tujuan tidak ditemukan.', 'NOT_FOUND');
+    }
+
+    var lastCol = sheet.getLastColumn();
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
+    var idIdx = headers.indexOf('id');
+    var createdIdx = headers.indexOf('created_at');
+    var statusIdx = headers.indexOf('status');
+    var fileIdIdx = headers.indexOf('file_id');
+    var fileUrlIdx = headers.indexOf('file_url');
+    var nonceIdx = headers.indexOf('upload_nonce');
+    if ([idIdx, createdIdx, fileIdIdx, fileUrlIdx, nonceIdx].some(function(idx) { return idx < 0; })) {
+      return createResponse_('error', null, 'Skema upload belum diperbarui. Jalankan initialSetupDatabase().', 'INTERNAL_ERROR');
+    }
+
+    var allData = sheet.getRange(2, 1, sheet.getLastRow() - 1, lastCol).getValues();
+    var targetRow = null;
+    for (var r = 0; r < allData.length; r++) {
+      if (String(allData[r][idIdx]) === entityId) {
+        targetRow = allData[r];
+        break;
+      }
+    }
+    if (!targetRow) {
+      return createResponse_('error', null, 'Record unggahan tidak ditemukan.', 'NOT_FOUND');
+    }
+
+    if (statusIdx >= 0 && String(targetRow[statusIdx]).toUpperCase() === 'ARCHIVED') {
+      return createResponse_('error', null, 'Record yang diarsipkan tidak dapat menerima unggahan.', 'FORBIDDEN');
+    }
+    if (String(targetRow[fileIdIdx] || '').trim() || String(targetRow[fileUrlIdx] || '').trim()) {
+      return createResponse_('error', null, 'Record ini sudah memiliki file. Gunakan sesi terautentikasi untuk menggantinya.', 'CONFLICT');
+    }
+
+    var createdValue = targetRow[createdIdx];
+    var createdAtMs = createdValue instanceof Date ? createdValue.getTime() : new Date(String(createdValue)).getTime();
+    var nowMs = new Date().getTime();
+    if (isNaN(createdAtMs) || createdAtMs > nowMs + 60000 || nowMs - createdAtMs > 900000) {
+      return createResponse_('error', null, 'Tiket hanya dapat diterbitkan untuk record baru (maksimal 15 menit).', 'FORBIDDEN');
+    }
+
+    var storedNonce = String(targetRow[nonceIdx] || '');
+    if (!storedNonce || !constantTimeEqual_(storedNonce, uploadNonce)) {
+      return createResponse_('error', null, 'Bukti kepemilikan record tidak valid.', 'FORBIDDEN');
+    }
+
+    var cache = CacheService.getScriptCache();
+    var globalRateKey = 'rl:ticket:global';
+    var issuedCount = Number(cache.get(globalRateKey) || 0);
+    if (issuedCount >= 15) {
+      return createResponse_(
+        'error',
+        null,
+        'Batas antrean unggah tercapai. Silakan coba lagi dalam 1 menit.',
+        'FORBIDDEN',
+        { retryAfterSeconds: 60 }
+      );
+    }
+
+    var ticket = Utilities.getUuid() + Utilities.getUuid();
+    var ticketScope = {
+      entity: entityKey,
+      entityId: entityId,
+      uploadNonce: storedNonce,
+      sessionSub: req.session ? String(req.session.sub || '') : ''
+    };
+    cache.put(globalRateKey, String(issuedCount + 1), 60);
+    cache.put('ticket:' + ticket, JSON.stringify(ticketScope), 300);
+
+    return createResponse_(
+      'success',
+      { ticket: ticket, expiresInSeconds: 300 },
+      'Tiket unggah terikat pada record baru dan hanya dapat digunakan sekali.',
+      'OK'
+    );
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /**
@@ -171,8 +249,8 @@ function handleFileUpload_(req) {
   var mimeType = String(p.mimeType || '').trim().toLowerCase();
   var base64Raw = String(p.base64 || '').trim();
   var ticket = String(p.ticket || '').trim();
-
   var entityCfg = ENTITY_UPLOAD_CONFIG_[entityKey];
+
   if (!entityCfg) {
     return createResponse_('error', null, 'Entitas tujuan unggah tidak valid.', 'VALIDATION_ERROR');
   }
@@ -183,20 +261,6 @@ function handleFileUpload_(req) {
     return createResponse_('error', null, 'Format file tidak didukung. Gunakan JPEG, PNG, atau WebP.', 'VALIDATION_ERROR');
   }
 
-  // If caller is not authenticated with a session token, consume one-time upload ticket
-  if (!req.session) {
-    if (!ticket) {
-      return createResponse_('error', null, 'Tiket unggah (ticket) wajib disertakan.', 'FORBIDDEN');
-    }
-    var cache = CacheService.getScriptCache();
-    var ticketStatus = cache.get('ticket:' + ticket);
-    if (ticketStatus !== 'VALID') {
-      return createResponse_('error', null, 'Tiket unggah tidak valid atau sudah kedaluwarsa.', 'NOT_FOUND');
-    }
-    cache.remove('ticket:' + ticket);
-  }
-
-  // Strip optional data URI prefix ("data:image/jpeg;base64,...")
   var commaIdx = base64Raw.indexOf(',');
   if (commaIdx !== -1 && base64Raw.slice(0, commaIdx).indexOf('base64') !== -1) {
     base64Raw = base64Raw.slice(commaIdx + 1);
@@ -217,7 +281,6 @@ function handleFileUpload_(req) {
   if (!decodedBytes || decodedBytes.length === 0 || decodedBytes.length > maxBytes) {
     return createResponse_('error', null, 'Ukuran byte file melebihi batas maksimum (5 MB).', 'VALIDATION_ERROR');
   }
-
   if (!verifyMagicBytes_(decodedBytes, mimeType)) {
     return createResponse_(
       'error',
@@ -225,6 +288,12 @@ function handleFileUpload_(req) {
       'Header biner file tidak cocok dengan tipe gambar ' + mimeType + '.',
       'VALIDATION_ERROR'
     );
+  }
+
+  var role = req.session ? String(req.session.role || '').toUpperCase() : '';
+  var canManageExisting = role === 'ADMIN' || role === 'STAFF';
+  if (!canManageExisting && !ticket) {
+    return createResponse_('error', null, 'Tiket unggah yang terikat pada record wajib disertakan.', 'FORBIDDEN');
   }
 
   var lock = LockService.getScriptLock();
@@ -245,12 +314,15 @@ function handleFileUpload_(req) {
     var allData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
     var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
     var idIdx = headers.indexOf('id');
+    var createdIdx = headers.indexOf('created_at');
     var fileIdIdx = headers.indexOf('file_id');
     var fileUrlIdx = headers.indexOf('file_url');
     var updatedIdx = headers.indexOf('updated_at');
+    var nonceIdx = headers.indexOf('upload_nonce');
+    var statusIdx = headers.indexOf('status');
 
-    if (idIdx === -1 || fileIdIdx === -1 || fileUrlIdx === -1) {
-      return createResponse_('error', null, 'Skema tabel belum memiliki kolom file_id dan file_url.', 'INTERNAL_ERROR');
+    if ([idIdx, createdIdx, fileIdIdx, fileUrlIdx, nonceIdx].some(function(idx) { return idx < 0; })) {
+      return createResponse_('error', null, 'Skema upload belum diperbarui. Jalankan initialSetupDatabase().', 'INTERNAL_ERROR');
     }
 
     var targetRowNumber = -1;
@@ -262,9 +334,37 @@ function handleFileUpload_(req) {
         break;
       }
     }
-
     if (targetRowNumber === -1) {
-      return createResponse_('error', null, 'Baris data dengan ID ' + entityId + ' tidak ditemukan.', 'NOT_FOUND');
+      return createResponse_('error', null, 'Record unggahan tidak ditemukan.', 'NOT_FOUND');
+    }
+    if (statusIdx >= 0 && String(existingRow[statusIdx]).toUpperCase() === 'ARCHIVED') {
+      return createResponse_('error', null, 'Record yang diarsipkan tidak dapat menerima unggahan.', 'FORBIDDEN');
+    }
+
+    var hasExistingFile = Boolean(String(existingRow[fileIdIdx] || '').trim() || String(existingRow[fileUrlIdx] || '').trim());
+    if (hasExistingFile && !canManageExisting) {
+      return createResponse_('error', null, 'Unggahan publik tidak dapat menimpa file yang sudah ada.', 'CONFLICT');
+    }
+
+    var cache = CacheService.getScriptCache();
+    if (!canManageExisting) {
+      var ticketRaw = cache.get('ticket:' + ticket);
+      var ticketScope = null;
+      try {
+        ticketScope = ticketRaw ? JSON.parse(ticketRaw) : null;
+      } catch (ticketErr) {
+        ticketScope = null;
+      }
+      if (
+        !ticketScope ||
+        ticketScope.entity !== entityKey ||
+        ticketScope.entityId !== entityId ||
+        ticketScope.uploadNonce !== String(existingRow[nonceIdx] || '') ||
+        (ticketScope.sessionSub && (!req.session || ticketScope.sessionSub !== String(req.session.sub || '')))
+      ) {
+        return createResponse_('error', null, 'Tiket tidak cocok dengan record tujuan, sudah digunakan, atau kedaluwarsa.', 'FORBIDDEN');
+      }
+      cache.remove('ticket:' + ticket);
     }
 
     var targetFolder = resolveUploadFolder_(entityKey);
@@ -282,6 +382,7 @@ function handleFileUpload_(req) {
 
     existingRow[fileIdIdx] = fileId;
     existingRow[fileUrlIdx] = canonicalUrl;
+    existingRow[nonceIdx] = '';
     if (updatedIdx >= 0) existingRow[updatedIdx] = nowIso;
 
     sheet.getRange(targetRowNumber, 1, 1, lastCol).setValues([existingRow]);
