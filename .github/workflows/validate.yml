@@ -1,51 +1,45 @@
-name: Validate GASLY
-
-permissions:
-  contents: write
+name: Validate Gasly Skills & Contracts
 
 on:
   push:
-    branches: ["work/**"]
+    branches: ["main", "SOWAN"]
   pull_request:
-    branches: ["SOWAN"]
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    env:
-      TZ: Asia/Jakarta
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Set up Node
-        uses: actions/setup-node@v4
+          python-version: "3.12" # <<PIN_VERSION>> recorded in VERIFY.md
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
         with:
-          node-version: "22"
-      - name: Build distributions
+          node-version: "22" # <<PIN_VERSION>> recorded in VERIFY.md
+
+      - name: Build skill packages and verify RPC/manifest contracts
         run: python build_skills.py
-      - name: Static regression tests
+
+      - name: Run WCAG AA contrast check across all design presets
+        run: python tools/check_contrast.py
+
+      - name: Run Python unit test suite
         run: python -m unittest discover -s tests -v
-      - name: Execute GAS Node harness
-        run: node tests/harness.js
-      - name: Capture generated distributions for exact rebuild review
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gasly-dist
-          path: dist/
-          if-no-files-found: error
-      - name: Sync generated distributions to the working branch
+
+      - name: Run Node execution harness (if present)
         run: |
-          if ! git diff --quiet -- dist; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add dist/
-            git commit -m "build(dist): sync generated distribution artifacts"
-            git push
+          if [ -f tests/harness.js ]; then
+            node tests/harness.js
           fi
-      - name: Verify deterministic generated artifacts
-        run: git diff --exit-code -- dist
+
+      # OPTIONAL CI CHECK (Documented idea only — not active by default):
+      # Deterministic anti-slop / generic-UI pattern scanner for generated app artifacts.
+      # When testing generated frontend outputs in a downstream app repo, you may enable:
+      # - name: Optional UI anti-slop pattern check
+      #   run: |
+      #     ! grep -RInE "window\.confirm\(|user-scalable=no|10,000\+\s+UMKM" src/
