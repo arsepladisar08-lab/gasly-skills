@@ -36,11 +36,10 @@ jobs:
       - name: Run Python unit test suite
         run: python -m unittest discover -s tests -v
 
-      - name: Run Node execution harness (if present)
+      - name: Run Node execution harness
         run: |
-          if [ -f tests/harness.js ]; then
-            node tests/harness.js
-          fi
+          test -f tests/harness.js
+          node tests/harness.js
 
       - name: Publish regenerated dist packages (push only)
         if: github.event_name == 'push'
