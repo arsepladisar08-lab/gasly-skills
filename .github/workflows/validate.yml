@@ -37,6 +37,8 @@ jobs:
         run: python -m unittest discover -s tests -v
 
       - name: Run Node execution harness
+        env:
+          TZ: Asia/Jakarta
         run: |
           test -f tests/harness.js
           node tests/harness.js
