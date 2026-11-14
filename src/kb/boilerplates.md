@@ -932,17 +932,6 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     return onSuccess(makeEnv('success', { id: payload.id, status: 'ARCHIVED' }, 'Data berhasil diarsipkan (Simulasi).', 'OK'));
   }
 
-  if (actionName === 'runDiagnostics') {
-    var diagnosticsAuthError = authorizePreviewAdmin_();
-    if (diagnosticsAuthError) return onError(diagnosticsAuthError);
-    return onSuccess(makeEnv(
-      'success',
-      { ok: true, sheets: { ITEMS: { exists: true, rowCount: db.items.length } } },
-      'Diagnostik selesai (Simulasi).',
-      'OK'
-    ));
-  }
-
   if (actionName === 'purgeSeedData') {
     var purgeAuthError = authorizePreviewAdmin_();
     if (purgeAuthError) return onError(purgeAuthError);
