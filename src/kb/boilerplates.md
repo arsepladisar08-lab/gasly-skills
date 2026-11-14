@@ -722,6 +722,17 @@ var STORAGE_KEY = 'GASLY_SANDBOX_STATE_V2';
 var MOCK_DB = null;
 var ALLOWED_CATEGORIES = ['Operasional', 'Pemasaran', 'Infrastruktur', 'Lisensi'];
 var ALLOWED_STATUSES = ['ACTIVE', 'PENDING', 'COMPLETED', 'ARCHIVED'];
+var PREVIEW_ADMIN_PIN_ = '';
+var PREVIEW_ADMIN_FAILURES_ = 0;
+var PREVIEW_ADMIN_LOCK_UNTIL_ = 0;
+
+window.configurePreviewAdmin = function(pin) {
+  if (typeof pin !== 'string' || pin.trim().length < 12) return false;
+  PREVIEW_ADMIN_PIN_ = pin.trim();
+  PREVIEW_ADMIN_FAILURES_ = 0;
+  PREVIEW_ADMIN_LOCK_UNTIL_ = 0;
+  return true;
+};
 
 function generateMockNextId_(items, prefix, ymd) {
   var fullPrefix = prefix + '-' + ymd + '-';
@@ -758,7 +769,7 @@ function createInitialMockDb_() {
       is_seed: 'TRUE'
     });
   }
-  return { items: items, adminPin: '123456' };
+  return { items: items };
 }
 
 function getMockDb_() {
@@ -817,6 +828,25 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
       code: code,
       meta: { schemaVersion: '1.0.0', timestamp: nowIso, sandbox: true }
     };
+  }
+
+  function authorizePreviewAdmin_() {
+    if (!PREVIEW_ADMIN_PIN_) {
+      return makeEnv('error', null, 'Admin preview belum dikonfigurasi. Atur PIN khusus preview terlebih dahulu.', 'FORBIDDEN');
+    }
+    if (PREVIEW_ADMIN_LOCK_UNTIL_ > now.getTime()) {
+      return makeEnv('error', null, 'Terlalu banyak percobaan PIN preview. Tunggu 15 menit atau konfigurasi ulang PIN preview.', 'FORBIDDEN');
+    }
+    var suppliedPin = payload && typeof payload === 'object' ? String(payload.adminPin || '') : '';
+    if (!suppliedPin || suppliedPin !== PREVIEW_ADMIN_PIN_) {
+      PREVIEW_ADMIN_FAILURES_++;
+      if (PREVIEW_ADMIN_FAILURES_ >= 5) {
+        PREVIEW_ADMIN_LOCK_UNTIL_ = now.getTime() + 900000;
+      }
+      return makeEnv('error', null, 'Akses ditolak. PIN admin preview tidak sesuai.', 'FORBIDDEN');
+    }
+    PREVIEW_ADMIN_FAILURES_ = 0;
+    return null;
   }
 
   if (actionName === 'getBootstrapData') {
@@ -902,10 +932,20 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     return onSuccess(makeEnv('success', { id: payload.id, status: 'ARCHIVED' }, 'Data berhasil diarsipkan (Simulasi).', 'OK'));
   }
 
+  if (actionName === 'runDiagnostics') {
+    var diagnosticsAuthError = authorizePreviewAdmin_();
+    if (diagnosticsAuthError) return onError(diagnosticsAuthError);
+    return onSuccess(makeEnv(
+      'success',
+      { ok: true, sheets: { ITEMS: { exists: true, rowCount: db.items.length } } },
+      'Diagnostik selesai (Simulasi).',
+      'OK'
+    ));
+  }
+
   if (actionName === 'purgeSeedData') {
-    if (payload && payload.adminPin && String(payload.adminPin) !== String(db.adminPin)) {
-      return onError(makeEnv('error', null, 'Akses ditolak. PIN Admin tidak sesuai.', 'FORBIDDEN'));
-    }
+    var purgeAuthError = authorizePreviewAdmin_();
+    if (purgeAuthError) return onError(purgeAuthError);
     var beforeCount = db.items.length;
     db.items = db.items.filter(function(it) {
       return String(it.id).indexOf('SEED-') !== 0 && it.is_seed !== 'TRUE';
