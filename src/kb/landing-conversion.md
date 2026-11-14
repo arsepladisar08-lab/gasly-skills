@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.3.0 -->
+<!-- KB_VERSION: 2.1.0 -->
 # LANDING PAGE CONVERSION BLUEPRINT (DE-FABRICATED)
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Dimuat secara kondisional ketika membangun Landing Page, Marketing Site, atau halaman depan produk komersial.

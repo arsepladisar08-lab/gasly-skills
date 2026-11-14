@@ -1,34 +1,32 @@
-# GASLY Skills
+# Gasly Skills — Index for AI Agents & Crawlers (llms.txt)
 
-> Open-source agent skills for planning and implementing Google Apps Script web applications with HtmlService and Google Sheets.
+> Paket keahlian (skill pack) berbahasa Indonesia berlisensi MIT untuk merancang dan membangun aplikasi web produksi dengan frontend eksternal yang terhubung ke satu URL Google Apps Script Web App (`.../exec`) sebagai headless API di atas Google Sheets dan Google Drive.
 
-- Project: https://github.com/arsepladisar08-lab/gasly-skills
-- License: MIT (see https://github.com/arsepladisar08-lab/gasly-skills/blob/SOWAN/LICENSE)
-- Catalog: https://github.com/arsepladisar08-lab/gasly-skills/blob/SOWAN/CATALOG.md
-- Human and platform setup guide: https://github.com/arsepladisar08-lab/gasly-skills/blob/SOWAN/README.md
-- Security policy: https://github.com/arsepladisar08-lab/gasly-skills/blob/SOWAN/SECURITY.md
+## Skills (Modular Packages)
+- [gasly-prompt](dist/modular/gasly-prompt/SKILL.md): Planner & Product Architect. Menghasilkan spesifikasi `MASTER INSTRUCTIONAL PROMPT` 8-seksi (Access Profile P1-P4, Design Preset + 3 Dials, Stack Adapter/Inherit, Data Schema, Drive Upload Needs).
+- [gasly-data](dist/modular/gasly-data/SKILL.md): Headless Google Apps Script Data & Drive API Engineer (`doPost`/`doGet` via `ContentService`, Action Registry allowlist, salted iterated passphrase hash, HMAC-SHA256 session token, `CacheService` rate limit, `LockService` Sheets CRUD, `file.ticket` + `file.upload` ke Google Drive).
+- [gasly-ui](dist/modular/gasly-ui/SKILL.md): Decoupled Frontend & Multi-Preset Design Engineer (`gasClient` `text/plain` POST, `ImageUploader` ~1 MB client compression, `driveImageUrl(fileId, width)` fallback chain, WCAG AA presets + 3 dials).
+- [gasly-pro (LEGACY)](dist/modular/gasly-pro/SKILL.md): Legacy GAS-hosted `HtmlService` + `google.script.run` monolithic web app builder.
 
-## Choose a skill
+## Core Contracts & Gates
+- [Wire Contract](src/core/contract.md): Protokol HTTP `POST` (`text/plain;charset=utf-8`) & `GET`, struktur `{ action, v: 1, auth, idem, payload }`, idempotensi `idem`, dan Response Envelope Kanonik.
+- [Access Profiles](src/core/access-profiles.md): Profil `P1` (`public-read`), `P2` (`public-with-accounts` - PLANNED), `P3` (`public-plus-admin`), dan `P4` (`internal-only`).
+- [Hard Gates](src/core/gates.md): Klasifikasi 26 gerbang keras ke dalam `UNIVERSAL`, `GAS-ONLY`, `WEB-ONLY`, dan `LEGACY-HTMLSERVICE`.
 
-- GASLY Prompt: planning, product requirements, workflows, spreadsheet data models, AURA UI/UX direction, and implementation-ready specifications.
-  - Entry file: https://raw.githubusercontent.com/arsepladisar08-lab/gasly-skills/SOWAN/dist/modular/gasly-prompt/SKILL.md
-  - References directory: https://github.com/arsepladisar08-lab/gasly-skills/tree/SOWAN/dist/modular/gasly-prompt/references
-- GASLY Pro: implementing and revising Google Apps Script web applications using HtmlService and Google Sheets.
-  - Entry file: https://raw.githubusercontent.com/arsepladisar08-lab/gasly-skills/SOWAN/dist/modular/gasly-pro/SKILL.md
-  - References directory: https://github.com/arsepladisar08-lab/gasly-skills/tree/SOWAN/dist/modular/gasly-pro/references
+## Design System (3 Layers)
+- [Token Schema](src/design/tokens.schema.json): JSON Schema untuk token warna dan pasangan kontras WCAG AA.
+- [Presets Guide](src/design/presets.md): Panduan pemilihan preset (`editorial-light`, `dense-dashboard`, `warm-friendly`, `aura`).
+- [Character Dials](src/design/dials.md): Kalibrasi `DESIGN_VARIANCE`, `MOTION_INTENSITY`, dan `VISUAL_DENSITY` (1-10) serta aturan anti-generic AI UI.
+- [WCAG Contrast Checker](tools/check_contrast.py): Skrip verifikasi deterministik rasio kontras >= 4.5:1 di seluruh preset.
 
-## Instructions for consuming agents
+## Stack Adapters & Roadmap
+- [HTML + Tailwind Adapter](src/stacks/html-tailwind.md): Adapter penuh HTML5 + Tailwind (Play CDN prototipe vs CLI produksi).
+- [Next.js + shadcn/ui Adapter](src/stacks/nextjs-shadcn.md): Adapter penuh Next.js App Router (baca publik saat build/ISR, tulis dari browser).
+- [Astro Adapter](src/stacks/astro.md): Adapter penuh Astro (baca publik saat build-time, tulis dari client islands).
+- [Inheriting Stacks (15 Stacks)](src/stacks/INHERIT.md): Pewarisan token, kontrak `/exec`, dan gates untuk `angular`, `avalonia`, `flutter`, `javafx`, `jetpack-compose`, `laravel`, `react-native`, `svelte`, `swiftui`, `threejs`, `uno`, `uwp`, `vue`, `winui`, `wpf`.
+- [Planned Features](src/stacks/PLANNED.md): Dokumentasi fitur tahap berikutnya (`react-vite+shadcn`, `nuxtjs+nuxt-ui`, `P2` Supabase Auth).
 
-- Read CATALOG.md first to choose the appropriate skill.
-- Read the selected modular SKILL.md and every Markdown reference file in its adjacent references directory. The SKILL.md is not a complete package by itself.
-- Treat dist/ as generated output. Prefer src/ for reviewing or changing canonical instructions.
-- Consult dist/manifest.json for versions and generated-file hashes.
-- Do not assume a model has automatically indexed or loaded this repository. Retrieve the files explicitly or clone the repository.
-- Do not claim tests passed unless you have run the documented checks. Static tests and the Node stub harness are not live production Apps Script tests, penetration tests, or LLM evaluations.
-- Observe SECURITY.md. Do not expose credentials or use the example CRUD boilerplate as a multi-tenant security solution without additional server-side controls.
-
-## Clone
-
-```bash
-git clone https://github.com/arsepladisar08-lab/gasly-skills.git
-```
+## Verification & Governance
+- [Catalog](CATALOG.md): Pemilih skill dan lokasi paket di `dist/`.
+- [Verification Log](VERIFY.md): Daftar asumsi teknis, penanda `<<PIN_VERSION>>`, dan checklist pengujian manual.
+- [References](docs/REFERENCES.md): Catatan atribusi ide dan lisensi repositori referensi.

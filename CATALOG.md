@@ -1,100 +1,43 @@
-# GASLY Skills Catalog
+# Katalog Skill & Pemilih Paket Gasly (`CATALOG.md`)
 
-**Project:** GASLY Skills  
-**Current product version:** 0.2.1  
-**Shared knowledge base version:** 2.3.0  
-**License:** MIT  
-**Canonical branch:** `SOWAN`
+Gunakan panduan ini untuk memilih skill dan varian distribusi yang tepat sesuai kebutuhan proyek dan kemampuan platform AI yang Anda gunakan.
 
-GASLY is a pair of complementary agent skills for the product lifecycle of Google Apps Script web applications built with HtmlService and Google Sheets.
+---
 
-## Skills
+## 1. Pemilih Skill Berdasarkan Tugas
 
-### GASLY Prompt — product planning and specification
+| Skenario Penggunaan | Skill yang Dipilih | Urutan Pemanggilan (Stackable Workflow) |
+| :--- | :--- | :--- |
+| Merancang aplikasi baru dari ide mentah (menentukan Access Profile `P1`–`P4`, Preset Desain + 3 Dials, Stack Frontend, Skema Sheet, dan Kebutuhan Upload Drive) | **`gasly-prompt`** | Langkah 1: Panggil `gasly-prompt` $\rightarrow$ Jawab 1 pertanyaan klarifikasi. |
+| Membangun atau merevisi kode backend Google Apps Script (`setup.gs`, `router.gs`, `auth.gs`, `sheets.gs`, `drive.gs`, `webhook.gs`) di balik URL `/exec` | **`gasly-data`** | Langkah 2A: Panggil `gasly-data` menggunakan `MASTER INSTRUCTIONAL PROMPT` dari `gasly-prompt`. |
+| Membangun atau merevisi aplikasi frontend eksternal (`html-tailwind`, `nextjs`+`shadcn`, `astro`, atau 15 stack pewaris) yang berkomunikasi ke URL `/exec` | **`gasly-ui`** | Langkah 2B: Panggil `gasly-ui` menggunakan `MASTER INSTRUCTIONAL PROMPT` yang sama. |
+| **[LEGACY]** Membangun atau memelihara aplikasi monolitik yang disajikan langsung dari dalam iframe `HtmlService` Google Apps Script (`google.script.run`) | **`gasly-pro`** *(Legacy)* | Gunakan hanya jika pengguna secara eksplisit meminta mode `HtmlService` di dalam Google Apps Script. |
 
-**Package name:** `gasly-prompt`  
-**Version:** 0.2.1
+---
 
-Use this skill when a user has an application idea and needs product discovery, workflow definition, spreadsheet data modeling, AURA UI/UX direction, or a structured **MASTER INSTRUCTIONAL PROMPT** before implementation.
+## 2. Daftar Paket Distribusi di `dist/`
 
-Typical work:
-- Convert an idea into a clear product scope and requirements.
-- Define user roles, workflows, validation rules, and edge cases.
-- Plan Google Sheets structure and data relationships.
-- Specify interface behavior, responsive states, and conversion considerations.
-- Produce an implementation-ready specification for GASLY Pro.
+Seluruh konten baru untuk arsitektur headless (`gasly-data` dan `gasly-ui`) dikompilasi secara eksklusif ke dalam **`dist/modular/`**, sementara paket `flat` dan `flat-lite` dipertahankan tanpa perubahan batas ukuran untuk kompatibilitas mundur.
 
-Source: [src/skills/gasly-prompt/SKILL.md](src/skills/gasly-prompt/SKILL.md)  
-Ready-to-use modular package: [dist/modular/gasly-prompt/](dist/modular/gasly-prompt/)
+### A. Paket Modular (`dist/modular/` — Direkomendasikan)
+Cocok untuk platform yang mendukung standar `SKILL.md` beserta pemuatan file di dalam subfolder `references/` (Claude Code, Claude.ai Skills/Projects, ChatGPT Skills, Gemini Skills, Cursor, Windsurf):
 
-### GASLY Pro — implementation and engineering
+- **`dist/modular/gasly-prompt/`**
+  - `SKILL.md`
+  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/presets.md`, `references/dials.md`, `references/spec-digest.md`
+- **`dist/modular/gasly-data/`**
+  - `SKILL.md`
+  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/config.md`, `references/router-and-envelope.md`, `references/auth-and-ratelimit.md`, `references/sheets-repository.md`, `references/drive-upload.md`, `references/webhook-receiver.md`
+- **`dist/modular/gasly-ui/`**
+  - `SKILL.md`
+  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/tokens.schema.json`, `references/presets.md`, `references/dials.md`, `references/presets/*.tokens.json`, `references/css/*.css`, `references/html-tailwind.md`, `references/nextjs-shadcn.md`, `references/astro.md`, `references/INHERIT.md`, `references/PLANNED.md`
+- **`dist/modular/gasly-pro/`** *(Legacy HtmlService Mode)*
+  - `SKILL.md`
+  - `references/aura-design.md`, `references/interaction-primitives.md`, `references/app-ux.md`, `references/landing-conversion.md`, `references/gas-backend.md`, `references/boilerplates.md`
 
-**Package name:** `gasly-pro`  
-**Version:** 0.2.1
+### B. Paket Legacy Flat & Flat-Lite (`dist/flat/` & `dist/flat-lite/`)
+Dipertahankan khusus untuk platform yang hanya menerima satu blok teks instruksi tunggal tanpa lampiran file:
 
-Use this skill when a user asks to implement or revise a Google Apps Script web application using HtmlService and Google Sheets, especially after a specification has been prepared.
-
-Typical work:
-- Implement end-to-end Apps Script web applications.
-- Build dashboards, internal tools, operational systems, and landing pages.
-- Connect browser UI to server-side Apps Script functions.
-- Apply data validation, concurrency checks, access guards, and deployment considerations.
-- Apply AURA design and interaction conventions.
-
-Source: [src/skills/gasly-pro/SKILL.md](src/skills/gasly-pro/SKILL.md)  
-Ready-to-use modular package: [dist/modular/gasly-pro/](dist/modular/gasly-pro/)
-
-## Recommended workflow
-
-1. Start with **GASLY Prompt** when the request is still an idea or needs a specification.
-2. Review and confirm the generated MASTER INSTRUCTIONAL PROMPT.
-3. Continue with **GASLY Pro** to implement or revise the application.
-4. Run the available tests and validate the result in the actual Apps Script environment before production use.
-
-The skills are complementary, not interchangeable: Prompt focuses on planning and specification; Pro focuses on code implementation.
-
-## Distribution formats
-
-The compiler produces three formats:
-
-| Format | Location | Intended use |
-|---|---|---|
-| Modular | `dist/modular/<skill-name>/` | Preferred when the host supports a skill folder and referenced files |
-| Flat | `dist/flat/<skill-name>/SKILL.md` | Single Markdown file with the full included reference material |
-| Flat Lite | `dist/flat-lite/gasly-pro/SKILL.md` | Constrained single-file Pro package; omits the boilerplate reference |
-
-For modular packages, keep `SKILL.md` together with the complete adjacent `references/` directory. Do not upload the entry file by itself.
-
-See [README.md](README.md) for platform-specific installation notes and current host documentation.
-
-## Repository map
-
-- `src/skills/`: canonical skill instructions.
-- `src/kb/`: shared knowledge base.
-- `build_skills.py`: distribution compiler.
-- `dist/`: generated skill packages and `manifest.json`.
-- `tests/`: automated regression checks and execution harness.
-- `evals/briefs/`: repeatable evaluation prompts.
-- `evals/results/`: evidence records for actual evaluations.
-
-## Versions and verification
-
-The manifest at [dist/manifest.json](dist/manifest.json) lists product/skill/KB versions and SHA-256 hashes for generated files.
-
-CI checks the build, Python static tests, and the Node Google Apps Script stub harness. These checks do not prove live Google Apps Script behavior, production Google Sheets behavior, LLM quality, or penetration-test status. Consult [evals/README.md](evals/README.md) and recorded result files for evaluation evidence.
-
-## For AI assistants and agents
-
-When consuming GASLY from this repository:
-
-1. Read this catalog to select the correct skill.
-2. Fetch the selected `dist/modular/<skill-name>/SKILL.md`.
-3. Fetch **all** Markdown files linked or listed in that skill's `references/` folder.
-4. Preserve the distinction between source instructions and generated distributions.
-5. Do not claim that GASLY is installed or automatically available to a model merely because this repository is public.
-6. Respect the security boundaries and do not invent test evidence.
-
-Start here:
-- [GASLY Prompt entry point](dist/modular/gasly-prompt/SKILL.md)
-- [GASLY Pro entry point](dist/modular/gasly-pro/SKILL.md)
-- [Distribution manifest](dist/manifest.json)
+- **`dist/flat/gasly-prompt/SKILL.md`** — `gasly-prompt` dengan `spec-digest.md` terintegrasi inline.
+- **`dist/flat/gasly-pro/SKILL.md`** — Skill legacy `gasly-pro` dengan keenam file `src/kb/*.md` terintegrasi inline.
+- **`dist/flat-lite/gasly-pro/SKILL.md`** — Skill legacy `gasly-pro` tanpa `boilerplates.md` (di bawah ambang `48.000` karakter) untuk platform berbatas instruksi ketat.

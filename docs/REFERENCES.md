@@ -1,0 +1,18 @@
+# Catatan Referensi Eksternal & Lisensi (`docs/REFERENCES.md`)
+
+Dokumen ini mencatat setiap repositori eksternal yang dibaca sebagai inspirasi struktural selama pengembangan ekstensi arsitektur **gasly-skills**, gagasan konseptual yang diambil, file target tempat gagasan tersebut diterapkan, serta catatan lisensinya.
+
+> **Kepatuhan Konten Orisinal:** Seluruh teks instruksi, aturan teknis, tabel pemetaan, skema token JSON, dan kode boilerplate di dalam repositori ini ditulis secara orisinal untuk arsitektur Google Apps Script (`/exec`) + Google Sheets + Google Drive milik Gasly. Tidak ada daftar aturan, tabel data, atau kode yang disalin dari repositori referensi di bawah ini.
+
+---
+
+## Tabel Referensi yang Digunakan
+
+| Repositori Referensi | Status Baca | Lisensi Tercatat | Gagasan Struktural yang Diambil | File Target di `gasly-skills` |
+| :--- | :---: | :---: | :--- | :--- |
+| **`https://github.com/arsepladisar08-lab/gasly-skills`** | `READ` | `MIT` | Identitas dasar repositori yang diperluas, struktur kompilasi `src/` $\rightarrow$ `dist/` (`modular`, `flat`, `flat-lite`), konvensi `dist/manifest.json` ber-SHA-256, Response Envelope Kanonik, serta gerbang keamanan GAS dan desain AURA yang sudah ada. | Seluruh file di `src/`, `build_skills.py`, `tests/test_skills.py`, `README.md`, `CATALOG.md`. |
+| **`https://github.com/anthropics/skills`** | `READ` | `Apache-2.0` | Konvensi standar terbuka `SKILL.md` dengan YAML frontmatter minimalis (`name` dan `description` sebagai pemicu pemilihan skill), menjaga badan `SKILL.md` tetap ringkas (`< 500` baris), dan mendelegasikan detail mendalam ke file di dalam subfolder `references/`. | `src/skills/gasly-prompt/SKILL.md`, `src/skills/gasly-data/SKILL.md`, `src/skills/gasly-ui/SKILL.md`, `src/skills/gasly-pro/SKILL.md`, `build_skills.py`. |
+| **`https://github.com/nextlevelbuilder/ui-ux-pro-max-skill`** | `READ` | `MIT` | Gagasan alur penalaran di tahap perencana (*kategori produk $\rightarrow$ pemilihan preset visual, mode tema, dan tipografi*) serta pemisahan panduan implementasi per stack frontend ke dalam file referensi tersendiri. | `src/design/presets.md`, `src/stacks/html-tailwind.md`, `src/stacks/nextjs-shadcn.md`, `src/stacks/astro.md`, `src/stacks/INHERIT.md`, `src/skills/gasly-prompt/SKILL.md`. |
+| **`https://github.com/Leonxlnx/taste-skill`** | `READ` | `MIT` | Gagasan penggunaan tiga parameter pengatur karakter desain (*design dials* berskala 1–10: `DESIGN_VARIANCE`, `MOTION_INTENSITY`, `VISUAL_DENSITY`) untuk mengkalibrasi asimetri layout, intensitas gerak, dan kepadatan data agar terhindar dari tampilan template AI yang seragam. | `src/design/dials.md`, `src/design/tokens.schema.json`, `src/design/presets/*.tokens.json`, `src/skills/gasly-prompt/SKILL.md`, `src/skills/gasly-ui/SKILL.md`. |
+| **`https://github.com/pbakaus/impeccable`** | `READ` | `Apache-2.0` | Gagasan pendeteksian deterministik terhadap pola anti-pattern UI (*anti-slop guardrails*) dan pengusulan pemeriksaan statis opsional di pipeline CI (didokumentasikan sebagai langkah opsional tanpa mengimplementasikan hook biner eksternal). | `src/design/dials.md`, `.github/workflows/validate.yml`, `VERIFY.md`. |
+| **`https://github.com/vercel-labs/agent-skills`** | `READ` | `MIT` | Gagasan pengorganisasian aturan aksesibilitas dan antarmuka web yang dapat diaudit (indikator `:focus-visible`, `<label for>` eksplisit, `prefers-reduced-motion`, angka `.tabular-nums`, dan pencegahan pemblokiran zoom viewport). | `src/core/gates.md`, `src/design/css/*.css`, `src/skills/gasly-ui/SKILL.md`, `tests/test_skills.py`. |

@@ -1,4 +1,4 @@
-<!-- KB_VERSION: 2.3.0 -->
+<!-- KB_VERSION: 2.1.0 -->
 # SAAS APP ARCHITECTURE & TABLE UX
 **KB_VERSION:** `2.1.0`  
 **Kondisi Muat:** Dimuat secara kondisional ketika membangun Web App, SaaS Dashboard, Portal Multi-Role, atau Internal Tool (tidak dimuat untuk Landing Page murni).
@@ -48,7 +48,3 @@ Jangan menempelkan ornamen SaaS yang tidak memiliki fungsi nyata di aplikasi pen
 
 - Di Google Sheets, operasi `sheet.deleteRow(rowIndex)` menggeser seluruh indeks baris di bawahnya dan berisiko menghapus baris yang salah bila ada dua pengguna yang menghapus data secara bersamaan.
 - **Utamakan Soft-Delete:** Gunakan perubahan kolom `status = 'ARCHIVED'` (atau pengisian kolom `deleted_at`) sebagai mekanisme hapus default. Selain aman dari pergeseran indeks baris, pola ini memungkinkan fitur **"Urungkan (Undo)"** pada toast berjalan secara nyata dengan mengembalikan status baris tersebut.
-
-## 5. Catatan Batas Akses Baca Berdasarkan Role
-
-Dashboard multi-role harus menetapkan matriks permission server-side untuk setiap sheet, baris, dan field. Jangan mengirim seluruh data ke browser lalu hanya menyembunyikan kolom/menu di UI. Bila boilerplate single-tenant digunakan tanpa model kepemilikan record, batasi deployment pada audience tepercaya atau tambahkan read-scoped guard sebelum dipublikasikan.

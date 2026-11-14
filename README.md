@@ -1,115 +1,96 @@
-# GASLY Skills
+# Gasly Skills
 
-GASLY is a compact skill set for planning and implementing Google Apps Script web applications backed by Google Sheets. Source-of-truth files live under `src/`; generated distribution packages live under `dist/`.
+Paket keahlian (*agent skill pack*) berbahasa Indonesia berlisensi MIT untuk merancang dan membangun aplikasi web produksi yang menggunakan **Google Sheets** sebagai database dan **Google Drive** sebagai penyimpanan file melalui **Google Apps Script**.
 
-## Start here
+- [Katalog Skill & Pemilih Paket (`CATALOG.md`)](CATALOG.md)
+- [Catatan Perubahan (`CHANGELOG.md`)](CHANGELOG.md)
+- [Log Verifikasi, Asumsi & Checklist Manual (`VERIFY.md`)](VERIFY.md)
+- [Referensi Eksternal & Lisensi (`docs/REFERENCES.md`)](docs/REFERENCES.md)
+- [Indeks Agen & Crawler (`llms.txt`)](llms.txt)
+- [Panduan Kontribusi (`CONTRIBUTING.md`)](CONTRIBUTING.md)
+- [Kebijakan Keamanan (`SECURITY.md`)](SECURITY.md)
+- [Kode Etik (`CODE_OF_CONDUCT.md`)](CODE_OF_CONDUCT.md)
+- [Manifest Distribusi & SHA-256 (`dist/manifest.json`)](dist/manifest.json)
 
-- **[Skill catalog](CATALOG.md):** choose GASLY Prompt or GASLY Pro and understand the package formats.
-- **[Contributing](CONTRIBUTING.md):** development setup, tests, and pull request checklist.
-- **[Security policy](SECURITY.md):** responsible vulnerability reporting and deployment boundaries.
-- **[Code of Conduct](CODE_OF_CONDUCT.md):** expectations for community participation.
-- **[AI/LLM entry point](llms.txt):** concise index for assistants, agents, and crawlers.
-- **[Distribution manifest](dist/manifest.json):** package versions and generated-file SHA-256 hashes.
+---
 
-## Project overview
+## Arsitektur Utama (Decoupled Frontend + Headless Apps Script `/exec`)
 
-- **GASLY Prompt** turns early-stage ideas into structured product requirements and implementation-ready specifications.
-- **GASLY Pro** implements and revises Google Apps Script web applications using HtmlService and Google Sheets.
+```text
+Browser / Client (Stack Frontend Apa Pun)
+   │
+   ├── HTTP POST (Content-Type: text/plain;charset=utf-8) ──► Apps Script Web App (.../exec)
+   └── HTTP GET  (Query Params untuk Baca Publik/Idempoten) ─►   ├── Google Sheets (Database)
+                                                                 └── Google Drive  (File & Foto)
 
-The skills are complementary: Prompt is for planning; Pro is for implementation. See [CATALOG.md](CATALOG.md) for exact use cases and package paths.
+Payment / External Webhook
+   └──► Fungsi Serverless Kecil (Verifikasi Signature) ──────► Apps Script Web App (Shared Secret di Body)
+```
 
-## Build and test
+1. **Satu Konfigurasi Frontend:** Aplikasi frontend hidup di luar Google Apps Script dan hanya membutuhkan satu nilai konfigurasi publik, yaitu URL Web App (`https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec`).
+2. **Keamanan Terpusat di Apps Script:** Karena URL `/exec` bersifat publik di dalam bundle browser, setiap keputusan otentikasi, otorisasi peran (*role*), validasi skema, pemeriksaan *magic bytes* file, dan *rate limiting* dieksekusi di dalam Google Apps Script (`gasly-data`).
+3. **Tiga Lapisan Desain:**
+   - **Lapisan 1 — Tokens:** Sumber kebenaran JSON netral (`src/design/presets/*.tokens.json`) dan ekspor variabel CSS (`src/design/css/*.css`).
+   - **Lapisan 2 — Character:** 4 preset visual yang lulus kontras WCAG AA (`editorial-light`, `dense-dashboard`, `warm-friendly`, dan `aura` — `aura` tidak pernah menjadi default otomatis) ditambah 3 dials (`DESIGN_VARIANCE`, `MOTION_INTENSITY`, `VISUAL_DENSITY` berskala `1–10`).
+   - **Lapisan 3 — Gates:** Gerbang kualitas yang diklasifikasikan ke dalam `UNIVERSAL`, `GAS-ONLY`, `WEB-ONLY`, dan `LEGACY-HTMLSERVICE` (`src/core/gates.md`).
 
-Requires Python 3.10+ and Node.js 22+ for the execution harness.
+---
+
+## Empat Skill di Dalam Repositori
+
+| Skill | Status | Peran Utama | Paket di `dist/` |
+| :--- | :---: | :--- | :--- |
+| **`gasly-prompt`** | **Aktif** | **Planner / Arsitek:** Menerjemahkan ide bisnis menjadi `MASTER INSTRUCTIONAL PROMPT` 8-seksi (Access Profile `P1`–`P4`, Design Preset + 3 Dials, Stack, Data Schema, Upload Needs). | `dist/modular/gasly-prompt`<br>`dist/flat/gasly-prompt` |
+| **`gasly-data`** | **Aktif** | **Headless Backend Engineer:** Membangun API Google Apps Script (`doPost`/`doGet` via `ContentService`) di atas Google Sheets dan Google Drive (`file.ticket` + `file.upload`). | `dist/modular/gasly-data` |
+| **`gasly-ui`** | **Aktif** | **Frontend & Design Engineer:** Membangun aplikasi frontend eksternal yang berbicara ke `/exec` menggunakan adapter penuh (`html-tailwind`, `nextjs`+`shadcn`, `astro`) atau mode pewarisan (`INHERIT` untuk 15 stack lainnya). | `dist/modular/gasly-ui` |
+| **`gasly-pro`** | **LEGACY** | **GAS-Hosted `HtmlService` Engineer:** Dipertahankan khusus untuk pengguna yang secara eksplisit meminta aplikasi monolitik di dalam iframe Google Apps Script (`HtmlService` + `google.script.run`). | `dist/modular/gasly-pro`<br>`dist/flat/gasly-pro`<br>`dist/flat-lite/gasly-pro` |
+
+---
+
+## Dukungan Frontend Stack (`gasly-ui`)
+
+- **Adapter Penuh (Tahap 1):**
+  1. `html-tailwind` (mencakup pemisahan prototipe Play CDN vs kompilasi CSS CLI produksi)
+  2. `nextjs` + `shadcn` (pembacaan publik saat build/ISR revalidation, penulisan dari browser)
+  3. `astro` (pembacaan publik saat build-time, penulisan dari *client islands*)
+- **Direncanakan (Tahap Berikutnya — `src/stacks/PLANNED.md`):**
+  - `react` (Vite) + `shadcn`, `nuxtjs` + `nuxt-ui`, serta profil akses `P2` (`public-with-accounts` via Supabase Auth).
+- **Mode Pewarisan Token & Gates (`STACK_MODE: INHERIT` — `src/stacks/INHERIT.md`):**
+  - `angular`, `avalonia`, `flutter`, `javafx`, `jetpack-compose`, `laravel`, `react-native`, `svelte`, `swiftui`, `threejs`, `uno`, `uwp`, `vue`, `winui`, `wpf`.
+
+---
+
+## Build, Verifikasi Kontras & Pengujian
+
+> **Status Eksekusi di Chat:** `NOT RUN` — Jalankan perintah berikut di terminal lokal Anda (membutuhkan Python 3.10+ dan Node.js 22+ untuk harness):
 
 ```bash
+# 1. Kompilasi seluruh paket skill ke dist/ dan verifikasi kontrak RPC + manifest SHA-256
 python build_skills.py
+
+# 2. Verifikasi deterministik kontras warna WCAG AA (>= 4.5:1) pada seluruh preset
+python tools/check_contrast.py
+
+# 3. Jalankan unit test Python (frontmatter, <=1000 char description, cross-refs, schema, flat limits)
 python -m unittest discover -s tests -v
+
+# 4. Jalankan Node execution harness (bila tersedia di lingkungan Anda)
 node tests/harness.js
 ```
 
-The compiler builds into a temporary staging directory, validates all outputs, writes `dist/manifest.json` with product/skill/KB versions and SHA-256 hashes for each generated package file, then atomically exchanges the validated output with `dist/` on Linux. Other platforms use a backup-and-rollback directory swap. If validation or publication fails, the prior `dist/` is preserved.
+---
 
-## Choose a distribution format
+## Cara Memasang Skill per Platform
 
-### Modular — `dist/modular/`
+1. **Claude Code / Gemini CLI / Agentic IDE:**
+   Salin folder `dist/modular/gasly-prompt`, `dist/modular/gasly-data`, dan `dist/modular/gasly-ui` (serta `dist/modular/gasly-pro` bila membutuhkan mode legacy) ke direktori `.claude/skills/` atau `~/.claude/skills/`.
+2. **Claude.ai (Web Skills / Projects):**
+   Kompres masing-masing folder di dalam `dist/modular/<nama-skill>` menjadi file `.zip` dan unggah ke menu Skills, atau lampirkan `SKILL.md` beserta isi folder `references/` ke dalam Project Knowledge.
+3. **Gemini Apps (Web) & ChatGPT:**
+   Unggah paket dari `dist/modular/<nama-skill>/` (`SKILL.md` + file di dalam `references/`). Untuk platform yang belum memuat folder `references/` secara otomatis pada mode legacy, gunakan `dist/flat/` atau `dist/flat-lite/`.
 
-Use when the host supports a skill folder with referenced Markdown files. Keep each skill's `SKILL.md` together with its complete `references/` subfolder. Do not upload the entry file alone; it relies on the adjacent references.
+---
 
-### Flat — `dist/flat/`
+## Lisensi
 
-Use when the host accepts a single Markdown skill file and its context allowance can accommodate the complete inline knowledge base. Each package's `SKILL.md` contains its instruction body and included material.
-
-### Flat Lite — `dist/flat-lite/`
-
-Use when a single file is required but the full boilerplate reference would exceed the target's available context budget. Flat Lite has a separate routing table and explicitly excludes `references/boilerplates.md`; it is not equivalent to the full Flat or Modular package for implementation details contained only in that reference.
-
-The host's current import mechanism and context limits determine which package is appropriate. Check the host's current documentation before choosing a platform-specific upload path.
-
-## Install by platform
-
-Use the folder for exactly one skill (either `gasly-pro` or `gasly-prompt`). Do not upload the whole repository as a skill.
-
-### ChatGPT Skills
-
-1. Open **Skills** in the ChatGPT sidebar.
-2. Select **Create → Upload from your computer**.
-3. Upload the skill package from `dist/modular/<skill-name>/` with its `SKILL.md` and complete `references/` folder.
-4. Review the uploaded skill and workspace availability settings before use.
-
-ChatGPT Skills are available only to eligible Business, Enterprise, Healthcare, and Edu users, subject to workspace settings and rollout. See [Skills in ChatGPT](https://help.openai.com/en/articles/20001066-skills-in-chatgpt).
-
-### Claude.ai
-
-1. Enable **Code execution** and **Skills** where required by your account/workspace.
-2. Package one complete folder from `dist/modular/<skill-name>/` as a ZIP. Keep `SKILL.md` at the skill folder root and include its `references/` subfolder.
-3. In Claude, open **Customize → Skills**, choose **Create skill → Upload a skill**, and upload the ZIP.
-4. Enable the skill after upload. Workspace sharing/provisioning is controlled separately.
-
-See [Use skills in Claude](https://support.claude.com/en/articles/12512180-use-skills-in-claude).
-
-### Claude Code
-
-Copy a complete modular skill folder into one of these locations:
-
-- Personal: `~/.claude/skills/gasly-pro/` or `~/.claude/skills/gasly-prompt/`
-- Project-local: `.claude/skills/gasly-pro/` or `.claude/skills/gasly-prompt/`
-
-Keep `SKILL.md` in the selected skill folder root and keep `references/` alongside it. See the [Agent Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview).
-
-### Gemini Apps (web)
-
-1. Open [gemini.google.com](https://gemini.google.com).
-2. Open **Customize → Skills → Create → Upload**.
-3. Select the skill folder under `dist/modular/<skill-name>/`, or ZIP its contents so that `SKILL.md` is in the ZIP's main folder (not nested an extra directory down).
-4. Include the adjacent `references/` folder in the same upload, review the skill, then create it.
-
-Gemini Apps accepts a `SKILL.md` file, a folder, or a ZIP containing `SKILL.md` in its main folder. Scripts that require internet access are not supported, and reference files must be uploaded with the skill. See [Create and manage skills for Gemini Apps](https://support.google.com/gemini/answer/17094296?hl=en).
-
-### When to use Flat or Flat Lite
-
-Use `dist/flat/<skill-name>/SKILL.md` only when a target accepts a single Markdown file but does not preserve supporting folders. Use `dist/flat-lite/gasly-pro/SKILL.md` only for GASLY Pro on a constrained single-file target: it explicitly excludes the boilerplate reference, so it is not functionally equivalent to Modular or full Flat. The flat packages are generated artifacts, not the preferred canonical upload when references are supported.
-
-## Versions and manifest
-
-Each skill has its own `SKILL_VERSION`, independent of the shared `KB_VERSION`. The product version and each generated file's SHA-256 are recorded in `dist/manifest.json`. The manifest does not include a hash of itself.
-
-## Evaluation evidence
-
-Fixed prompts are stored in `evals/briefs/`. Record each real platform/model run using `evals/results/TEMPLATE.md`. A score or rubric is not evidence of a passing LLM evaluation; a result must include the platform, model, date, score, and inspectable evidence.
-
-CI executes the compiler, static regression checks, and the Node GAS-stub harness. These are non-LLM checks and do not establish LLM quality, production Google Apps Script behavior, or penetration-test status.
-
-## Security boundary
-
-The included CRUD boilerplate is a **single-tenant baseline**. It has no per-record `owner_id`/`tenant_id` model and does not filter reads per role. It is suitable only where every user admitted to the deployment may read the same records. Restrict the web app audience, or implement server-side authentication, read-scoped authorization, and write guards before broader exposure. An `Anyone` deployment is not safe by default.
-
-Set `OWNER_EMAIL` manually in Apps Script Script Properties after verifying the owner. `ADMIN_PIN` is optional and must also be configured manually; the boilerplate does not read it from the `CONFIG` sheet. Do not use a PIN as the only control for a deployment exposed to Anyone.
-
-## Contributing, security, and community
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Security issues should be reported using [SECURITY.md](SECURITY.md), not in public issue reports. Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## License
-
-This repository is distributed under the MIT License. See [LICENSE](LICENSE).
+Dirilis di bawah [MIT License](LICENSE).

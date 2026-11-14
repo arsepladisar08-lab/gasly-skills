@@ -1,0 +1,85 @@
+{
+  "id": "aura",
+  "name": "AURA Modern Tech & AI SaaS",
+  "version": "2.1.0",
+  "defaultMode": "dark",
+  "recommendedDials": {
+    "DESIGN_VARIANCE": 7,
+    "MOTION_INTENSITY": 6,
+    "VISUAL_DENSITY": 5
+  },
+  "typography": {
+    "fontSans": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "fontDisplay": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "fontMono": "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+    "scale": {
+      "display": "clamp(2.75rem, 5vw, 4rem)",
+      "h1": "clamp(2rem, 3.5vw, 2.5rem)",
+      "h2": "clamp(1.25rem, 2vw, 1.5rem)",
+      "body": "0.9375rem",
+      "caption": "0.75rem"
+    }
+  },
+  "geometry": {
+    "radiusSm": "6px",
+    "radiusMd": "8px",
+    "radiusLg": "12px",
+    "radiusXl": "20px",
+    "gridBasePx": 8
+  },
+  "modes": {
+    "dark": {
+      "bgBase": "#09090B",
+      "bgSurface": "#18181B",
+      "bgInteractive": "#222226",
+      "textPrimary": "#F4F4F5",
+      "textSecondary": "#A1A1AA",
+      "textHelper": "#8A8A93",
+      "textDisabled": "#71717A",
+      "borderSubtle": "#27272A",
+      "borderFocus": "#6366F1",
+      "accentSolid": "#4F46E5",
+      "accentTextOnSolid": "#FFFFFF",
+      "successSolid": "#10B981",
+      "successTextOnSolid": "#09090B",
+      "warningSolid": "#F59E0B",
+      "warningTextOnSolid": "#09090B",
+      "dangerSolid": "#E11D48",
+      "dangerTextOnSolid": "#FFFFFF"
+    },
+    "light": {
+      "bgBase": "#F8FAFC",
+      "bgSurface": "#FFFFFF",
+      "bgInteractive": "#F1F5F9",
+      "textPrimary": "#0F172A",
+      "textSecondary": "#475569",
+      "textHelper": "#526071",
+      "textDisabled": "#94A3B8",
+      "borderSubtle": "#E2E8F0",
+      "borderFocus": "#4F46E5",
+      "accentSolid": "#4F46E5",
+      "accentTextOnSolid": "#FFFFFF",
+      "successSolid": "#047857",
+      "successTextOnSolid": "#FFFFFF",
+      "warningSolid": "#F59E0B",
+      "warningTextOnSolid": "#0F172A",
+      "dangerSolid": "#E11D48",
+      "dangerTextOnSolid": "#FFFFFF"
+    }
+  },
+  "contrastPairs": [
+    { "fg": "textPrimary", "bg": "bgBase", "minRatio": 4.5, "usage": "Primary text on base canvas" },
+    { "fg": "textPrimary", "bg": "bgSurface", "minRatio": 4.5, "usage": "Primary text on elevated cards" },
+    { "fg": "textPrimary", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Primary text on interactive hover surface" },
+    { "fg": "textSecondary", "bg": "bgBase", "minRatio": 4.5, "usage": "Body copy on base canvas" },
+    { "fg": "textSecondary", "bg": "bgSurface", "minRatio": 4.5, "usage": "Body copy on elevated cards" },
+    { "fg": "textSecondary", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Body copy on interactive hover surface" },
+    { "fg": "textHelper", "bg": "bgBase", "minRatio": 4.5, "usage": "Helper/caption text on base canvas" },
+    { "fg": "textHelper", "bg": "bgSurface", "minRatio": 4.5, "usage": "Helper/caption text on elevated cards" },
+    { "fg": "textHelper", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Helper/caption text on interactive hover surface" },
+    { "fg": "accentTextOnSolid", "bg": "accentSolid", "minRatio": 4.5, "usage": "Primary CTA button label" },
+    { "fg": "successTextOnSolid", "bg": "successSolid", "minRatio": 4.5, "usage": "Success badge/button label" },
+    { "fg": "warningTextOnSolid", "bg": "warningSolid", "minRatio": 4.5, "usage": "Warning badge/button label" },
+    { "fg": "dangerTextOnSolid", "bg": "dangerSolid", "minRatio": 4.5, "usage": "Destructive button label" }
+  ]
+}
