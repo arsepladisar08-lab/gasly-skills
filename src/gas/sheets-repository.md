@@ -187,7 +187,6 @@ function handleItemsCreate_(req) {
 
     var lastCol = sheet.getLastColumn();
     var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
-    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
     if (headers.indexOf('upload_nonce') === -1) {
       return createResponse_('error', null, 'Skema upload belum diperbarui. Jalankan initialSetupDatabase() untuk migrasi kolom upload_nonce.', 'INTERNAL_ERROR');
     }
