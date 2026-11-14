@@ -239,7 +239,7 @@ function assertAdminAccess_(payload) {
   } catch (e) {}
 
   // 1. Jika dijalankan langsung dari toolbar GAS Editor (payload undefined) oleh pemilik
-  if (payload === undefined && effectiveEmail && (!ownerEmail || effectiveEmail === ownerEmail)) {
+  if (payload === undefined && activeEmail && effectiveEmail && activeEmail === effectiveEmail && (!ownerEmail || activeEmail === ownerEmail)) {
     return { allowed: true };
   }
 
