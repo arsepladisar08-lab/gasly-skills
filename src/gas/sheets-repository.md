@@ -93,7 +93,7 @@ function readSheetObjects_(sheetName) {
     var row = raw[r];
     var obj = {};
     for (var c = 0; c < headers.length; c++) {
-      if (headers[c]) obj[headers[c]] = row[c];
+      if (headers[c] && headers[c] !== 'upload_nonce') obj[headers[c]] = row[c];
     }
     if (obj.status !== 'ARCHIVED') {
       records.push(obj);
@@ -187,8 +187,14 @@ function handleItemsCreate_(req) {
 
     var lastCol = sheet.getLastColumn();
     var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
+    if (headers.indexOf('upload_nonce') === -1) {
+      return createResponse_('error', null, 'Skema upload belum diperbarui. Jalankan initialSetupDatabase() untuk migrasi kolom upload_nonce.', 'INTERNAL_ERROR');
+    }
+
     var nowIso = formatIsoOffset_(new Date());
     var newId = generateNextId_(sheet, 'TRX');
+    var uploadNonce = Utilities.getUuid() + Utilities.getUuid();
 
     var newRecord = {
       id: newId,
@@ -200,6 +206,7 @@ function handleItemsCreate_(req) {
       status: String(req.payload.status || 'ACTIVE'),
       file_id: '',
       file_url: '',
+      upload_nonce: uploadNonce,
       is_seed: 'FALSE'
     };
 
@@ -209,7 +216,17 @@ function handleItemsCreate_(req) {
 
     sheet.getRange(sheet.getLastRow() + 1, 1, 1, lastCol).setValues([rowValues]);
     SpreadsheetApp.flush();
-    return createResponse_('success', { item: newRecord }, 'Data baru berhasil disimpan.', 'OK');
+
+    var publicRecord = {};
+    Object.keys(newRecord).forEach(function(key) {
+      if (key !== 'upload_nonce') publicRecord[key] = newRecord[key];
+    });
+    return createResponse_(
+      'success',
+      { item: publicRecord, uploadNonce: uploadNonce },
+      'Data baru berhasil disimpan.',
+      'OK'
+    );
   } finally {
     lock.releaseLock();
   }
