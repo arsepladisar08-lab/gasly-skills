@@ -402,6 +402,10 @@ function getBootstrapData() {
 }
 
 function saveItem(payload) {
+  if (payload && payload.id && !payload.updated_at) {
+    return createResponse_('error', null, 'updated_at wajib disertakan saat memperbarui data.', 'VALIDATION_ERROR');
+  }
+
   var validationError = validateItemPayload_(payload);
   if (validationError) {
     return createResponse_('error', null, validationError, 'VALIDATION_ERROR');
@@ -453,16 +457,17 @@ function saveItem(payload) {
         return createResponse_('error', null, 'Data dengan ID tersebut tidak ditemukan.', 'NOT_FOUND');
       }
 
-      if (payload.updated_at && updatedColIdx >= 0) {
-        var currentUpdated = sanitizeForClient_(existingRow[updatedColIdx]);
-        if (String(currentUpdated) !== String(payload.updated_at)) {
-          return createResponse_(
-            'error',
-            null,
-            'Data ini baru saja diubah oleh pengguna lain. Muat ulang tabel sebelum menyimpan.',
-            'CONFLICT'
-          );
-        }
+      if (updatedColIdx < 0) {
+        return createResponse_('error', null, 'Kolom updated_at tidak tersedia pada skema.', 'INTERNAL_ERROR');
+      }
+      var currentUpdated = sanitizeForClient_(existingRow[updatedColIdx]);
+      if (String(currentUpdated) !== String(payload.updated_at)) {
+        return createResponse_(
+          'error',
+          null,
+          'Data ini baru saja diubah oleh pengguna lain. Muat ulang tabel sebelum menyimpan.',
+          'CONFLICT'
+        );
       }
 
       var updatedRecord = {};
@@ -510,8 +515,8 @@ function saveItem(payload) {
 }
 
 function deleteItem(payload) {
-  if (!payload || !payload.id) {
-    return createResponse_('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR');
+  if (!payload || !payload.id || !payload.updated_at) {
+    return createResponse_('error', null, 'ID dan updated_at wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR');
   }
 
   var lock = LockService.getScriptLock();
@@ -548,11 +553,12 @@ function deleteItem(payload) {
       return createResponse_('error', null, 'Data yang akan dihapus tidak ditemukan.', 'NOT_FOUND');
     }
 
-    if (payload.updated_at && updatedIdx >= 0) {
-      var currentUpdated = sanitizeForClient_(existingRow[updatedIdx]);
-      if (String(currentUpdated) !== String(payload.updated_at)) {
-        return createResponse_('error', null, 'Data telah berubah. Muat ulang sebelum menghapus.', 'CONFLICT');
-      }
+    if (updatedIdx < 0) {
+      return createResponse_('error', null, 'Kolom updated_at tidak tersedia pada skema.', 'INTERNAL_ERROR');
+    }
+    var currentUpdated = sanitizeForClient_(existingRow[updatedIdx]);
+    if (String(currentUpdated) !== String(payload.updated_at)) {
+      return createResponse_('error', null, 'Data telah berubah. Muat ulang sebelum menghapus.', 'CONFLICT');
     }
 
     var nowIso = formatIsoOffset_(new Date());
@@ -833,6 +839,9 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     }
 
     if (payload.id) {
+      if (!payload.updated_at) {
+        return onError(makeEnv('error', null, 'updated_at wajib disertakan saat memperbarui data.', 'VALIDATION_ERROR'));
+      }
       var idx = -1;
       for (var i = 0; i < db.items.length; i++) {
         if (db.items[i].id === payload.id) { idx = i; break; }
@@ -840,7 +849,7 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
       if (idx === -1) {
         return onError(makeEnv('error', null, 'Data dengan ID tersebut tidak ditemukan.', 'NOT_FOUND'));
       }
-      if (payload.updated_at && String(db.items[idx].updated_at) !== String(payload.updated_at)) {
+      if (String(db.items[idx].updated_at) !== String(payload.updated_at)) {
         return onError(makeEnv('error', null, 'Data ini baru saja diubah oleh pengguna lain. Muat ulang tabel sebelum menyimpan.', 'CONFLICT'));
       }
       db.items[idx].title = title;
@@ -869,8 +878,8 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'deleteItem') {
-    if (!payload || !payload.id) {
-      return onError(makeEnv('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR'));
+    if (!payload || !payload.id || !payload.updated_at) {
+      return onError(makeEnv('error', null, 'ID dan updated_at wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR'));
     }
     var foundIdx = -1;
     for (var j = 0; j < db.items.length; j++) {
@@ -879,7 +888,7 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     if (foundIdx === -1) {
       return onError(makeEnv('error', null, 'Data yang akan dihapus tidak ditemukan.', 'NOT_FOUND'));
     }
-    if (payload.updated_at && String(db.items[foundIdx].updated_at) !== String(payload.updated_at)) {
+    if (String(db.items[foundIdx].updated_at) !== String(payload.updated_at)) {
       return onError(makeEnv('error', null, 'Data telah berubah. Muat ulang sebelum menghapus.', 'CONFLICT'));
     }
     db.items[foundIdx].status = 'ARCHIVED';
