@@ -650,7 +650,6 @@ function runDiagnostics(payload) {
     return createResponse_('error', null, 'Diagnostik gagal dijalankan.', 'INTERNAL_ERROR');
   }
 }
-}
 ```
 
 ---
