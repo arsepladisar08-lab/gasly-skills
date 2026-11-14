@@ -27,6 +27,11 @@
 - Untuk nilai kecil (seperti penghitung rate-limit `rl:fail:<sub>` atau tiket upload `ticket:<id>`), simpan langsung.
 - Untuk nilai JSON besar (seperti cache daftar data atau respon idempoten besar), gunakan helper `cachePutChunked_()` dan `cacheGetChunked_()` yang memecah string di atas `80.000` karakter menjadi potongan-potongan terindeks.
 
+**Batas Operasional yang Wajib Didokumentasikan:**
+- `CacheService` bersifat best-effort: nilai dapat ter-evict sebelum TTL dan operasi read-modify-write tidak memberikan transaksi atomik. Counter rate-limit dapat kehilangan update atau meloloskan beberapa request paralel. Jangan mengklaim ini sebagai proteksi brute-force yang kuat; untuk kebutuhan ketat, serialisasikan seluruh pemeriksaan+update di bawah lock atau gunakan gateway/penyimpanan rate-limit eksternal.
+- Batas global gagal login (`30` kegagalan dengan TTL `600` detik) dapat dipicu oleh pengunjung publik dan sementara menghambat login semua pengguna. Karena GAS Web App tidak menyediakan IP client yang andal, perlakukan ini sebagai trade-off DoS; blok global otomatis kedaluwarsa, sedangkan lockout per akun berakhir sesuai TTL `LOCKOUT_DURATION_SEC`.
+- `computeIteratedHash_()` saat ini menggunakan iterasi SHA-256 sebanyak `2000` putaran. Ini bukan KDF memory-hard dan tidak setara dengan bcrypt, scrypt, atau Argon2. Jangan membuat klaim kesetaraan; gunakan identity provider atau penyimpanan kredensial eksternal dengan KDF yang sesuai jika ancaman/keperluan produksi menuntutnya.
+
 ---
 
 ## 3. Boilerplate `auth.gs` (Passphrase, Google ID Token & Rate Limiting)
