@@ -253,10 +253,24 @@ function assertAdminAccess_(payload) {
     return { allowed: true };
   }
 
-  // 4. Fallback kredensial: verifikasi adminPin dari payload terhadap ScriptProperties
+  // 4. Deployment publik "Anyone" tidak boleh memakai PIN sebagai satu-satunya faktor admin.
+  // Minta akses deployment terbatas atau gunakan autentikasi identitas/session provider terpisah.
+  if (typeof DEPLOY_ACCESS !== 'undefined' && DEPLOY_ACCESS === 'ANYONE') {
+    return {
+      allowed: false,
+      response: createResponse_(
+        'error',
+        null,
+        'Akses admin melalui PIN dinonaktifkan pada deployment publik. Batasi akses deployment atau gunakan autentikasi identitas terpisah.',
+        'FORBIDDEN'
+      )
+    };
+  }
+
+  // 5. Fallback kredensial: verifikasi adminPin hanya pada deployment terbatas
   if (payload && payload.adminPin && expectedPin && String(payload.adminPin) === String(expectedPin)) {
     return { allowed: true };
-  }
+  }}
 
   return {
     allowed: false,
