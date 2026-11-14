@@ -239,7 +239,7 @@ function assertAdminAccess_(payload) {
   } catch (e) {}
 
   // 1. Jika dijalankan langsung dari toolbar GAS Editor (payload undefined) oleh pemilik
-  if (payload === undefined && effectiveEmail && (!ownerEmail || effectiveEmail === ownerEmail)) {
+  if (payload === undefined && activeEmail && effectiveEmail && activeEmail === effectiveEmail && (!ownerEmail || activeEmail === ownerEmail)) {
     return { allowed: true };
   }
 
@@ -253,9 +253,44 @@ function assertAdminAccess_(payload) {
     return { allowed: true };
   }
 
-  // 4. Fallback kredensial: verifikasi adminPin dari payload terhadap ScriptProperties
-  if (payload && payload.adminPin && expectedPin && String(payload.adminPin) === String(expectedPin)) {
-    return { allowed: true };
+  // 4. Deployment publik "Anyone" tidak boleh memakai PIN sebagai satu-satunya faktor admin.
+  // Minta akses deployment terbatas atau gunakan autentikasi identitas/session provider terpisah.
+  if (typeof DEPLOY_ACCESS !== 'undefined' && DEPLOY_ACCESS === 'ANYONE') {
+    return {
+      allowed: false,
+      response: createResponse_(
+        'error',
+        null,
+        'Akses admin melalui PIN dinonaktifkan pada deployment publik. Batasi akses deployment atau gunakan autentikasi identitas terpisah.',
+        'FORBIDDEN'
+      )
+    };
+  }
+
+  // 5. Fallback PIN hanya pada deployment terbatas; lima kegagalan mengunci jalur PIN selama 15 menit.
+  if (payload && payload.adminPin) {
+    var pinCache = CacheService.getScriptCache();
+    var pinFailureKey = 'legacy:admin-pin:failures';
+    var pinFailureCount = Number(pinCache.get(pinFailureKey) || 0);
+    var pinLockoutSeconds = Number(PropertiesService.getScriptProperties().getProperty('LOCKOUT_DURATION_SEC') || 900);
+
+    if (pinFailureCount >= 5) {
+      return {
+        allowed: false,
+        response: createResponse_('error', null, 'Terlalu banyak percobaan PIN. Silakan tunggu sebelum mencoba lagi.', 'FORBIDDEN', { retryAfterSeconds: pinLockoutSeconds })
+      };
+    }
+
+    if (expectedPin && String(payload.adminPin) === String(expectedPin)) {
+      pinCache.remove(pinFailureKey);
+      return { allowed: true };
+    }
+
+    pinCache.put(pinFailureKey, String(pinFailureCount + 1), pinLockoutSeconds);
+    return {
+      allowed: false,
+      response: createResponse_('error', null, 'Akses ditolak. Tindakan ini membutuhkan otorisasi Admin (PIN atau akun pemilik).', 'FORBIDDEN')
+    };
   }
 
   return {
@@ -367,6 +402,10 @@ function getBootstrapData() {
 }
 
 function saveItem(payload) {
+  if (payload && payload.id && !payload.updated_at) {
+    return createResponse_('error', null, 'updated_at wajib disertakan saat memperbarui data.', 'VALIDATION_ERROR');
+  }
+
   var validationError = validateItemPayload_(payload);
   if (validationError) {
     return createResponse_('error', null, validationError, 'VALIDATION_ERROR');
@@ -418,16 +457,17 @@ function saveItem(payload) {
         return createResponse_('error', null, 'Data dengan ID tersebut tidak ditemukan.', 'NOT_FOUND');
       }
 
-      if (payload.updated_at && updatedColIdx >= 0) {
-        var currentUpdated = sanitizeForClient_(existingRow[updatedColIdx]);
-        if (String(currentUpdated) !== String(payload.updated_at)) {
-          return createResponse_(
-            'error',
-            null,
-            'Data ini baru saja diubah oleh pengguna lain. Muat ulang tabel sebelum menyimpan.',
-            'CONFLICT'
-          );
-        }
+      if (updatedColIdx < 0) {
+        return createResponse_('error', null, 'Kolom updated_at tidak tersedia pada skema.', 'INTERNAL_ERROR');
+      }
+      var currentUpdated = sanitizeForClient_(existingRow[updatedColIdx]);
+      if (String(currentUpdated) !== String(payload.updated_at)) {
+        return createResponse_(
+          'error',
+          null,
+          'Data ini baru saja diubah oleh pengguna lain. Muat ulang tabel sebelum menyimpan.',
+          'CONFLICT'
+        );
       }
 
       var updatedRecord = {};
@@ -475,8 +515,8 @@ function saveItem(payload) {
 }
 
 function deleteItem(payload) {
-  if (!payload || !payload.id) {
-    return createResponse_('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR');
+  if (!payload || !payload.id || !payload.updated_at) {
+    return createResponse_('error', null, 'ID dan updated_at wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR');
   }
 
   var lock = LockService.getScriptLock();
@@ -513,11 +553,12 @@ function deleteItem(payload) {
       return createResponse_('error', null, 'Data yang akan dihapus tidak ditemukan.', 'NOT_FOUND');
     }
 
-    if (payload.updated_at && updatedIdx >= 0) {
-      var currentUpdated = sanitizeForClient_(existingRow[updatedIdx]);
-      if (String(currentUpdated) !== String(payload.updated_at)) {
-        return createResponse_('error', null, 'Data telah berubah. Muat ulang sebelum menghapus.', 'CONFLICT');
-      }
+    if (updatedIdx < 0) {
+      return createResponse_('error', null, 'Kolom updated_at tidak tersedia pada skema.', 'INTERNAL_ERROR');
+    }
+    var currentUpdated = sanitizeForClient_(existingRow[updatedIdx]);
+    if (String(currentUpdated) !== String(payload.updated_at)) {
+      return createResponse_('error', null, 'Data telah berubah. Muat ulang sebelum menghapus.', 'CONFLICT');
     }
 
     var nowIso = formatIsoOffset_(new Date());
@@ -578,31 +619,36 @@ function purgeSeedData(payload) {
  * struktur sheet bila dipanggil oleh non-admin dari console browser.
  */
 function runDiagnostics(payload) {
-  var auth = assertAdminAccess_(payload);
-  if (!auth.allowed) return auth.response;
+  try {
+    var auth = assertAdminAccess_(payload);
+    if (!auth.allowed) return auth.response;
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var report = {
-    schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
-    sheets: {},
-    ok: true
-  };
-  Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
-    var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      report.sheets[sheetName] = { exists: false, missingHeaders: DB_SCHEMAS[sheetName] };
-      report.ok = false;
-      return;
-    }
-    var actual = sheet.getLastColumn() > 0
-      ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_)
-      : [];
-    var missing = DB_SCHEMAS[sheetName].filter(function(h) { return actual.indexOf(h) === -1; });
-    report.sheets[sheetName] = { exists: true, rowCount: Math.max(0, sheet.getLastRow() - 1), missingHeaders: missing };
-    if (missing.length > 0) report.ok = false;
-  });
-  console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
-  return createResponse_('success', report, 'Diagnostik selesai.', 'OK');
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var report = {
+      schemaVersion: PropertiesService.getScriptProperties().getProperty('SCHEMA_VERSION') || 'UNSET',
+      sheets: {},
+      ok: true
+    };
+    Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        report.sheets[sheetName] = { exists: false, missingHeaders: DB_SCHEMAS[sheetName] };
+        report.ok = false;
+        return;
+      }
+      var actual = sheet.getLastColumn() > 0
+        ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_)
+        : [];
+      var missing = DB_SCHEMAS[sheetName].filter(function(h) { return actual.indexOf(h) === -1; });
+      report.sheets[sheetName] = { exists: true, rowCount: Math.max(0, sheet.getLastRow() - 1), missingHeaders: missing };
+      if (missing.length > 0) report.ok = false;
+    });
+    console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
+    return createResponse_('success', report, 'Diagnostik selesai.', 'OK');
+  } catch (err) {
+    console.error('runDiagnostics error:', err);
+    return createResponse_('error', null, 'Diagnostik gagal dijalankan.', 'INTERNAL_ERROR');
+  }
 }
 ```
 
@@ -676,6 +722,17 @@ var STORAGE_KEY = 'GASLY_SANDBOX_STATE_V2';
 var MOCK_DB = null;
 var ALLOWED_CATEGORIES = ['Operasional', 'Pemasaran', 'Infrastruktur', 'Lisensi'];
 var ALLOWED_STATUSES = ['ACTIVE', 'PENDING', 'COMPLETED', 'ARCHIVED'];
+var PREVIEW_ADMIN_PIN_ = '';
+var PREVIEW_ADMIN_FAILURES_ = 0;
+var PREVIEW_ADMIN_LOCK_UNTIL_ = 0;
+
+window.configurePreviewAdmin = function(pin) {
+  if (typeof pin !== 'string' || pin.trim().length < 12) return false;
+  PREVIEW_ADMIN_PIN_ = pin.trim();
+  PREVIEW_ADMIN_FAILURES_ = 0;
+  PREVIEW_ADMIN_LOCK_UNTIL_ = 0;
+  return true;
+};
 
 function generateMockNextId_(items, prefix, ymd) {
   var fullPrefix = prefix + '-' + ymd + '-';
@@ -712,7 +769,7 @@ function createInitialMockDb_() {
       is_seed: 'TRUE'
     });
   }
-  return { items: items, adminPin: '123456' };
+  return { items: items };
 }
 
 function getMockDb_() {
@@ -773,6 +830,25 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     };
   }
 
+  function authorizePreviewAdmin_() {
+    if (!PREVIEW_ADMIN_PIN_) {
+      return makeEnv('error', null, 'Admin preview belum dikonfigurasi. Atur PIN khusus preview terlebih dahulu.', 'FORBIDDEN');
+    }
+    if (PREVIEW_ADMIN_LOCK_UNTIL_ > now.getTime()) {
+      return makeEnv('error', null, 'Terlalu banyak percobaan PIN preview. Tunggu 15 menit atau konfigurasi ulang PIN preview.', 'FORBIDDEN');
+    }
+    var suppliedPin = payload && typeof payload === 'object' ? String(payload.adminPin || '') : '';
+    if (!suppliedPin || suppliedPin !== PREVIEW_ADMIN_PIN_) {
+      PREVIEW_ADMIN_FAILURES_++;
+      if (PREVIEW_ADMIN_FAILURES_ >= 5) {
+        PREVIEW_ADMIN_LOCK_UNTIL_ = now.getTime() + 900000;
+      }
+      return makeEnv('error', null, 'Akses ditolak. PIN admin preview tidak sesuai.', 'FORBIDDEN');
+    }
+    PREVIEW_ADMIN_FAILURES_ = 0;
+    return null;
+  }
+
   if (actionName === 'getBootstrapData') {
     var activeItems = db.items.filter(function(it) { return it.status !== 'ARCHIVED'; });
     return onSuccess(makeEnv('success', { items: activeItems }, 'Data simulasi dimuat.', 'OK'));
@@ -798,6 +874,9 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     }
 
     if (payload.id) {
+      if (!payload.updated_at) {
+        return onError(makeEnv('error', null, 'updated_at wajib disertakan saat memperbarui data.', 'VALIDATION_ERROR'));
+      }
       var idx = -1;
       for (var i = 0; i < db.items.length; i++) {
         if (db.items[i].id === payload.id) { idx = i; break; }
@@ -805,7 +884,7 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
       if (idx === -1) {
         return onError(makeEnv('error', null, 'Data dengan ID tersebut tidak ditemukan.', 'NOT_FOUND'));
       }
-      if (payload.updated_at && String(db.items[idx].updated_at) !== String(payload.updated_at)) {
+      if (String(db.items[idx].updated_at) !== String(payload.updated_at)) {
         return onError(makeEnv('error', null, 'Data ini baru saja diubah oleh pengguna lain. Muat ulang tabel sebelum menyimpan.', 'CONFLICT'));
       }
       db.items[idx].title = title;
@@ -834,8 +913,8 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'deleteItem') {
-    if (!payload || !payload.id) {
-      return onError(makeEnv('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR'));
+    if (!payload || !payload.id || !payload.updated_at) {
+      return onError(makeEnv('error', null, 'ID dan updated_at wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR'));
     }
     var foundIdx = -1;
     for (var j = 0; j < db.items.length; j++) {
@@ -844,7 +923,7 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
     if (foundIdx === -1) {
       return onError(makeEnv('error', null, 'Data yang akan dihapus tidak ditemukan.', 'NOT_FOUND'));
     }
-    if (payload.updated_at && String(db.items[foundIdx].updated_at) !== String(payload.updated_at)) {
+    if (String(db.items[foundIdx].updated_at) !== String(payload.updated_at)) {
       return onError(makeEnv('error', null, 'Data telah berubah. Muat ulang sebelum menghapus.', 'CONFLICT'));
     }
     db.items[foundIdx].status = 'ARCHIVED';
@@ -854,9 +933,8 @@ function handleMockAction_(actionName, payload, onSuccess, onError) {
   }
 
   if (actionName === 'purgeSeedData') {
-    if (payload && payload.adminPin && String(payload.adminPin) !== String(db.adminPin)) {
-      return onError(makeEnv('error', null, 'Akses ditolak. PIN Admin tidak sesuai.', 'FORBIDDEN'));
-    }
+    var purgeAuthError = authorizePreviewAdmin_();
+    if (purgeAuthError) return onError(purgeAuthError);
     var beforeCount = db.items.length;
     db.items = db.items.filter(function(it) {
       return String(it.id).indexOf('SEED-') !== 0 && it.is_seed !== 'TRUE';
