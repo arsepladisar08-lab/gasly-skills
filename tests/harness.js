@@ -125,7 +125,8 @@ expectCode(serverContext.runDiagnostics(undefined), "FORBIDDEN", "anonymous diag
 // (b) No admin PIN/owner identity means configuration-incomplete FORBIDDEN.
 const noPin = serverContext.assertAdminAccess_({});
 expectCode(noPin.response, "FORBIDDEN", "missing admin PIN");
-assert.match(noPin.response.message, /Konfigurasi admin belum selesai/i);
+assert.match(noPin.response.message, /Akses ditolak/i);
+assert.doesNotMatch(noPin.response.message, /OWNER_EMAIL|ADMIN_PIN|ScriptProperties/i);
 
 // Explicit editor identity and USER_ACCESSING owner identity remain authorized.
 state.active = "owner@example.test";
