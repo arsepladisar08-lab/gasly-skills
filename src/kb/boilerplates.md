@@ -270,7 +270,7 @@ function assertAdminAccess_(payload) {
   // 5. Fallback kredensial: verifikasi adminPin hanya pada deployment terbatas
   if (payload && payload.adminPin && expectedPin && String(payload.adminPin) === String(expectedPin)) {
     return { allowed: true };
-  }}
+  }
 
   return {
     allowed: false,
