@@ -70,6 +70,12 @@ class TestRepositoryQuality(unittest.TestCase):
         self.assertIn("if (hasExistingFile && !canManageExisting)", drive)
         self.assertIn("role === 'ADMIN' || role === 'STAFF'", drive)
 
+    def test_legacy_admin_pin_has_no_default_and_requires_strong_secret(self) -> None:
+        boilerplate = read("src/kb/boilerplates.md")
+        self.assertNotIn("props.setProperty('ADMIN_PIN', '123456')", boilerplate)
+        self.assertIn("String(expectedPin).trim().length >= 16", boilerplate)
+        self.assertIn("pin.trim().length < 16", boilerplate)
+
     def test_google_id_token_issuer_is_checked(self) -> None:
         auth = read("src/gas/auth-and-ratelimit.md")
         self.assertIn("tokenInfo.iss", auth)
