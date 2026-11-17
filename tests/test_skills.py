@@ -130,6 +130,7 @@ class TestGaslySkillPack(unittest.TestCase):
         # New skills must ONLY be built in dist/modular/
         self.assertFalse((DIST_DIR / "flat" / "gasly-data").exists())
         self.assertFalse((DIST_DIR / "flat" / "gasly-ui").exists())
+        self.assertFalse((DIST_DIR / "flat" / "gasly-install").exists())
 
         flat_lite_text = (DIST_DIR / "flat-lite" / "gasly-pro" / "SKILL.md").read_text(encoding="utf-8")
         self.assertLessEqual(len(flat_lite_text), build_skills.FLAT_WARN_CHARS)

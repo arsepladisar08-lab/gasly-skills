@@ -1,0 +1,45 @@
+{
+  "contract_version": "1.0.0",
+  "kb_version": "2.1.0",
+  "project": {
+    "name": "FixtureApp",
+    "surface_profile": "INTERNAL_APP",
+    "access_profile": "P4",
+    "regulatory_domain": "NONE"
+  },
+  "architecture": {
+    "tier": "TIER_1_DECOUPLED_WORKSPACE",
+    "frontend_stack": "html-tailwind",
+    "hosting_target": "cloudflare_pages",
+    "auth_primary": "GAS_ADMIN_PASSPHRASE",
+    "auth_google_enabled": true
+  },
+  "envelope_spec": {
+    "status_values": ["success", "error"],
+    "code_values": ["OK", "VALIDATION_ERROR", "NOT_FOUND", "FORBIDDEN", "CONFLICT", "LOCK_TIMEOUT", "RATE_LIMITED", "INTERNAL_ERROR"]
+  },
+  "entities": [
+    {
+      "sheet_name": "ITEMS",
+      "id_prefix": "TRX",
+      "data_classification": "CONFIDENTIAL",
+      "concurrency_mode": "OPTIMISTIC_VERSION",
+      "headers": ["id", "title", "status", "tracking_token"],
+      "drive_upload": {
+        "enabled": true,
+        "visibility": "private"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "items.list",
+      "min_role": "STAFF",
+      "require_idem": false,
+      "rate_limited": false,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    }
+  ]
+}

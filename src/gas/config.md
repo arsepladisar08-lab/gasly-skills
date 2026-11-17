@@ -31,6 +31,8 @@ Seluruh rahasia dan parameter konfigurasi lingkungan disimpan di dalam `Properti
 | `MAX_UPLOAD_BYTES` | Batas ukuran byte file hasil decode pada `file.upload` (default 5 MB). | `"5242880"` |
 | `WEBHOOK_SHARED_SECRET` | Rahasia bersama untuk memverifikasi payload dari proxy webhook pembayaran. | `"<opsional>"` |
 | `P2_LITE_AUTO_PROVISION` | Mengizinkan pembuatan baris `STAFF` otomatis pada sheet `USERS` saat login `auth.google` (`P2-lite`). | `"FALSE"` |
+| `ADMIN_PASSPHRASE_INIT` | Passphrase admin awal minimal 12 karakter (sementara, dihapus otomatis oleh `setupAdminCredentials()`). | `"<sementara, dihapus otomatis>"` |
+| `ADMIN_PIN_INIT` | PIN step-up admin 6 digit angka (sementara, dihapus otomatis oleh `setupAdminCredentials()`). | `"<sementara, dihapus otomatis>"` |
 
 ---
 
@@ -76,13 +78,40 @@ var DB_SCHEMAS = {
     'pin_hash',
     'created_at',
     'updated_at'
+  ],
+  PLANS: [
+    'id',
+    'plan_code',
+    'name',
+    'price_amount',
+    'billing_period',
+    'max_quota',
+    'features_json',
+    'status',
+    'updated_at',
+    'is_seed'
+  ],
+  SUBSCRIPTIONS: [
+    'id',
+    'user_email',
+    'plan_code',
+    'status',
+    'period_start',
+    'period_end',
+    'external_invoice_id',
+    'provider_event_id',
+    'created_at',
+    'updated_at',
+    'is_seed'
   ]
-  };
+};
 
 var DB_CLASSIFICATIONS = {
   ITEMS: 'CONFIDENTIAL',
   ALLOWLIST: 'INTERNAL',
-  USERS: 'SENSITIVE_PII'
+  USERS: 'SENSITIVE_PII',
+  PLANS: 'PUBLIC',
+  SUBSCRIPTIONS: 'CONFIDENTIAL'
 };
 
 /**
@@ -233,6 +262,43 @@ function initialSetupDatabase() {
       props.setProperty('SEED_INITIALIZED', 'TRUE');
     }
 
+    var plansSheet = ss.getSheetByName('PLANS');
+    if (plansSheet && plansSheet.getLastRow() <= 1) {
+      var nowPlanIso = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd'T'HH:mm:ssXXX");
+      var planYmd = Utilities.formatDate(new Date(), tz, 'yyyyMMdd');
+      var planHeaders = plansSheet.getRange(1, 1, 1, plansSheet.getLastColumn()).getValues()[0];
+      var planSeedObjects = [
+        {
+          id: 'SEED-' + planYmd + '-0001',
+          plan_code: 'STARTER',
+          name: 'Starter Plan',
+          price_amount: 149000,
+          billing_period: 'MONTHLY',
+          max_quota: 50,
+          features_json: '["50 Transaksi/Bulan","Dukungan Email"]',
+          status: 'ACTIVE',
+          updated_at: nowPlanIso,
+          is_seed: 'TRUE'
+        },
+        {
+          id: 'SEED-' + planYmd + '-0002',
+          plan_code: 'PRO',
+          name: 'Pro SaaS Plan',
+          price_amount: 490000,
+          billing_period: 'MONTHLY',
+          max_quota: 1000,
+          features_json: '["1.000 Transaksi/Bulan","Upload Drive & AI"]',
+          status: 'ACTIVE',
+          updated_at: nowPlanIso,
+          is_seed: 'TRUE'
+        }
+      ];
+      var planRows = planSeedObjects.map(function(obj) {
+        return buildRowFromObject_(planHeaders, obj);
+      });
+      plansSheet.getRange(2, 1, planRows.length, planHeaders.length).setValues(planRows);
+    }
+
     // 5. Ensure a root Drive folder exists for uploads if not yet configured
     if (!props.getProperty('DRIVE_ROOT_FOLDER_ID')) {
       var folder = DriveApp.createFolder('Gasly_App_Uploads_' + ss.getId().slice(0, 6));
@@ -272,6 +338,100 @@ function configureAdminPassphrase_(newPassphrase) {
     ADMIN_PASSPHRASE_ITER: String(iterations)
   });
   return { status: 'success', message: 'Admin passphrase hash stored in ScriptProperties.' };
+}
+
+/**
+ * Sets or rotates the 6-digit step-up PIN for the bootstrap 'admin' account in ScriptProperties.
+ */
+function configureAdminPin_(newPin) {
+  var cleanPin = String(newPin || '').trim();
+  if (!/^\d{6}$/.test(cleanPin)) {
+    throw new Error('Admin step-up PIN must be exactly 6 digits.');
+  }
+  var props = PropertiesService.getScriptProperties();
+  var pepper = props.getProperty('AUTH_PEPPER');
+  if (!pepper) {
+    pepper = generateRandomSecret_(32);
+    props.setProperty('AUTH_PEPPER', pepper);
+  }
+  var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
+  var pinSalt = generateRandomSecret_(16);
+  var pinHash = computeIteratedHash_(cleanPin, pinSalt, pepper, iterations);
+  props.setProperties({
+    ADMIN_PIN_SALT: pinSalt,
+    ADMIN_PIN_HASH: pinHash
+  });
+  return { status: 'success', message: 'Admin step-up PIN hash stored in ScriptProperties.' };
+}
+
+/**
+ * Public zero-argument initializer for bootstrap admin credentials from the GAS IDE toolbar.
+ * Reads temporary ScriptProperties ADMIN_PASSPHRASE_INIT and ADMIN_PIN_INIT,
+ * delegates to configureAdminPassphrase_ / configureAdminPin_, and ALWAYS deletes
+ * both temporary properties (including when validation fails). Never logs or returns secret values.
+ */
+function setupAdminCredentials() {
+  var props = PropertiesService.getScriptProperties();
+  var rawPassphrase = props.getProperty('ADMIN_PASSPHRASE_INIT');
+  var rawPin = props.getProperty('ADMIN_PIN_INIT');
+
+  try {
+    if (
+      (rawPassphrase === null || rawPassphrase === undefined || rawPassphrase === '') &&
+      (rawPin === null || rawPin === undefined || rawPin === '')
+    ) {
+      throw new Error('Set ADMIN_PASSPHRASE_INIT and/or ADMIN_PIN_INIT in ScriptProperties before running setupAdminCredentials().');
+    }
+
+    var passphraseConfigured = false;
+    var pinConfigured = false;
+
+    if (rawPassphrase !== null && rawPassphrase !== undefined && rawPassphrase !== '') {
+      configureAdminPassphrase_(rawPassphrase);
+      passphraseConfigured = true;
+    }
+
+    if (rawPin !== null && rawPin !== undefined && rawPin !== '') {
+      configureAdminPin_(rawPin);
+      pinConfigured = true;
+    }
+
+    return {
+      status: 'success',
+      code: 'OK',
+      data: {
+        passphraseConfigured: passphraseConfigured,
+        pinConfigured: pinConfigured
+      },
+      message: 'Admin credentials configured and temporary init properties deleted.'
+    };
+  } finally {
+    props.deleteProperty('ADMIN_PASSPHRASE_INIT');
+    props.deleteProperty('ADMIN_PIN_INIT');
+  }
+}
+  /**
+  Sets or rotates the 6-digit step-up PIN for the bootstrap 'admin' account in ScriptProperties.
+  */
+  function configureAdminPin_(newPin) {
+  var cleanPin = String(newPin || '').trim();
+  if (!/^\d{6}$/.test(cleanPin)) {
+  throw new Error('Admin step-up PIN must be exactly 6 digits.');
+  }
+  var props = PropertiesService.getScriptProperties();
+  var pepper = props.getProperty('AUTH_PEPPER');
+  if (!pepper) {
+  pepper = generateRandomSecret_(32);
+  props.setProperty('AUTH_PEPPER', pepper);
+  }
+  var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
+  var pinSalt = generateRandomSecret_(16);
+  var pinHash = computeIteratedHash_(cleanPin, pinSalt, pepper, iterations);
+  props.setProperties({
+    ADMIN_PIN_SALT: pinSalt,
+    ADMIN_PIN_HASH: pinHash
+  });
+  return { status: 'success', message: 'Admin step-up PIN hash stored in ScriptProperties.' };
 }
 ```
 

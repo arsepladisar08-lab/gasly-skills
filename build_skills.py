@@ -27,19 +27,20 @@ SRC_CORE_DIR = SRC_DIR / "core"
 SRC_DESIGN_DIR = SRC_DIR / "design"
 SRC_GAS_DIR = SRC_DIR / "gas"
 SRC_STACKS_DIR = SRC_DIR / "stacks"
+SRC_INSTALL_DIR = SRC_DIR / "install"
 SRC_SKILLS_DIR = SRC_DIR / "skills"
 SCHEMAS_DIR = ROOT_DIR / "schemas"
 
 DIST_DIR = ROOT_DIR / "dist"
 STAGING_DIR = ROOT_DIR / ".dist_staging"
 
-SKILL_VERSION = "2.2.0"
+SKILL_VERSION = "2.3.0"
 MAX_SKILL_BODY_LINES = 500
 MAX_DESCRIPTION_CHARS = 1000
 FLAT_WARN_CHARS = 48000
 FLAT_MAX_CHARS = 95000
 
-ALL_SKILLS = ["gasly-prompt", "gasly-data", "gasly-ui", "gasly-pro"]
+ALL_SKILLS = ["gasly-prompt", "gasly-data", "gasly-ui", "gasly-install", "gasly-pro"]
 LEGACY_FLAT_SKILLS = ["gasly-prompt", "gasly-pro"]
 
 KB_ORDER = [
@@ -70,8 +71,10 @@ STACK_FILES = [
     "INHERIT.md",
     "PLANNED.md",
 ]
+INSTALL_FILES = ["install-steps.md"]
+INSTALL_TEMPLATE_FILES = ["guide-template.html"]
 
-LIFECYCLE_FUNCTIONS = {"doGet", "include", "initialSetupDatabase", "runDiagnostics"}
+LIFECYCLE_FUNCTIONS = {"doGet", "include", "initialSetupDatabase", "setupAdminCredentials", "runDiagnostics"}
 
 VERSION_PATTERN = re.compile(r"<!--\s*KB_VERSION:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*-->")
 DIGEST_PATTERN = re.compile(
@@ -381,6 +384,7 @@ def main(argv: list[str] | None = None) -> int:
         design_doc_contents = load_markdown_group(SRC_DESIGN_DIR, DESIGN_DOCS, detected_versions)
         gas_contents = load_markdown_group(SRC_GAS_DIR, GAS_FILES, detected_versions)
         stack_contents = load_markdown_group(SRC_STACKS_DIR, STACK_FILES, detected_versions)
+        install_contents = load_markdown_group(SRC_INSTALL_DIR, INSTALL_FILES, detected_versions)
 
         if len(detected_versions) != 1:
             raise ValueError(f"[ERROR] Inconsistent KB_VERSION across source files: {sorted(detected_versions)}")
@@ -394,6 +398,7 @@ def main(argv: list[str] | None = None) -> int:
         design_doc_contents = inject_version_tokens(design_doc_contents, kb_version)
         gas_contents = inject_version_tokens(gas_contents, kb_version)
         stack_contents = inject_version_tokens(stack_contents, kb_version)
+        install_contents = inject_version_tokens(install_contents, kb_version)
 
         verify_boilerplate_rpc_contract(kb_contents["boilerplates.md"])
         verify_headless_registry_handlers(gas_contents)
@@ -427,7 +432,7 @@ def main(argv: list[str] | None = None) -> int:
             mod_ref_dir.mkdir(parents=True, exist_ok=True)
             (mod_dir / "SKILL.md").write_text(compiled_skill, encoding="utf-8")
 
-            if contract_schema_path.exists() and skill_slug in {"gasly-prompt", "gasly-data", "gasly-ui"}:
+            if contract_schema_path.exists() and skill_slug in {"gasly-prompt", "gasly-data", "gasly-ui", "gasly-install"}:
                 shutil.copy2(contract_schema_path, mod_ref_dir / "gasly-contract.schema.json")
 
             # Populate modular references per skill routing contract
@@ -460,6 +465,23 @@ def main(argv: list[str] | None = None) -> int:
                     shutil.copy2(cf, css_dst / cf.name)
                 for fname, text in stack_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+
+            elif skill_slug == "gasly-install":
+                for fname, text in core_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                (mod_ref_dir / "config.md").write_text(gas_contents["config.md"], encoding="utf-8")
+                for fname, text in install_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                for tname in INSTALL_TEMPLATE_FILES:
+                    src_tpl = SRC_INSTALL_DIR / tname
+                    if not src_tpl.exists():
+                        raise FileNotFoundError(f"[ERROR] Required install template missing: {src_tpl}")
+                    tpl_text = (
+                        src_tpl.read_text(encoding="utf-8")
+                        .replace("{{KB_VERSION}}", kb_version)
+                        .replace("{{SKILL_VERSION}}", SKILL_VERSION)
+                    )
+                    (mod_ref_dir / tname).write_text(tpl_text, encoding="utf-8")
 
             elif skill_slug == "gasly-pro":
                 for fname, text in kb_contents.items():
@@ -524,6 +546,7 @@ def main(argv: list[str] | None = None) -> int:
                 "gasly-prompt": {"mode": "active", "packages": ["modular", "flat"]},
                 "gasly-data": {"mode": "active", "packages": ["modular"]},
                 "gasly-ui": {"mode": "active", "packages": ["modular"]},
+                "gasly-install": {"mode": "active", "packages": ["modular"]},
                 "gasly-pro": {"mode": "legacy", "packages": ["modular", "flat", "flat-lite"]},
             },
             "files": files_manifest,

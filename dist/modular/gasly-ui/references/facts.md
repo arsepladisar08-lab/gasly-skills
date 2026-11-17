@@ -21,3 +21,19 @@
 | **Cloudflare Pages** | **Diizinkan** untuk penggunaan komersial (batas 500 build/bulan pada Free plan) | **Default Tier 1 & Tier 2** untuk produksi komersial hemat biaya |
 | **Vercel (Hobby Plan)** | **Dilarang untuk komersial** (*Personal / Non-Commercial Only*). Penggunaan komersial wajib **Vercel Pro ($20/bulan)** | Gunakan Hobby hanya untuk Dev/Preview; gunakan **Vercel Pro** untuk SaaS komersial berbasis Next.js SSR |
 | **GitHub Pages** | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (sesuai GitHub Terms of Service) | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial** |
+
+## 3. Referensi Dokumentasi & Status Verifikasi Langkah Antarmuka Pihak Ketiga (`gasly-install`)
+- **Aturan Provenance (`Gate I-05`):** Setiap langkah antarmuka pihak ketiga di dalam `gasly-install` wajib mencantumkan URL dokumentasi resmi dan status verifikasi. Karena antarmuka web pihak ketiga dapat berubah tanpa pemberitahuan di luar repositori statis, langkah klik menu spesifik ditandai `UNVERIFIED` dan dicatat pada `VERIFY.md` (`A-12`).
+- **Google Apps Script Editor & Deployment (`/exec`):**
+  - Dokumentasi Resmi: `https://developers.google.com/apps-script/guides/web` (`Status UI: UNVERIFIED — mengacu pada prosedur internal src/gas/config.md Seksi 3, dicatat di VERIFY.md`).
+  - Jalur yang digunakan: **Extensions > Apps Script**, tombol **Run** (`initialSetupDatabase`, `setupAdminCredentials`, `runDiagnostics`), **Deploy > New deployment** (jenis **Web app**, **Execute as: Me**, **Who has access: Anyone**), serta pembaruan rilis via **Deploy > Manage deployments > Edit (ikon pensil) > Version: New version > Deploy**.
+- **Google Apps Script `ScriptProperties`:**
+  - Dokumentasi Resmi: `https://developers.google.com/apps-script/guides/properties` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Jalur yang digunakan: **Project Settings (ikon roda gigi) > Script Properties > Add script property / Edit script properties > Save script properties**.
+- **Google Cloud Console — OAuth 2.0 Client ID (`auth.google`):**
+  - Dokumentasi Resmi: `https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Syarat wajib: konfigurasi OAuth Consent Screen (mewajibkan URL kebijakan privasi `/privacy` publik sesuai `src/core/monetization-and-tiers.md`) dan pembuatan Web Application Client ID dengan *Authorized JavaScript origins* berisi domain frontend.
+- **Hosting Frontend (Cloudflare Pages / Vercel / GitHub Pages):**
+  - Dokumentasi Resmi Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Dokumentasi Resmi Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Dokumentasi Resmi GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).

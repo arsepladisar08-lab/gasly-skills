@@ -86,6 +86,114 @@ class TestRepositoryQuality(unittest.TestCase):
         harness = ROOT / "tests" / "harness.js"
         self.assertTrue(harness.is_file())
         self.assertIn("node:assert/strict", harness.read_text(encoding="utf-8"))
+        harness_gas = ROOT / "tests" / "harness_gas.js"
+        self.assertTrue(harness_gas.is_file())
+        self.assertIn("node:assert/strict", harness_gas.read_text(encoding="utf-8"))
+        harness_install = ROOT / "tests" / "harness_install.js"
+        self.assertTrue(harness_install.is_file())
+        self.assertIn("node:assert/strict", harness_install.read_text(encoding="utf-8"))
+
+    def test_setup_admin_credentials_without_plaintext_in_code(self) -> None:
+        config = read("src/gas/config.md")
+        self.assertIn("ADMIN_PASSPHRASE_INIT", config)
+        self.assertIn("ADMIN_PIN_INIT", config)
+        self.assertIn("function setupAdminCredentials()", config)
+        self.assertIn("props.deleteProperty('ADMIN_PASSPHRASE_INIT')", config)
+        self.assertIn("props.deleteProperty('ADMIN_PIN_INIT')", config)
+
+    def test_all_registry_handlers_and_step_up_enforced(self) -> None:
+        router = read("src/gas/router-and-envelope.md")
+        handlers = set(re.findall(r"handler:\s*([A-Za-z0-9_]+)", router))
+        self.assertGreaterEqual(len(handlers), 18)
+
+        gas_files = [
+            "src/gas/config.md",
+            "src/gas/router-and-envelope.md",
+            "src/gas/auth-and-ratelimit.md",
+            "src/gas/sheets-repository.md",
+            "src/gas/drive-upload.md",
+            "src/gas/webhook-receiver.md",
+            "src/gas/integrations.md",
+        ]
+        combined_gas = "\n".join(read(p) for p in gas_files)
+        defined_funcs = set(re.findall(r"^function\s+([A-Za-z0-9_]+)\s*\(", combined_gas, re.MULTILINE))
+        self.assertEqual(handlers - defined_funcs, set())
+
+        for action_name in ("items.delete", "admin.purgeSeed", "file.delete", "auth.setCredentials"):
+            self.assertIn(
+                f"verifyAndConsumeStepUp_(req, '{action_name}')",
+                combined_gas,
+                f"Missing verifyAndConsumeStepUp_ enforcement for {action_name}",
+            )
+
+    def test_verify_output_fixtures(self) -> None:
+        import subprocess
+        import sys
+
+        good_run = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "verify_output.py"),
+                "--contract",
+                str(ROOT / "tests" / "fixtures" / "good_contract.json"),
+                "--backend",
+                str(ROOT / "tests" / "fixtures" / "good_backend.gs"),
+                "--frontend",
+                str(ROOT / "tests" / "fixtures" / "good_frontend.html"),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(good_run.returncode, 0, good_run.stdout + good_run.stderr)
+
+        bad_run = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "verify_output.py"),
+                "--contract",
+                str(ROOT / "tests" / "fixtures" / "good_contract.json"),
+                "--backend",
+                str(ROOT / "tests" / "fixtures" / "good_backend.gs"),
+                "--frontend",
+                str(ROOT / "tests" / "fixtures" / "bad_frontend.html"),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(bad_run.returncode, 0)
+        self.assertIn("GATE-ENVELOPE-DRIFT", bad_run.stdout)
+        self.assertIn("GATE-WEB-MODAL", bad_run.stdout)
+
+    def test_verify_output_install_guide_fixtures(self) -> None:
+        import subprocess
+        import sys
+
+        good_guide = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "verify_output.py"),
+                "--install-guide",
+                str(ROOT / "tests" / "fixtures" / "install_guide_good.html"),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(good_guide.returncode, 0, good_guide.stdout + good_guide.stderr)
+
+        bad_guide = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "verify_output.py"),
+                "--install-guide",
+                str(ROOT / "tests" / "fixtures" / "install_guide_bad.html"),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(bad_guide.returncode, 0)
+        self.assertIn("GATE-I-01", bad_guide.stdout)
+        self.assertIn("GATE-I-02", bad_guide.stdout)
+        self.assertIn("GATE-I-03", bad_guide.stdout)
 
 
 if __name__ == "__main__":

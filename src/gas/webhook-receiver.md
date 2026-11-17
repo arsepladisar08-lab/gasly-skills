@@ -62,6 +62,81 @@ function handleWebhookReceive_(req) {
     }
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var isSubscriptionTarget =
+      String(p.targetEntity || '').trim().toUpperCase() === 'SUBSCRIPTIONS' ||
+      entityId.indexOf('SUB-') === 0 ||
+      entityId.indexOf('INV-') === 0;
+
+    if (isSubscriptionTarget) {
+      var subsSheet = ss.getSheetByName('SUBSCRIPTIONS');
+      if (!subsSheet || subsSheet.getLastRow() <= 1) {
+        return createResponse_('error', null, 'Tabel SUBSCRIPTIONS tidak ditemukan.', 'NOT_FOUND');
+      }
+      var subLastRow = subsSheet.getLastRow();
+      var subLastCol = subsSheet.getLastColumn();
+      var subData = subsSheet.getRange(2, 1, subLastRow - 1, subLastCol).getValues();
+      var subHeaders = subsSheet.getRange(1, 1, 1, subLastCol).getValues()[0].map(normalizeHeader_);
+      var subIdIdx = subHeaders.indexOf('id');
+      var invIdIdx = subHeaders.indexOf('external_invoice_id');
+      var subStatusIdx = subHeaders.indexOf('status');
+      var pStartIdx = subHeaders.indexOf('period_start');
+      var pEndIdx = subHeaders.indexOf('period_end');
+      var evIdIdx = subHeaders.indexOf('provider_event_id');
+      var subUpdIdx = subHeaders.indexOf('updated_at');
+
+      var subRowNum = -1;
+      var subRow = null;
+      for (var s = 0; s < subData.length; s++) {
+        var rId = subIdIdx >= 0 ? String(subData[s][subIdIdx]) : '';
+        var rInv = invIdIdx >= 0 ? String(subData[s][invIdIdx]) : '';
+        if (rId === entityId || rInv === entityId) {
+          subRowNum = s + 2;
+          subRow = subData[s];
+          break;
+        }
+      }
+      if (subRowNum === -1) {
+        return createResponse_('error', null, 'Langganan dengan ID/Invoice ' + entityId + ' tidak ditemukan.', 'NOT_FOUND');
+      }
+
+      var nowObj = new Date();
+      var nowSubIso = formatIsoOffset_(nowObj);
+      var effectiveSubStatus = newStatus === 'COMPLETED' ? 'ACTIVE' : newStatus;
+      if (subStatusIdx >= 0) subRow[subStatusIdx] = effectiveSubStatus;
+      if (evIdIdx >= 0 && providerEventId) subRow[evIdIdx] = escapeFormula_(providerEventId);
+      if (subUpdIdx >= 0) subRow[subUpdIdx] = nowSubIso;
+
+      var periodStartIso = pStartIdx >= 0 ? String(subRow[pStartIdx] || '') : '';
+      var periodEndIso = pEndIdx >= 0 ? String(subRow[pEndIdx] || '') : '';
+      if (effectiveSubStatus === 'ACTIVE') {
+        periodStartIso = nowSubIso;
+        periodEndIso = formatIsoOffset_(new Date(nowObj.getTime() + 30 * 86400000));
+        if (pStartIdx >= 0) subRow[pStartIdx] = periodStartIso;
+        if (pEndIdx >= 0) subRow[pEndIdx] = periodEndIso;
+      }
+
+      subsSheet.getRange(subRowNum, 1, 1, subLastCol).setValues([subRow]);
+      SpreadsheetApp.flush();
+
+      var subRes = createResponse_(
+        'success',
+        {
+          id: subIdIdx >= 0 ? subRow[subIdIdx] : entityId,
+          externalInvoiceId: invIdIdx >= 0 ? subRow[invIdIdx] : '',
+          status: effectiveSubStatus,
+          periodStart: periodStartIso,
+          periodEnd: periodEndIso,
+          updatedAt: nowSubIso
+        },
+        'Status langganan berhasil diperbarui melalui webhook.',
+        'OK'
+      );
+      if (dedupKey) {
+        cache.put(dedupKey, JSON.stringify(subRes), 21600);
+      }
+      return subRes;
+    }
+
     var sheet = ss.getSheetByName('ITEMS');
     if (!sheet || sheet.getLastRow() <= 1) {
       return createResponse_('error', null, 'Tabel ITEMS tidak ditemukan.', 'NOT_FOUND');

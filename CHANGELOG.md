@@ -4,6 +4,34 @@ Seluruh perubahan penting pada repositori **gasly-skills** didokumentasikan di d
 
 ---
 
+## [2.3.0] — 2026-11-17 (`KB_VERSION: 2.1.0`)
+
+### Added
+- **Multi-User Auth (`USERS`), `P2-lite`, & Step-Up PIN (`src/gas/auth-and-ratelimit.md`, `src/gas/config.md`):**
+  - Menambahkan skema tabel `USERS` (`SENSITIVE_PII`), auto-provisioning `P2-lite` ber-rate-limit pada `auth.google`, pengaturan kredensial `auth.setCredentials` (`currentPassphrase` wajib untuk self-service), serta verifikasi PIN 6 digit `auth.verifyPin` (`stepUpToken` sekali pakai yang terikat pada `STEP_UP_ALLOWED_ACTIONS_`).
+- **Siklus Hidup File Drive & Konektor Integrasi (`src/gas/drive-upload.md`, `src/gas/integrations.md`):**
+  - Menambahkan handler `file.replace` (memindahkan file Drive lama ke Trash setelah Sheet flush) dan `file.delete`.
+  - Menambahkan `src/gas/integrations.md` berisi `mail.send` (dengan quota guard `MailApp.getRemainingDailyQuota() > 5`), `notify.whatsapp` (Fonnte + fallback `wa.me`), `ai.generate` (Gemini JSON dengan kuota harian per user di `CacheService`), wrapper `fetchExternalWithBreaker_` (*circuit breaker* `CacheService` + retry backoff), dan antrean `JOBS_OUTBOX`.
+- **Blueprint Monetisasi & Matriks Promosi Tier (`src/core/monetization-and-tiers.md`):**
+  - Menambahkan panduan skema `PLANS` & `SUBSCRIPTIONS`, batas `P2-lite` vs Supabase Auth, syarat halaman `/privacy`, dan ambang naik tier berbasis `facts.md`.
+- **Harness Eksekusi V8 Headless (`tests/harness_gas.js` & `tests/fixtures/`):**
+  - Menambahkan test runner VM Node.js khusus untuk mengeksekusi seluruh modul di `src/gas/*.md` beserta fixture uji untuk `tools/verify_output.py`.
+
+### Changed
+- **Verifier Output (`tools/verify_output.py`):**
+  - Memperluas pemeriksaan deterministik untuk menolak status `'ok'`/`'OK'` (`Gate U-04`) dan memeriksa gerbang anti-slop web (`Gate W-01`, `Gate W-05`, `Gate W-08`, `Gate U-03`).
+
+### Fixed
+- **Sinkronisasi Kontrak Envelope (`schemas/gasly-contract.schema.json`, `src/skills/gasly-ui/SKILL.md`, `src/core/hardening-gates-p0.md`):**
+  - Mengunci nilai `status_values` secara konsisten ke `["success", "error"]`.
+
+### Security
+- **Penegakan `verifyAndConsumeStepUp_` & Penyembunyian Kolom Hash (`src/gas/sheets-repository.md`, `src/gas/drive-upload.md`, `src/gas/webhook-receiver.md`):**
+  - Mewajibkan `stepUpToken` sekali pakai ber-scope server pada `items.delete`, `admin.purgeSeed`, `file.delete`, dan rotasi PIN/admin di `auth.setCredentials`.
+  - Menyembunyikan `password_salt`, `password_hash`, `pin_salt`, dan `pin_hash` di `readSheetObjects_` secara default, serta menambahkan deduplikasi `idem:webhook:<providerEventId>` (TTL `21600` detik) di `webhook.receive`.
+
+---
+
 ## [2.2.0] — 2026-11-14 (`KB_VERSION: 2.1.0`)
 
 ### Added

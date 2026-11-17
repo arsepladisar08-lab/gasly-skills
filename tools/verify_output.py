@@ -187,30 +187,127 @@ def check_anti_slop_and_web_gates(frontend_text: str, failures: list[str]) -> No
             "GATE-ANTI-FABRICATION (U-03): Ditemukan klaim bisnis/uptime fabrikasi yang di-hardcode di frontend."
         )
 
+
+ALLOWED_INSTALL_PLACEHOLDERS = {
+    "SPREADSHEET_ID",
+    "GAS_EXEC_URL",
+    "GOOGLE_CLIENT_ID",
+    "PAGES_DOMAIN",
+}
+
+
+def check_install_guide(guide_path_str: str, failures: list[str]) -> None:
+    """
+    Memeriksa kepatuhan file HTML keluaran gasly-install terhadap Gate I-01 s/d I-06.
+    """
+    path_obj = Path(guide_path_str)
+    if not path_obj.exists():
+        print(f"[FATAL] File install guide tidak ditemukan: {guide_path_str}")
+        sys.exit(2)
+
+    html_text = path_obj.read_text(encoding="utf-8")
+    scripts = "\n".join(re.findall(r"<script\b[^>]*>(.*?)</script>", html_text, re.DOTALL | re.IGNORECASE))
+
+    # Gate I-01: Mandiri 100%, tanpa aset eksternal / CDN / pemanggilan jaringan
+    if re.search(r"<script\b[^>]*\bsrc\s*=", html_text, re.IGNORECASE):
+        failures.append("GATE-I-01 (SELF-CONTAINED-NO-NET): Ditemukan <script src=...>; file wajib mandiri.")
+    if re.search(r"<link\b[^>]*\bhref\s*=\s*['\"]https?:", html_text, re.IGNORECASE):
+        failures.append("GATE-I-01 (SELF-CONTAINED-NO-NET): Ditemukan stylesheet/font eksternal (<link href='http...'>).")
+    if re.search(r"<img\b[^>]*\bsrc\s*=\s*['\"]https?:", html_text, re.IGNORECASE):
+        failures.append("GATE-I-01 (SELF-CONTAINED-NO-NET): Ditemukan gambar eksternal (<img src='http...'>).")
+    if re.search(r"@import\s+url\(\s*['\"]?https?:", html_text, re.IGNORECASE):
+        failures.append("GATE-I-01 (SELF-CONTAINED-NO-NET): Ditemukan CSS @import eksternal.")
+    if re.search(r"\b(?:fetch\s*\(|XMLHttpRequest\b|navigator\.sendBeacon\b|WebSocket\b)", scripts):
+        failures.append("GATE-I-01 (SELF-CONTAINED-NO-NET): Ditemukan panggilan jaringan di dalam <script>.")
+
+    # Gate I-02: Tanpa secret tertanam & wajib memiliki crypto.getRandomValues
+    if re.search(r"AIza[0-9A-Za-z_\-]{20,}|sk_live_[0-9A-Za-z]{16,}|ghp_[0-9A-Za-z]{20,}", html_text):
+        failures.append("GATE-I-02 (NO-EMBEDDED-SECRETS): Ditemukan string yang menyerupai API key/secret nyata di HTML.")
+    if "getRandomValues" not in scripts:
+        failures.append("GATE-I-02 (NO-EMBEDDED-SECRETS): Generator secret wajib menggunakan crypto.getRandomValues.")
+
+    # Gate I-03: Manipulasi DOM murni via textContent (tanpa innerHTML) + ekspos GaslyGuide
+    if re.search(r"\.(?:innerHTML|outerHTML)\b|insertAdjacentHTML\s*\(|document\.write\s*\(", scripts):
+        failures.append("GATE-I-03 (SAFE-DOM-TEXTCONTENT): Dilarang menggunakan innerHTML/outerHTML/insertAdjacentHTML/document.write.")
+    if ".textContent" not in scripts:
+        failures.append("GATE-I-03 (SAFE-DOM-TEXTCONTENT): Pembaruan DOM wajib menggunakan .textContent.")
+    for fn_name in ("GaslyGuide", "fillPlaceholders", "validateConfig", "generateSecret"):
+        if fn_name not in scripts:
+            failures.append(f"GATE-I-03 (SAFE-DOM-TEXTCONTENT): Objek/fungsi wajib '{fn_name}' tidak ditemukan di <script>.")
+
+    # Gate I-04: Deklarasi & substitusi placeholder lengkap
+    if "{{KB_VERSION}}" in html_text or "{{SKILL_VERSION}}" in html_text:
+        failures.append("GATE-I-04 (DECLARED-PLACEHOLDERS): Ditemukan token {{KB_VERSION}} atau {{SKILL_VERSION}} yang belum terganti.")
+    found_tokens = set(re.findall(r"\{\{([A-Z0-9_]+)\}\}", html_text))
+    undeclared = found_tokens - ALLOWED_INSTALL_PLACEHOLDERS
+    if undeclared:
+        failures.append(f"GATE-I-04 (DECLARED-PLACEHOLDERS): Ditemukan placeholder tidak terdeklarasi: {sorted(undeclared)}.")
+
+    # Gate I-05: Setiap langkah instalasi wajib memiliki purpose, action, expected, source, dan verified
+    step_tags = re.findall(
+        r"<section\b(?:(?:\"[^\"]*\"|'[^']*'|[^>'\"])*?\bdata-install-step\b(?:\"[^\"]*\"|'[^']*'|[^>'\"])*)>",
+        html_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if not step_tags:
+        failures.append("GATE-I-05 (STEP-PROVENANCE): Tidak ditemukan elemen <section data-install-step ...>.")
+    for idx, tag in enumerate(step_tags, 1):
+        for attr in ("data-step-purpose", "data-step-action", "data-step-expected", "data-step-source", "data-step-verified"):
+            m = re.search(rf'\b{attr}\s*=\s*["\']([^"\']+)["\']', tag, re.IGNORECASE)
+            if not m or not m.group(1).strip():
+                failures.append(f"GATE-I-05 (STEP-PROVENANCE): Langkah #{idx} kehilangan atribut wajib '{attr}'.")
+            elif attr == "data-step-verified":
+                val = m.group(1).strip()
+                if not (re.match(r"^\d{4}-\d{2}-\d{2}$", val) or "UNVERIFIED" in val):
+                    failures.append(f"GATE-I-05 (STEP-PROVENANCE): Langkah #{idx} memiliki data-step-verified tidak valid: '{val}'.")
+
+    # Gate I-06: localStorage hanya untuk progres centang berawalan gasly_install_ di dalam try/catch
+    ls_calls = re.findall(r"localStorage\.(?:setItem|getItem|removeItem)\s*\(\s*([^,\)]+)", scripts)
+    for arg_expr in ls_calls:
+        cleaned = arg_expr.strip()
+        if cleaned.startswith(("'", '"')) and not re.match(r"^['\"]gasly_install_", cleaned):
+            failures.append(f"GATE-I-06 (SCOPED-LOCALSTORAGE): Kunci localStorage '{cleaned}' tidak berawalan 'gasly_install_'.")
+    if "localStorage" in scripts and "gasly_install_" not in scripts:
+        failures.append("GATE-I-06 (SCOPED-LOCALSTORAGE): Penggunaan localStorage wajib memakai prefix 'gasly_install_'.")
+    if "localStorage" in scripts and ("try" not in scripts or "catch" not in scripts):
+        failures.append("GATE-I-06 (SCOPED-LOCALSTORAGE): Akses localStorage wajib dibungkus try/catch.")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Gasly Deterministic Output Verifier")
-    parser.add_argument("--contract", required=True, help="Path ke gasly.project.json")
-    parser.add_argument("--backend", nargs="+", required=True, help="Path ke file .gs backend")
-    parser.add_argument("--frontend", nargs="+", required=True, help="Path ke file frontend")
+    parser.add_argument("--contract", required=False, help="Path ke gasly.project.json")
+    parser.add_argument("--backend", nargs="+", required=False, help="Path ke file .gs backend")
+    parser.add_argument("--frontend", nargs="+", required=False, help="Path ke file frontend")
+    parser.add_argument("--install-guide", required=False, help="Path ke file HTML panduan instalasi (gasly-install)")
     args = parser.parse_args()
 
-    contract = json.loads(Path(args.contract).read_text(encoding="utf-8"))
-    backend_text = read_combined(args.backend)
-    frontend_text = read_combined(args.frontend)
-    all_text = backend_text + "\n" + frontend_text
-
     failures: list[str] = []
+    has_full_args = Boolean_full = bool(args.contract and args.backend and args.frontend)
 
-    check_unreplaced_placeholders(all_text, failures)
-    check_sensitive_drive_privacy(contract, backend_text, failures)
-    check_public_lookup_anti_enum(contract, backend_text, failures)
-    check_upload_result_verification(frontend_text, failures)
-    check_spec_to_ui_bindings(contract, frontend_text, failures)
-    check_seed_and_envelope_consistency(contract, backend_text, frontend_text, failures)
-    check_anti_slop_and_web_gates(frontend_text, failures)
+    if not has_full_args and not args.install_guide:
+        parser.error("Wajib menyertakan (--contract, --backend, --frontend) dan/atau --install-guide.")
+
+    project_label = "INSTALL-GUIDE-ONLY"
+    if has_full_args:
+        contract = json.loads(Path(args.contract).read_text(encoding="utf-8"))
+        project_label = str(contract.get("project", {}).get("name") or "UNKNOWN")
+        backend_text = read_combined(args.backend)
+        frontend_text = read_combined(args.frontend)
+        all_text = backend_text + "\n" + frontend_text
+
+        check_unreplaced_placeholders(all_text, failures)
+        check_sensitive_drive_privacy(contract, backend_text, failures)
+        check_public_lookup_anti_enum(contract, backend_text, failures)
+        check_upload_result_verification(frontend_text, failures)
+        check_spec_to_ui_bindings(contract, frontend_text, failures)
+        check_seed_and_envelope_consistency(contract, backend_text, frontend_text, failures)
+        check_anti_slop_and_web_gates(frontend_text, failures)
+
+    if args.install_guide:
+        check_install_guide(args.install_guide, failures)
 
     print("=" * 72)
-    print(f"GASLY DETERMINISTIC VERIFICATION — PROJECT: {contract.get('project', {}).get('name')}")
+    print(f"GASLY DETERMINISTIC VERIFICATION — PROJECT: {project_label}")
     print("=" * 72)
 
     if failures:

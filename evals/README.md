@@ -1,11 +1,11 @@
 # GASLY SKILLS EVALUATION SUITE (`evals/README.md`)
 **Target Versi KB:** `2.1.0`  
-**Target Versi Skill:** `2.2.0`  
+**Target Versi Skill:** `2.3.0`  
 **Status Hasil Evaluasi Saat Ini:** `NOT RUN` (Belum ada hasil rekaman eksekusi model; jalankan di Gemini, Claude, dan ChatGPT menggunakan rubrik di bawah).
 
 ---
 
-## 1. Delapan Brief Uji Standar (5 Legacy/Core + 3 Headless/Adapter Baru)
+## 1. Sembilan Brief Uji Standar (5 Legacy/Core + 4 Headless/Adapter & Install Baru)
 
 ### Brief 1 — CRUD Sederhana (`gasly-prompt` $\rightarrow$ `gasly-data` / `gasly-pro`)
 > **Prompt Uji:** "Buatkan aplikasi pencatat inventaris buku perpustakaan pribadi sederhana (judul buku, kategori, harga beli, status dipinjam/tersedia) dengan Google Apps Script dan Google Sheets."
@@ -57,6 +57,13 @@
 - **Fokus Verifikasi:**
   - Tahap A (`html-tailwind`): Menyatakan secara eksplisit bahwa *Tailwind Play CDN* hanya untuk prototipe dan menyediakan konfigurasi build CSS terkompilasi (`dist/styles.css`) untuk produksi.
   - Tahap B (`flutter`): Menetapkan `STACK_MODE: INHERIT`, mewarisi kontrak JSON `text/plain` `/exec`, mengambil nilai hex dari `warm-friendly.tokens.json`, menggunakan rantai URL `driveImageUrl`, dan mematuhi seluruh gerbang `UNIVERSAL`.
+
+### Brief 9 [BARU] — Panduan Instalasi Interaktif Mandiri (`gasly-install`)
+> **Prompt Uji:** "Berdasarkan `GASLY_CONTRACT_JSON` proyek sistem gudang internal (`P4`, `TIER_1_DECOUPLED_WORKSPACE`, `html-tailwind`, `cloudflare_pages`, `auth_google_enabled: true`), buatkan satu file HTML panduan pemasangan interaktif yang siap dibuka secara lokal."
+- **Fokus Verifikasi:**
+  - **Kemandirian & Keamanan (`I-01` s/d `I-06`):** Satu file HTML mandiri tanpa `<script src>`, tanpa CDN/font eksternal, tanpa panggilan jaringan (`fetch`/`XMLHttpRequest`/`sendBeacon`/`WebSocket`), dan tanpa secret asli.
+  - **Setup Admin Tanpa Plaintext di Kode:** Menginstruksikan pengisian `ADMIN_PASSPHRASE_INIT` dan `ADMIN_PIN_INIT` di `Project Settings > Script Properties` lalu menjalankan fungsi publik `setupAdminCredentials()`.
+  - **Interaksi & Verifier:** Mengekspos `GaslyGuide` (`fillPlaceholders`, `validateConfig`, `generateSecret`), memvalidasi URL `/exec` (termasuk URL domain Workspace `/macros/a/.../s/.../exec`), memperbarui DOM murni via `textContent`, membatasi `localStorage` hanya pada kunci `gasly_install_`, serta lulus `python tools/verify_output.py --install-guide <file.html>`.
 
 ---
 

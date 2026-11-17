@@ -36,13 +36,14 @@ Payment / External Webhook
 
 ---
 
-## Empat Skill di Dalam Repositori
+## Lima Skill di Dalam Repositori
 
 | Skill | Status | Peran Utama | Paket di `dist/` |
 | :--- | :---: | :--- | :--- |
-| **`gasly-prompt`** | **Aktif** | **Planner / Arsitek:** Menerjemahkan ide bisnis menjadi `MASTER INSTRUCTIONAL PROMPT` 8-seksi (Access Profile `P1`–`P4`, Design Preset + 3 Dials, Stack, Data Schema, Upload Needs). | `dist/modular/gasly-prompt`<br>`dist/flat/gasly-prompt` |
-| **`gasly-data`** | **Aktif** | **Headless Backend Engineer:** Membangun API Google Apps Script (`doPost`/`doGet` via `ContentService`) di atas Google Sheets dan Google Drive (`file.ticket` + `file.upload`). | `dist/modular/gasly-data` |
+| **`gasly-prompt`** | **Aktif** | **Planner / Arsitek:** Menerjemahkan ide bisnis menjadi `MASTER INSTRUCTIONAL PROMPT` 9-seksi beserta `GASLY_CONTRACT_JSON` (Access Profile `P1`–`P4`, Design Preset + 3 Dials, Stack, Data Schema, Upload Needs). | `dist/modular/gasly-prompt`<br>`dist/flat/gasly-prompt` |
+| **`gasly-data`** | **Aktif** | **Headless Backend Engineer:** Membangun API Google Apps Script (`doPost`/`doGet` via `ContentService`) dengan multi-user `USERS`, `P2-lite`, step-up PIN, Sheets CRUD, `file.ticket`/`file.upload`/`file.replace`/`file.delete`, dan konektor `integrations`. | `dist/modular/gasly-data` |
 | **`gasly-ui`** | **Aktif** | **Frontend & Design Engineer:** Membangun aplikasi frontend eksternal yang berbicara ke `/exec` menggunakan adapter penuh (`html-tailwind`, `nextjs`+`shadcn`, `astro`) atau mode pewarisan (`INHERIT` untuk 15 stack lainnya). | `dist/modular/gasly-ui` |
+| **`gasly-install`** | **Aktif** | **Interactive Deployment Guide Compiler:** Menghasilkan satu file HTML panduan instalasi mandiri (tanpa jaringan/CDN) yang spesifik terhadap `GASLY_CONTRACT_JSON` dan siap salin-tempel. | `dist/modular/gasly-install` |
 | **`gasly-pro`** | **LEGACY** | **GAS-Hosted `HtmlService` Engineer:** Dipertahankan khusus untuk pengguna yang secara eksplisit meminta aplikasi monolitik di dalam iframe Google Apps Script (`HtmlService` + `google.script.run`). | `dist/modular/gasly-pro`<br>`dist/flat/gasly-pro`<br>`dist/flat-lite/gasly-pro` |
 
 ---
@@ -54,7 +55,7 @@ Payment / External Webhook
   2. `nextjs` + `shadcn` (pembacaan publik saat build/ISR revalidation, penulisan dari browser)
   3. `astro` (pembacaan publik saat build-time, penulisan dari *client islands*)
 - **Direncanakan (Tahap Berikutnya — `src/stacks/PLANNED.md`):**
-  - `react` (Vite) + `shadcn`, `nuxtjs` + `nuxt-ui`, serta profil akses `P2` (`public-with-accounts` via Supabase Auth).
+  - `react` (Vite) + `shadcn`, `nuxtjs` + `nuxt-ui`, serta profil akses `P2` skala penuh (`public-with-accounts` multi-tenant via Supabase Auth; untuk skala ringan pada GAS murni sudah tersedia `P2-lite` melalui `P2_LITE_AUTO_PROVISION` + tabel `USERS`).
 - **Mode Pewarisan Token & Gates (`STACK_MODE: INHERIT` — `src/stacks/INHERIT.md`):**
   - `angular`, `avalonia`, `flutter`, `javafx`, `jetpack-compose`, `laravel`, `react-native`, `svelte`, `swiftui`, `threejs`, `uno`, `uwp`, `vue`, `winui`, `wpf`.
 
@@ -74,8 +75,10 @@ python tools/check_contrast.py
 # 3. Jalankan unit test Python (frontmatter, <=1000 char description, cross-refs, schema, flat limits)
 python -m unittest discover -s tests -v
 
-# 4. Jalankan Node execution harness
-node tests/harness.js
+# 4. Jalankan Node execution harness (Legacy, Headless GAS V8, & Install Guide)
+TZ=Asia/Jakarta node tests/harness.js
+TZ=Asia/Jakarta node tests/harness_gas.js
+TZ=Asia/Jakarta node tests/harness_install.js
 ```
 
 ---

@@ -514,6 +514,9 @@ function handleItemsDelete_(req) {
   if (!targetId) {
     return createResponse_('error', null, 'ID data wajib disertakan untuk penghapusan.', 'VALIDATION_ERROR');
   }
+  if (!verifyAndConsumeStepUp_(req, 'items.delete')) {
+    return createResponse_('error', null, 'Verifikasi PIN step-up diperlukan.', 'FORBIDDEN');
+  }
 
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) {
@@ -570,6 +573,10 @@ function handleItemsDelete_(req) {
 }
 
 function handleAdminPurgeSeed_(req) {
+  if (!verifyAndConsumeStepUp_(req, 'admin.purgeSeed')) {
+    return createResponse_('error', null, 'Verifikasi PIN step-up diperlukan.', 'FORBIDDEN');
+  }
+
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) {
     return createResponse_('error', null, 'Server sedang sibuk. Silakan coba lagi.', 'LOCK_TIMEOUT');
@@ -651,4 +658,139 @@ function runDiagnostics(fromClient) {
   var report = buildDiagnosticsReport_();
   console.log('DIAGNOSTICS REPORT:', JSON.stringify(report, null, 2));
   return report;
+}
+
+/**
+ * Handler: plans.list (Returns active subscription plans from PLANS sheet)
+ */
+function handlePlansList_(req) {
+  var result = readSheetObjects_('PLANS');
+  if (!result.ok) return result.errorResponse;
+  var activePlans = result.records.filter(function(pl) {
+    return String(pl.status || 'ACTIVE').toUpperCase() === 'ACTIVE';
+  });
+  return createResponse_('success', { plans: activePlans }, 'Daftar paket berhasil dimuat.', 'OK');
+}
+
+/**
+ * Handler: subscription.get (Returns the latest subscription record for the caller or target email for ADMIN)
+ */
+function handleSubscriptionGet_(req) {
+  if (!req.session || !req.session.sub) {
+    return createResponse_('error', null, 'Sesi login diperlukan.', 'FORBIDDEN');
+  }
+  var p = req.payload || {};
+  var callerEmail = String(req.session.sub).trim().toLowerCase();
+  var callerRole = String(req.session.role || '').toUpperCase();
+  var targetEmail = p.email && callerRole === 'ADMIN' ? String(p.email).trim().toLowerCase() : callerEmail;
+
+  var subsRes = readSheetObjects_('SUBSCRIPTIONS');
+  if (!subsRes.ok) return subsRes.errorResponse;
+
+  var matched = null;
+  for (var i = subsRes.records.length - 1; i >= 0; i--) {
+    var row = subsRes.records[i];
+    if (String(row.user_email || '').trim().toLowerCase() === targetEmail) {
+      matched = row;
+      if (String(row.status || '').toUpperCase() === 'ACTIVE') {
+        break;
+      }
+    }
+  }
+  return createResponse_('success', { subscription: matched }, 'Data langganan berhasil dimuat.', 'OK');
+}
+
+/**
+ * Helper: assertEntitlement_(req, currentUsageCount)
+ * Verifies active subscription period_end and max_quota in server before allowing gated operations.
+ */
+function assertEntitlement_(req, currentUsageCount) {
+  if (!req.session || !req.session.sub) {
+    return {
+      allowed: false,
+      errorResponse: createResponse_('error', null, 'Sesi login diperlukan.', 'FORBIDDEN')
+    };
+  }
+  var role = String(req.session.role || '').toUpperCase();
+  if (role === 'ADMIN') {
+    return { allowed: true, planCode: 'ADMIN_BYPASS', maxQuota: -1 };
+  }
+
+  var email = String(req.session.sub).trim().toLowerCase();
+  var subsRes = readSheetObjects_('SUBSCRIPTIONS');
+  if (!subsRes.ok) {
+    return { allowed: false, errorResponse: subsRes.errorResponse };
+  }
+
+  var nowMs = new Date().getTime();
+  var activeSub = null;
+  for (var i = subsRes.records.length - 1; i >= 0; i--) {
+    var s = subsRes.records[i];
+    if (
+      String(s.user_email || '').trim().toLowerCase() === email &&
+      String(s.status || '').toUpperCase() === 'ACTIVE'
+    ) {
+      var endVal = s.period_end;
+      var endMs = endVal instanceof Date ? endVal.getTime() : new Date(String(endVal || '')).getTime();
+      if (!isNaN(endMs) && endMs > nowMs) {
+        activeSub = s;
+        break;
+      }
+    }
+  }
+
+  if (!activeSub) {
+    return {
+      allowed: false,
+      errorResponse: createResponse_(
+        'error',
+        null,
+        'Langganan aktif tidak ditemukan atau masa berlangganan telah berakhir.',
+        'FORBIDDEN'
+      )
+    };
+  }
+
+  var plansRes = readSheetObjects_('PLANS');
+  if (!plansRes.ok) {
+    return { allowed: false, errorResponse: plansRes.errorResponse };
+  }
+
+  var planCode = String(activeSub.plan_code || '').trim().toUpperCase();
+  var matchedPlan = null;
+  for (var j = 0; j < plansRes.records.length; j++) {
+    if (String(plansRes.records[j].plan_code || '').trim().toUpperCase() === planCode) {
+      matchedPlan = plansRes.records[j];
+      break;
+    }
+  }
+
+  if (!matchedPlan || String(matchedPlan.status || '').toUpperCase() !== 'ACTIVE') {
+    return {
+      allowed: false,
+      errorResponse: createResponse_('error', null, 'Paket langganan tidak aktif.', 'FORBIDDEN')
+    };
+  }
+
+  var maxQuota = Number(matchedPlan.max_quota || 0);
+  var usage = Number(currentUsageCount || 0);
+  if (maxQuota > 0 && usage >= maxQuota) {
+    return {
+      allowed: false,
+      errorResponse: createResponse_(
+        'error',
+        { planCode: planCode, maxQuota: maxQuota, currentUsage: usage },
+        'Kuota paket langganan Anda (' + maxQuota + ') telah habis.',
+        'FORBIDDEN'
+      )
+    };
+  }
+
+  return {
+    allowed: true,
+    planCode: planCode,
+    maxQuota: maxQuota,
+    subscription: activeSub,
+    plan: matchedPlan
+  };
 }

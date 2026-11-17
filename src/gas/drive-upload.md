@@ -461,6 +461,9 @@ function handleFileDelete_(req) {
   if (!entityCfg || !entityId) {
     return createResponse_('error', null, 'Entitas dan entityId wajib disertakan.', 'VALIDATION_ERROR');
   }
+  if (!verifyAndConsumeStepUp_(req, 'file.delete')) {
+    return createResponse_('error', null, 'Verifikasi PIN step-up diperlukan.', 'FORBIDDEN');
+  }
 
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) {

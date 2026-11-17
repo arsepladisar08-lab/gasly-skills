@@ -3,9 +3,10 @@
 > Paket keahlian (skill pack) berbahasa Indonesia berlisensi MIT untuk merancang dan membangun aplikasi web produksi dengan frontend eksternal yang terhubung ke satu URL Google Apps Script Web App (`.../exec`) sebagai headless API di atas Google Sheets dan Google Drive.
 
 ## Skills (Modular Packages)
-- [gasly-prompt](dist/modular/gasly-prompt/SKILL.md): Planner & Product Architect. Menghasilkan spesifikasi `MASTER INSTRUCTIONAL PROMPT` 8-seksi (Access Profile P1-P4, Design Preset + 3 Dials, Stack Adapter/Inherit, Data Schema, Drive Upload Needs).
-- [gasly-data](dist/modular/gasly-data/SKILL.md): Headless Google Apps Script Data & Drive API Engineer (`doPost`/`doGet` via `ContentService`, Action Registry allowlist, salted iterated passphrase hash, HMAC-SHA256 session token, `CacheService` rate limit, `LockService` Sheets CRUD, `file.ticket` + `file.upload` ke Google Drive).
+- [gasly-prompt](dist/modular/gasly-prompt/SKILL.md): Planner & Product Architect. Menghasilkan spesifikasi `MASTER INSTRUCTIONAL PROMPT` 9-seksi beserta `GASLY_CONTRACT_JSON` (Access Profile P1-P4, Design Preset + 3 Dials, Stack Adapter/Inherit, Data Schema, Drive Upload Needs).
+- [gasly-data](dist/modular/gasly-data/SKILL.md): Headless Google Apps Script Data & Drive API Engineer (`doPost`/`doGet` via `ContentService`, Action Registry allowlist, multi-user `USERS`, `P2-lite`, step-up PIN, HMAC-SHA256 session token, `CacheService` rate limit, `LockService` Sheets CRUD, `file.ticket`/`file.upload`/`file.replace`/`file.delete`, dan konektor `integrations`).
 - [gasly-ui](dist/modular/gasly-ui/SKILL.md): Decoupled Frontend & Multi-Preset Design Engineer (`gasClient` `text/plain` POST, `ImageUploader` ~1 MB client compression, `driveImageUrl(fileId, width)` fallback chain, WCAG AA presets + 3 dials).
+- [gasly-install](dist/modular/gasly-install/SKILL.md): Interactive Deployment Guide Compiler. Menghasilkan satu file HTML panduan instalasi mandiri (tanpa jaringan/CDN) yang spesifik terhadap `GASLY_CONTRACT_JSON`, lengkap dengan form live placeholder replacement, generator secret lokal, dan checklist progres.
 - [gasly-pro (LEGACY)](dist/modular/gasly-pro/SKILL.md): Legacy GAS-hosted `HtmlService` + `google.script.run` monolithic web app builder.
 
 ## Core Contracts & Gates

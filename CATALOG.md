@@ -11,26 +11,30 @@ Gunakan panduan ini untuk memilih skill dan varian distribusi yang tepat sesuai 
 | Merancang aplikasi baru dari ide mentah (menentukan Access Profile `P1`–`P4`, Preset Desain + 3 Dials, Stack Frontend, Skema Sheet, dan Kebutuhan Upload Drive) | **`gasly-prompt`** | Langkah 1: Panggil `gasly-prompt` $\rightarrow$ Jawab 1 pertanyaan klarifikasi. |
 | Membangun atau merevisi kode backend Google Apps Script (`setup.gs`, `router.gs`, `auth.gs`, `sheets.gs`, `drive.gs`, `webhook.gs`) di balik URL `/exec` | **`gasly-data`** | Langkah 2A: Panggil `gasly-data` menggunakan `MASTER INSTRUCTIONAL PROMPT` dari `gasly-prompt`. |
 | Membangun atau merevisi aplikasi frontend eksternal (`html-tailwind`, `nextjs`+`shadcn`, `astro`, atau 15 stack pewaris) yang berkomunikasi ke URL `/exec` | **`gasly-ui`** | Langkah 2B: Panggil `gasly-ui` menggunakan `MASTER INSTRUCTIONAL PROMPT` yang sama. |
+| Menghasilkan satu file HTML panduan instalasi & deployment interaktif mandiri (tanpa jaringan/CDN) yang spesifik per proyek | **`gasly-install`** | Langkah 3: Panggil `gasly-install` menggunakan `GASLY_CONTRACT_JSON` serta daftar file keluaran dari `gasly-data` dan `gasly-ui`. |
 | **[LEGACY]** Membangun atau memelihara aplikasi monolitik yang disajikan langsung dari dalam iframe `HtmlService` Google Apps Script (`google.script.run`) | **`gasly-pro`** *(Legacy)* | Gunakan hanya jika pengguna secara eksplisit meminta mode `HtmlService` di dalam Google Apps Script. |
 
 ---
 
 ## 2. Daftar Paket Distribusi di `dist/`
 
-Seluruh konten baru untuk arsitektur headless (`gasly-data` dan `gasly-ui`) dikompilasi secara eksklusif ke dalam **`dist/modular/`**, sementara paket `flat` dan `flat-lite` dipertahankan tanpa perubahan batas ukuran untuk kompatibilitas mundur.
+Seluruh konten baru untuk arsitektur headless (`gasly-data`, `gasly-ui`, dan `gasly-install`) dikompilasi secara eksklusif ke dalam **`dist/modular/`**, sementara paket `flat` dan `flat-lite` dipertahankan tanpa perubahan batas ukuran untuk kompatibilitas mundur.
 
 ### A. Paket Modular (`dist/modular/` — Direkomendasikan)
 Cocok untuk platform yang mendukung standar `SKILL.md` beserta pemuatan file di dalam subfolder `references/` (Claude Code, Claude.ai Skills/Projects, ChatGPT Skills, Gemini Skills, Cursor, Windsurf):
 
 - **`dist/modular/gasly-prompt/`**
   - `SKILL.md`
-  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/presets.md`, `references/dials.md`, `references/spec-digest.md`
+  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/monetization-and-tiers.md`, `references/facts.md`, `references/hardening-gates-p0.md`, `references/gasly-contract.schema.json`, `references/presets.md`, `references/dials.md`, `references/spec-digest.md`
 - **`dist/modular/gasly-data/`**
   - `SKILL.md`
-  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/config.md`, `references/router-and-envelope.md`, `references/auth-and-ratelimit.md`, `references/sheets-repository.md`, `references/drive-upload.md`, `references/webhook-receiver.md`
+  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/monetization-and-tiers.md`, `references/facts.md`, `references/hardening-gates-p0.md`, `references/gasly-contract.schema.json`, `references/config.md`, `references/router-and-envelope.md`, `references/auth-and-ratelimit.md`, `references/sheets-repository.md`, `references/drive-upload.md`, `references/webhook-receiver.md`, `references/integrations.md`
 - **`dist/modular/gasly-ui/`**
   - `SKILL.md`
-  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/tokens.schema.json`, `references/presets.md`, `references/dials.md`, `references/presets/*.tokens.json`, `references/css/*.css`, `references/html-tailwind.md`, `references/nextjs-shadcn.md`, `references/astro.md`, `references/INHERIT.md`, `references/PLANNED.md`
+  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/monetization-and-tiers.md`, `references/facts.md`, `references/hardening-gates-p0.md`, `references/gasly-contract.schema.json`, `references/tokens.schema.json`, `references/presets.md`, `references/dials.md`, `references/presets/*.tokens.json`, `references/css/*.css`, `references/html-tailwind.md`, `references/nextjs-shadcn.md`, `references/astro.md`, `references/INHERIT.md`, `references/PLANNED.md`
+- **`dist/modular/gasly-install/`**
+  - `SKILL.md`
+  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/monetization-and-tiers.md`, `references/facts.md`, `references/hardening-gates-p0.md`, `references/gasly-contract.schema.json`, `references/config.md`, `references/install-steps.md`, `references/guide-template.html`
 - **`dist/modular/gasly-pro/`** *(Legacy HtmlService Mode)*
   - `SKILL.md`
   - `references/aura-design.md`, `references/interaction-primitives.md`, `references/app-ux.md`, `references/landing-conversion.md`, `references/gas-backend.md`, `references/boilerplates.md`

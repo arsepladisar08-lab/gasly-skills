@@ -9,6 +9,7 @@
 3. [Kelas 2: `GAS-ONLY` Gates (Khusus Backend Apps Script)](#3-kelas-2-gas-only-gates-khusus-backend-apps-script)
 4. [Kelas 3: `WEB-ONLY` Gates (Khusus Frontend Web)](#4-kelas-3-web-only-gates-khusus-frontend-web)
 5. [Kelas 4: `LEGACY-HTMLSERVICE` Gates (Khusus Mode Legacy `gasly-pro`)](#5-kelas-4-legacy-htmlservice-gates-khusus-mode-legacy-gasly-pro)
+6. [Kelas 5: `INSTALL-GUIDE` Gates (Khusus Panduan Instalasi `gasly-install`)](#6-kelas-5-install-guide-gates-khusus-panduan-instalasi-gasly-install)
 
 ---
 
@@ -70,7 +71,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 7. **Pencegahan Formula Injection Khusus Teks Bebas (`G-07`):**
    - Terapkan `escapeFormula_()` (menambahkan apostrof `'` jika string diawali `=`, `+`, `-`, `@`) **hanya** pada kolom teks bebas menurut skema. Jangan terapkan pada kolom numerik agar angka negatif tetap tersimpan sebagai `Number`.
 8. **Akhiran Underscore (`_`) pada Fungsi Internal (`G-08`):**
-   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `initialSetupDatabase`, `runDiagnostics`) yang ditulis tanpa akhiran `_`.
+   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `initialSetupDatabase`, `setupAdminCredentials`, `runDiagnostics`) yang ditulis tanpa akhiran `_`.
 9. **Keamanan Unggahan Drive & Penulisan Sheet Atomik (`G-09`):**
    - Aksi `file.upload` wajib memvalidasi profil akses / tiket sekali pakai (`file.ticket`), membatasi ukuran byte hasil decode (default `<= 5 MB`), memeriksa daftar putih MIME (`image/jpeg`, `image/png`, `image/webp`) **sekaligus** *magic bytes* header biner, menyanitasi nama file, menyimpan ke `ROOT/<entity>/<yyyy-mm>`, mengatur izin berbagi sesuai klasifikasi (`private` sebagai default mutlak untuk data sensitif), dan menulis `file_id` serta `file_url` ke baris Sheet di dalam satu operasi ber-lock (serta menghapus file Drive bila update Sheet gagal).
 10. **Anti-Enumerasi Endpoint Pelacakan Publik (`G-10`):**
@@ -117,3 +118,21 @@ Gerbang berikut tetap berlaku penuh ketika agen menjalankan skill legacy `gasly-
 3. **Arsitektur 3-File vs 6-File `HtmlService` (`L-03`):** Menggunakan `createHtmlOutputFromFile('index')` untuk 3-file default dan `createTemplateFromFile('index').evaluate()` + `include()` untuk 6-file.
 4. **In-Browser `google.script.run` Sandbox Preview Guard (`L-04`):** Menyediakan `IS_GAS_ENV`, `handleMockAction_()` berparitas 100% dengan fungsi publik `code.gs`, penyimpanan memori default, serta badge **Preview Mode** kiri-bawah dengan tombol `"Reset data preview"`.
 5. **Protokol Pengiriman Bertahap (`L-05`):** Apabila pengguna meminta pembuatan kode monolitik lengkap (`setup.gs`, `code.gs`, dan `index.html`) sekaligus, kirimkan dalam 2 tahap berurutan (Tahap 1: `setup.gs` + `code.gs` utuh; Tahap 2: `index.html` + `VERIFY.md` utuh) untuk mencegah pemotongan token atau kegagalan respons model.
+
+---
+
+## 6. Kelas 5: `INSTALL-GUIDE` Gates (Khusus Panduan Instalasi `gasly-install`)
+
+Gerbang berikut wajib dipatuhi oleh skill `gasly-install` saat menghasilkan file HTML panduan pemasangan interaktif:
+1. **Kemandirian File & Nol Panggilan Jaringan (`I-01`):**
+   - File HTML panduan instalasi wajib mandiri 100%. Dilarang memuat `<script src="...">`, stylesheet/font/gambar eksternal (`http://` atau `https://`), CDN, maupun pemanggilan jaringan runtime (`fetch(`, `XMLHttpRequest`, `navigator.sendBeacon`, `WebSocket`). Tautan `<a href="https://...">` ke dokumentasi resmi diizinkan.
+2. **Nol Kredensial & Secret Tertanam di HTML (`I-02`):**
+   - Dilarang menyertakan API key, token, hash, passphrase, atau contoh string yang menyerupai kredensial nyata di dalam file HTML. Pembuatan secret hanya boleh dilakukan di memori browser melalui `crypto.getRandomValues` untuk properti manual yang terdaftar di `src/gas/config.md`.
+3. **Manipulasi DOM Aman via `textContent` & Validasi Input (`I-03`):**
+   - Seluruh pembaruan nilai konfigurasi dan snippet wajib menggunakan `textContent` (dilarang memakai `innerHTML`, `outerHTML`, atau `insertAdjacentHTML`). Validator wajib menolak karakter `<`, `>`, `"`, `'`, dan spasi, serta memvalidasi URL Web App (`https://`, host `script.google.com`, path memuat `/macros/` dan berakhir `/exec`, termasuk URL domain Workspace).
+4. **Deklarasi & Substitusi Placeholder Lengkap (`I-04`):**
+   - Seluruh placeholder di dalam snippet panduan wajib menggunakan token yang dideklarasikan (`{{SPREADSHEET_ID}}`, `{{GAS_EXEC_URL}}`, `{{GOOGLE_CLIENT_ID}}`, `{{PAGES_DOMAIN}}`), dapat diganti secara lengkap oleh `GaslyGuide.fillPlaceholders`, dan tidak boleh menyisakan placeholder tak dikenal atau token compiler (`{{KB_VERSION}}`, `{{SKILL_VERSION}}`).
+5. **Kelengkapan Metadata & Sumber Verifikasi per Langkah (`I-05`):**
+   - Setiap langkah instalasi wajib mencantumkan 5 atribut/elemen: **Tujuan** (`data-step-purpose`), **Aksi** (`data-step-action`), **Hasil yang Diharapkan** (`data-step-expected`), **Sumber** (`data-step-source`), serta status **`last_verified`** (`data-step-verified` berisi tanggal `YYYY-MM-DD` atau `UNVERIFIED`).
+6. **Pembatasan Ketat `localStorage` Khusus Progres Centang (`I-06`):**
+   - Penggunaan `localStorage` hanya diizinkan untuk menyimpan status centang checklist progres dengan kunci berawalan `gasly_install_`, wajib dibungkus `try / catch`, dan dilarang keras menyimpan nilai form konfigurasi maupun secret.

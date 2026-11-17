@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panduan Instalasi &amp; Deployment Gasly</title>
+  <style>
+    /* Gasly Design Tokens — Preset: dense-dashboard (KB v2.1.0) */
+    :root,
+    [data-theme="light"] {
+      --bg-base: #F1F5F9;
+      --bg-surface: #FFFFFF;
+      --bg-interactive: #E2E8F0;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-helper: #475569;
+      --text-disabled: #94A3B8;
+      --border-subtle: #CBD5E1;
+      --border-focus: #1D4ED8;
+      --accent-solid: #1D4ED8;
+      --accent-text-on-solid: #FFFFFF;
+      --success-solid: #047857;
+      --success-text-on-solid: #FFFFFF;
+      --warning-solid: #B45309;
+      --warning-text-on-solid: #FFFFFF;
+      --danger-solid: #B91C1C;
+      --danger-text-on-solid: #FFFFFF;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 10px;
+      --grid-base: 4px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-base: #0B0F19;
+        --bg-surface: #111827;
+        --bg-interactive: #1E293B;
+        --text-primary: #F8FAFC;
+        --text-secondary: #CBD5E1;
+        --text-helper: #94A3B8;
+        --text-disabled: #64748B;
+        --border-subtle: #1E293B;
+        --border-focus: #3B82F6;
+        --accent-solid: #2563EB;
+        --accent-text-on-solid: #FFFFFF;
+        --success-solid: #047857;
+        --success-text-on-solid: #FFFFFF;
+        --warning-solid: #F59E0B;
+        --warning-text-on-solid: #0B0F19;
+        --danger-solid: #DC2626;
+        --danger-text-on-solid: #FFFFFF;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 64px;
+    }
+    .card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    h1, h2, h3 {
+      margin: 0 0 8px 0;
+      font-family: var(--font-display);
+      color: var(--text-primary);
+    }
+    h1 { font-size: 24px; font-weight: 700; }
+    h2 { font-size: 18px; font-weight: 600; }
+    h3 { font-size: 15px; font-weight: 600; }
+    p { margin: 0 0 8px 0; color: var(--text-secondary); }
+    .helper { font-size: 12px; color: var(--text-helper); }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-interactive);
+      color: var(--text-primary);
+    }
+    .badge-warn {
+      background-color: var(--warning-solid);
+      color: var(--warning-text-on-solid);
+    }
+    .badge-ok {
+      background-color: var(--success-solid);
+      color: var(--success-text-on-solid);
+    }
+    .grid-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 10px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    button {
+      min-height: 40px;
+      min-width: 40px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background-color: var(--bg-interactive);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    button.btn-primary {
+      background-color: var(--accent-solid);
+      color: var(--accent-text-on-solid);
+      border-color: var(--accent-solid);
+    }
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background-color: var(--bg-interactive);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background-color: var(--success-solid);
+      transition: width 160ms ease;
+    }
+    .code-wrap {
+      position: relative;
+      margin-top: 8px;
+    }
+    pre {
+      margin: 0;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .step-check-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .step-check-label input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      background-color: var(--bg-base);
+      margin-bottom: 8px;
+    }
+    details {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background-color: var(--bg-base);
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+    }
+    *:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="card">
+      <div class="header-bar">
+        <div>
+          <h1>Panduan Instalasi &amp; Deployment Gasly</h1>
+          <p class="helper">Mandiri 100% (Offline-Capable) • Tanpa Panggilan Jaringan • Kontrak KB v2.1.0</p>
+        </div>
+        <div class="tabular-nums">
+          <span class="badge" id="progress-badge">0 / 7 Langkah Selesai (0%)</span>
+        </div>
+      </div>
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-Wrap">
+        <div class="progress-fill" id="progress-bar-fill"></div>
+      </div>
+    </header>
+
+    <!-- Panel Konfigurasi Live Placeholder Replacement -->
+    <section class="card" aria-labelledby="cfg-heading">
+      <h2 id="cfg-heading">1. Parameter Konfigurasi Proyek (Live Snippet Filler)</h2>
+      <p class="helper">Nilai di bawah ini hanya mengganti placeholder di halaman secara langsung melalui <code>textContent</code> dan TIDAK PERNAH disimpan ke <code>localStorage</code> atau dikirim ke jaringan.</p>
+      <div class="grid-form">
+        <div>
+          <label for="cfg-spreadsheet-id">Spreadsheet ID (<code>{{SPREADSHEET_ID}}</code>)</label>
+          <input id="cfg-spreadsheet-id" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+        </div>
+        <div>
+          <label for="cfg-gas-url">URL Web App /exec (<code>{{GAS_EXEC_URL}}</code>)</label>
+          <input id="cfg-gas-url" type="url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+        </div>
+        <div>
+          <label for="cfg-google-client-id">Google Client ID (<code>{{GOOGLE_CLIENT_ID}}</code>)</label>
+          <input id="cfg-google-client-id" type="text" placeholder="1234567890-abc.apps.googleusercontent.com">
+        </div>
+        <div>
+          <label for="cfg-pages-domain">Domain Frontend (<code>{{PAGES_DOMAIN}}</code>)</label>
+          <input id="cfg-pages-domain" type="text" placeholder="https://app.contoh.id">
+        </div>
+      </div>
+      <p id="cfg-validation-msg" class="helper" role="status" aria-live="polite" style="margin-top:8px;">Masukkan nilai konfigurasi untuk memperbarui seluruh snippet di bawah secara otomatis.</p>
+    </section>
+
+    <!-- Panel Generator Secret Lokal -->
+    <section class="card" aria-labelledby="sec-heading">
+      <h2 id="sec-heading">2. Pembuat Secret Acak Lokal (Khusus Properti Manual)</h2>
+      <p class="helper">Catatan Penting: <code>AUTH_HMAC_SECRET</code> dan <code>AUTH_PEPPER</code> dibuat otomatis oleh <code>initialSetupDatabase()</code>. Gunakan generator CSPRNG (<code>crypto.getRandomValues</code>) ini HANYA untuk properti manual seperti <code>WEBHOOK_SHARED_SECRET</code> atau nilai awal <code>ADMIN_PASSPHRASE_INIT</code>.</p>
+      <div class="header-bar" style="margin-top:8px;">
+        <button type="button" class="btn-primary" id="btn-gen-secret">Buat Secret Acak 32-Karakter</button>
+        <button type="button" id="btn-copy-secret" data-copy-target="generated-secret-output">Salin Secret</button>
+      </div>
+      <pre id="generated-secret-output">[Klik "Buat Secret Acak 32-Karakter" — nilai hanya tampil di memori halaman]</pre>
+      <p class="helper"><span class="badge badge-warn">PERINGATAN</span> Salin sekarang ke Script Properties — nilai ini tidak disimpan dan akan hilang saat halaman dimuat ulang.</p>
+    </section>
+
+    <!-- Daftar Langkah Instalasi -->
+    <section id="steps-container">
+      <section class="card install-step" data-install-step="step-1"
+        data-step-purpose="Membuat Google Spreadsheet database dan menyalin file backend .gs ke editor Apps Script."
+        data-step-action="Buat Spreadsheet baru, catat SPREADSHEET_ID, buka Extensions > Apps Script, lalu tempel setup.gs dan code.gs."
+        data-step-expected="Kedua file setup.gs dan code.gs tersimpan di proyek Apps Script tanpa syntax error."
+        data-step-source="src/core/facts.md &amp; https://developers.google.com/apps-script/guides/bound"
+        data-step-verified="UNVERIFIED">
+        <div class="step-header">
+          <h3>Langkah 1 — Persiapan Spreadsheet &amp; Kode Backend (.gs)</h3>
+          <label class="step-check-label">
+            <input type="checkbox" data-step-checkbox="step-1"> Tandai Selesai
+          </label>
+        </div>
+        <div class="meta-grid">
+          <div><strong>Tujuan:</strong> Membuat Google Spreadsheet database dan menyalin file backend <code>setup.gs</code> &amp; <code>code.gs</code>.</div>
+          <div><strong>Aksi:</strong> Buka <code>https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit</code>, pilih menu <strong>Extensions &gt; Apps Script</strong>, lalu salin kode backend proyek.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Proyek Apps Script tersimpan dan terikat ke Spreadsheet <code>{{SPREADSHEET_ID}}</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/bound" target="_blank" rel="noopener noreferrer">Google Apps Script Bound Scripts</a> (<span class="badge badge-warn">UNVERIFIED</span> — dicatat di <code>VERIFY.md</code> A-12)</div>
+        </div>
+        <div class="code-wrap">
+          <button type="button" data-copy-target="snippet-step-1">Salin URL</button>
+          <pre id="snippet-step-1" data-template="https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit">https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit</pre>
+        </div>
+      </section>
+
+      <section class="card install-step" data-install-step="step-2"
+        data-step-purpose="Menginisialisasi skema sheet, 16 baris seed objek, zona waktu, AUTH_HMAC_SECRET, AUTH_PEPPER, dan folder Drive."
+        data-step-action="Pilih fungsi initialSetupDatabase pada dropdown toolbar editor Apps Script lalu klik Run."
+        data-step-expected="Log eksekusi menampilkan status success pada SCHEMA_VERSION 1.1.0 dan seluruh sheet terbentuk."
+        data-step-source="src/gas/config.md (Seksi 1 &amp; 2)"
+        data-step-verified="UNVERIFIED">
+        <div class="step-header">
+          <h3>Langkah 2 — Jalankan <code>initialSetupDatabase()</code></h3>
+          <label class="step-check-label">
+            <input type="checkbox" data-step-checkbox="step-2"> Tandai Selesai
+          </label>
+        </div>
+        <div class="meta-grid">
+          <div><strong>Tujuan:</strong> Menginisialisasi tabel sheet, 16 baris seed objek, serta membuat <code>AUTH_HMAC_SECRET</code> dan <code>AUTH_PEPPER</code> secara otomatis.</div>
+          <div><strong>Aksi:</strong> Di toolbar editor Apps Script, pilih <code>initialSetupDatabase</code> lalu klik <strong>Run</strong>. Setujui dialog izin akses Google.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Log menampilkan <code>{ status: 'success', schemaVersion: '1.1.0' }</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/gas/config.md</code> (<span class="badge badge-warn">UNVERIFIED</span> — UI toolbar dicatat di <code>VERIFY.md</code>)</div>
+        </div>
+      </section>
+
+      <section class="card install-step" data-install-step="step-3"
+        data-step-purpose="Mengatur hash passphrase dan PIN step-up admin di ScriptProperties tanpa menulis plaintext di kode."
+        data-step-action="Isi ADMIN_PASSPHRASE_INIT (>=12 karakter) dan ADMIN_PIN_INIT (6 digit) di Project Settings > Script Properties, lalu jalankan setupAdminCredentials()."
+        data-step-expected="ADMIN_PASSPHRASE_HASH dan ADMIN_PIN_HASH tersimpan, sedangkan ADMIN_PASSPHRASE_INIT dan ADMIN_PIN_INIT otomatis terhapus."
+        data-step-source="src/gas/config.md &amp; https://developers.google.com/apps-script/guides/properties"
+        data-step-verified="UNVERIFIED">
+        <div class="step-header">
+          <h3>Langkah 3 — Konfigurasi <code>ScriptProperties</code> &amp; <code>setupAdminCredentials()</code></h3>
+          <label class="step-check-label">
+            <input type="checkbox" data-step-checkbox="step-3"> Tandai Selesai
+          </label>
+        </div>
+        <div class="meta-grid">
+          <div><strong>Tujuan:</strong> Menyimpan hash kredensial admin di <code>ScriptProperties</code> tanpa pernah menulis plaintext di file <code>.gs</code>.</div>
+          <div><strong>Aksi:</strong> Buka <strong>Project Settings &gt; Script Properties</strong>, tambahkan properti di bawah ini, simpan, lalu jalankan fungsi publik <code>setupAdminCredentials</code> dari toolbar editor.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Properti sementara <code>ADMIN_PASSPHRASE_INIT</code> dan <code>ADMIN_PIN_INIT</code> terhapus otomatis setelah hash tersimpan.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/properties" target="_blank" rel="noopener noreferrer">Apps Script Properties Service</a> (<span class="badge badge-warn">UNVERIFIED</span>)</div>
+        </div>
+        <div class="code-wrap">
+          <button type="button" data-copy-target="snippet-step-3">Salin Daftar Kunci</button>
+          <pre id="snippet-step-3" data-template="ACCESS_PROFILE=P4&#10;GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}&#10;ADMIN_PASSPHRASE_INIT=&lt;isi_passphrase_minimal_12_karakter_lalu_jalankan_setupAdminCredentials&gt;&#10;ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;">ACCESS_PROFILE=P4
+GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}
+ADMIN_PASSPHRASE_INIT=&lt;isi_passphrase_minimal_12_karakter_lalu_jalankan_setupAdminCredentials&gt;
+ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pre>
+        </div>
+      </section>
+
+      <section class="card install-step" data-install-step="step-4"
+        data-step-purpose="Menerbitkan endpoint Web App .../exec tunggal dengan akses lintas domain."
+        data-step-action="Klik Deploy > New deployment, pilih Web app, Execute as: Me, Who has access: Anyone, lalu salin URL /exec ke form konfigurasi."
+        data-step-expected="Diperoleh URL https://script.google.com/macros/.../exec yang aktif."
+        data-step-source="src/core/contract.md (Seksi 7) &amp; https://developers.google.com/apps-script/guides/web"
+        data-step-verified="UNVERIFIED">
+        <div class="step-header">
+          <h3>Langkah 4 — Deploy Web App (<code>.../exec</code>)</h3>
+          <label class="step-check-label">
+            <input type="checkbox" data-step-checkbox="step-4"> Tandai Selesai
+          </label>
+        </div>
+        <div class="meta-grid">
+          <div><strong>Tujuan:</strong> Menerbitkan endpoint HTTP <code>/exec</code> tunggal.</div>
+          <div><strong>Aksi:</strong> Klik <strong>Deploy &gt; New deployment</strong> (jenis: <strong>Web app</strong>, <strong>Execute as: Me</strong>, <strong>Who has access: Anyone</strong>). Tempel URL yang didapat pada input <code>{{GAS_EXEC_URL}}</code> di bagian atas halaman ini.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Endpoint <code>{{GAS_EXEC_URL}}</code> siap menerima request <code>POST text/plain;charset=utf-8</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/web" target="_blank" rel="noopener noreferrer">Apps Script Web Apps Guide</a> (<span class="badge badge-warn">UNVERIFIED</span>)</div>
+        </div>
+      </section>
+
+      <section class="card install-step" data-install-step="step-5"
+        data-step-purpose="Mengonfigurasi Google OAuth 2.0 Web Client ID untuk fitur login auth.google."
+        data-step-action="Buat OAuth Web Client ID di Google Cloud Console dengan Authorized JavaScript origins berisi {{PAGES_DOMAIN}}."
+        data-step-expected="Nilai GOOGLE_CLIENT_ID cocok antara frontend dan ScriptProperties."
+        data-step-source="src/core/access-profiles.md (Seksi 3) &amp; https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid"
+        data-step-verified="UNVERIFIED">
+        <div class="step-header">
+          <h3>Langkah 5 — Konfigurasi Google Sign-In (<code>auth.google</code>) &amp; Halaman <code>/privacy</code></h3>
+          <label class="step-check-label">
+            <input type="checkbox" data-step-checkbox="step-5"> Tandai Selesai
+          </label>
+        </div>
+        <div class="meta-grid">
+          <div><strong>Tujuan:</strong> Mengaktifkan login Google ID Token (0 kuota email <code>MailApp</code>) dan memenuhi syarat publikasi OAuth Consent Screen.</div>
+          <div><strong>Aksi:</strong> Pastikan <code>{{PAGES_DOMAIN}}/privacy</code> tersedia publik, tambahkan <code>{{PAGES_DOMAIN}}</code> sebagai <em>Authorized JavaScript origins</em> pada Google Cloud Console, dan pasang <code>{{GOOGLE_CLIENT_ID}}</code>.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Action <code>auth.google</code> memverifikasi token dengan klaim <code>aud === GOOGLE_CLIENT_ID</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid" target="_blank" rel="noopener noreferrer">Google Identity Services Setup</a> (<span class="badge badge-warn">UNVERIFIED</span>)</div>
+        </div>
+      </section>
+
+      <section class="card install-step" data-install-step="step-6"
+        data-step-purpose="Menghubungkan frontend ke URL /exec dan men-deploy ke Cloudflare Pages."
+        data-step-action="Salin konfigurasi environment di bawah ini ke proyek frontend, kompilasi CSS produksi, lalu deploy ke Cloudflare Pages."
+        data-step-expected="Aplikasi frontend aktif di {{PAGES_DOMAIN}} dan terhubung ke {{GAS_EXEC_URL}}."
+        data-step-source="src/core/facts.md (Seksi 2) &amp; src/stacks/html-tailwind.md"
+        data-step-verified="2026-11-16">
+        <div class="step-header">
+          <h3>Langkah 6 — Konfigurasi Environment &amp; Deploy Frontend</h3>
+          <label class="step-check-label">
+            <input type="checkbox" data-step-checkbox="step-6"> Tandai Selesai
+          </label>
+        </div>
+        <div class="meta-grid">
+          <div><strong>Tujuan:</strong> Mengisi satu-satunya konfigurasi URL backend (<code>{{GAS_EXEC_URL}}</code>) pada frontend dan men-deploy ke <strong>Cloudflare Pages</strong> (diizinkan untuk komersial pada tier gratis sesuai <code>facts.md</code>).</div>
+          <div><strong>Aksi:</strong> Salin blok konfigurasi di bawah ke <code>src/config.js</code> atau <code>.env</code> proyek Anda.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Mode simulasi otomatis nonaktif dan frontend memanggil <code>{{GAS_EXEC_URL}}</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/facts.md</code> (<span class="badge badge-ok">2026-11-16</span>)</div>
+        </div>
+        <div class="code-wrap">
+          <button type="button" data-copy-target="snippet-step-6">Salin Konfigurasi</button>
+          <pre id="snippet-step-6" data-template="window.GASLY_CONFIG = {&#10;  EXEC_URL: '{{GAS_EXEC_URL}}',&#10;  GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}',&#10;  PUBLIC_ORIGIN: '{{PAGES_DOMAIN}}',&#10;  REQUEST_TIMEOUT_MS: 20000,&#10;  ALLOW_SESSION_STORAGE: false&#10;};">window.GASLY_CONFIG = {
+  EXEC_URL: '{{GAS_EXEC_URL}}',
+  GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}',
+  PUBLIC_ORIGIN: '{{PAGES_DOMAIN}}',
+  REQUEST_TIMEOUT_MS: 20000,
+  ALLOW_SESSION_STORAGE: false
+};</pre>
+        </div>
+      </section>
+
+      <section class="card install-step" data-install-step="step-7"
+        data-step-purpose="Menguji endpoint /exec dengan perintah curl atau Browser Console tanpa memicu CORS preflight."
+        data-step-action="Salin perintah curl di bawah dan jalankan di terminal lokal Anda."
+        data-step-expected="Server mengembalikan JSON Response Envelope kanonik ({ status: 'success' | 'error', code: ... })."
+        data-step-source="src/core/contract.md (Seksi 2 &amp; 4)"
+        data-step-verified="2026-11-16">
+        <div class="step-header">
+          <h3>Langkah 7 — Snippet Uji Koneksi (Salin &amp; Jalankan di Terminal / Console)</h3>
+          <label class="step-check-label">
+            <input type="checkbox" data-step-checkbox="step-7"> Tandai Selesai
+          </label>
+        </div>
+        <div class="meta-grid">
+          <div><strong>Tujuan:</strong> Memverifikasi bahwa endpoint <code>{{GAS_EXEC_URL}}</code> merespons dengan JSON Envelope Kanonik setelah mengikuti pengalihan <code>HTTP 302</code>.</div>
+          <div><strong>Aksi:</strong> Salin perintah <code>curl</code> di bawah ini ke terminal Anda (halaman ini tidak melakukan panggilan jaringan).</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Menerima JSON dengan kunci <code>status</code> (<code>"success"</code> atau <code>"error"</code>) dan <code>meta.schemaVersion</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/contract.md</code> (<span class="badge badge-ok">2026-11-16</span>)</div>
+        </div>
+        <div class="code-wrap">
+          <button type="button" data-copy-target="snippet-step-7">Salin Perintah curl</button>
+          <pre id="snippet-step-7" data-template="curl -sL -X POST '{{GAS_EXEC_URL}}' \&#10;  -H 'Content-Type: text/plain;charset=utf-8' \&#10;  -d '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">curl -sL -X POST '{{GAS_EXEC_URL}}' \
+  -H 'Content-Type: text/plain;charset=utf-8' \
+  -d '{"action":"items.list","v":1,"auth":null,"idem":null,"payload":{}}'</pre>
+        </div>
+      </section>
+    </section>
+
+    <!-- Akordeon Troubleshooting -->
+    <section class="card" aria-labelledby="ts-heading">
+      <h2 id="ts-heading">3. Troubleshooting &amp; Pertanyaan Umum</h2>
+      <details>
+        <summary>1. Mengapa request POST ke /exec mengembalikan HTTP 302 Redirect?</summary>
+        <p>Endpoint Google Apps Script <code>.../exec</code> secara arsitektural selalu membalas dengan pengalihan <code>HTTP 302</code> ke <code>script.googleusercontent.com</code> (Sumber: <code>src/core/facts.md</code>, terverifikasi <code>2026-11-16</code>). Pastikan klien HTTP menggunakan <code>curl -L</code> atau opsi <code>redirect: "follow"</code>.</p>
+      </details>
+      <details>
+        <summary>2. Mengapa muncul error CORS / preflight OPTIONS gagal di browser?</summary>
+        <p>Apps Script tidak melayani permintaan preflight <code>HTTP OPTIONS</code>. Jangan mengirim header <code>Content-Type: application/json</code> atau header kustom <code>Authorization</code>; wajib gunakan <code>Content-Type: text/plain;charset=utf-8</code> dan kirim token <code>auth</code> di dalam body JSON (Sumber: <code>src/core/contract.md</code>, terverifikasi <code>2026-11-16</code>).</p>
+      </details>
+      <details>
+        <summary>3. Mengapa muncul halaman HTML "Authorization required" atau "Script function not found"?</summary>
+        <p>Pastikan saat men-deploy Web App Anda memilih <strong>Execute as: Me</strong> dan <strong>Who has access: Anyone</strong>, serta sudah menjalankan <code>initialSetupDatabase()</code> minimal satu kali dari editor (Sumber: <code>src/gas/config.md</code> Seksi 3, status UI: <code>UNVERIFIED</code>).</p>
+      </details>
+      <details>
+        <summary>4. Berapa batas kuota waktu eksekusi, konkurensi, dan pengiriman email harian?</summary>
+        <p>Waktu eksekusi maksimal <strong>6 menit/eksekusi</strong>, batas simultan <strong>30 eksekusi</strong> per akun, dan kuota <code>MailApp</code> adalah <strong>100 penerima/hari</strong> (akun konsumen) atau <strong>1.500 penerima/hari</strong> (Workspace) (Sumber: <code>src/core/facts.md</code>, terverifikasi <code>2026-11-16</code>).</p>
+      </details>
+      <details>
+        <summary>5. Bagaimana cara memperbarui kode .gs tanpa mengubah URL /exec?</summary>
+        <p>Jangan klik <em>New deployment</em>. Buka <strong>Deploy &gt; Manage deployments &gt; Edit (ikon pensil) &gt; Version: New version &gt; Deploy</strong> agar URL <code>{{GAS_EXEC_URL}}</code> tetap sama (Sumber: <code>src/gas/config.md</code> Seksi 3, status UI: <code>UNVERIFIED</code>).</p>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    (function(globalScope) {
+      'use strict';
+
+      var STORAGE_CHECKLIST_KEY = 'gasly_install_checklist_v1';
+      var FORBIDDEN_CHARS_RE = /[<>"'\s]/;
+      var SECRET_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
+      /**
+       * Validates user configuration inputs without allowing dangerous characters.
+       * Accepts both standard /macros/s/<id>/exec and Workspace /macros/a/<domain>/s/<id>/exec URLs.
+       */
+      function validateConfig(configObj) {
+        var cfg = configObj && typeof configObj === 'object' ? configObj : {};
+        var errors = {};
+
+        var spreadsheetId = String(cfg.spreadsheetId || cfg.SPREADSHEET_ID || '');
+        var gasExecUrl = String(cfg.gasExecUrl || cfg.GAS_EXEC_URL || cfg.execUrl || '');
+        var googleClientId = String(cfg.googleClientId || cfg.GOOGLE_CLIENT_ID || '');
+        var pagesDomain = String(cfg.pagesDomain || cfg.PAGES_DOMAIN || '');
+
+        if (spreadsheetId) {
+          if (FORBIDDEN_CHARS_RE.test(spreadsheetId) || !/^[a-zA-Z0-9_-]{6,128}$/.test(spreadsheetId)) {
+            errors.SPREADSHEET_ID = 'Spreadsheet ID mengandung karakter tidak valid.';
+          }
+        }
+
+        if (gasExecUrl) {
+          if (FORBIDDEN_CHARS_RE.test(gasExecUrl)) {
+            errors.GAS_EXEC_URL = 'URL Web App tidak boleh mengandung spasi, kutip, atau kurung sudut.';
+          } else {
+            try {
+              var parsed = new URL(gasExecUrl);
+              var pathOk = parsed.pathname.indexOf('/macros/') !== -1 && /\/exec$/.test(parsed.pathname);
+              if (parsed.protocol !== 'https:' || parsed.hostname !== 'script.google.com' || !pathOk || parsed.search || parsed.hash) {
+                errors.GAS_EXEC_URL = 'URL wajib https://script.google.com/macros/.../exec.';
+              }
+            } catch (e) {
+              errors.GAS_EXEC_URL = 'Format URL Web App tidak valid.';
+            }
+          }
+        }
+
+        if (googleClientId) {
+          if (FORBIDDEN_CHARS_RE.test(googleClientId) || !/^[a-zA-Z0-9._-]+$/.test(googleClientId)) {
+            errors.GOOGLE_CLIENT_ID = 'Google Client ID mengandung karakter terlarang.';
+          }
+        }
+
+        if (pagesDomain) {
+          if (FORBIDDEN_CHARS_RE.test(pagesDomain)) {
+            errors.PAGES_DOMAIN = 'Domain Pages mengandung karakter terlarang.';
+          } else {
+            try {
+              var dUrl = new URL(pagesDomain);
+              if (dUrl.protocol !== 'https:' && dUrl.protocol !== 'http:') {
+                errors.PAGES_DOMAIN = 'Domain Pages wajib berprotokol https:// atau http://.';
+              }
+            } catch (e2) {
+              errors.PAGES_DOMAIN = 'Domain Pages wajib berupa URL valid (mis. https://app.contoh.id).';
+            }
+          }
+        }
+
+        return {
+          valid: Object.keys(errors).length === 0,
+          errors: errors
+        };
+      }
+
+      /**
+       * Pure placeholder substitution function.
+       * Rejects any replacement value containing < > " ' or whitespace.
+       */
+      function fillPlaceholders(templateStr, valuesObj) {
+        var tpl = String(templateStr === undefined || templateStr === null ? '' : templateStr);
+        var vals = valuesObj && typeof valuesObj === 'object' ? valuesObj : {};
+
+        var normalized = {
+          SPREADSHEET_ID: vals.SPREADSHEET_ID !== undefined ? vals.SPREADSHEET_ID : vals.spreadsheetId,
+          GAS_EXEC_URL: vals.GAS_EXEC_URL !== undefined ? vals.GAS_EXEC_URL : (vals.gasExecUrl !== undefined ? vals.gasExecUrl : vals.execUrl),
+          GOOGLE_CLIENT_ID: vals.GOOGLE_CLIENT_ID !== undefined ? vals.GOOGLE_CLIENT_ID : vals.googleClientId,
+          PAGES_DOMAIN: vals.PAGES_DOMAIN !== undefined ? vals.PAGES_DOMAIN : vals.pagesDomain
+        };
+
+        Object.keys(normalized).forEach(function(k) {
+          var rawVal = normalized[k];
+          if (rawVal !== undefined && rawVal !== null && String(rawVal) !== '') {
+            var strVal = String(rawVal);
+            if (FORBIDDEN_CHARS_RE.test(strVal)) {
+              throw new Error('Forbidden characters detected in placeholder ' + k);
+            }
+          }
+        });
+
+        return tpl.replace(/\{\{([A-Z0-9_]+)\}\}/g, function(fullMatch, tokenName) {
+          var replacement = normalized[tokenName];
+          if (replacement === undefined || replacement === null || String(replacement) === '') {
+            return fullMatch;
+          }
+          return String(replacement);
+        });
+      }
+
+      /**
+       * Generates a local CSPRNG secret string using crypto.getRandomValues.
+       */
+      function generateSecret(length) {
+        var len = length === undefined ? 32 : Number(length);
+        if (!Number.isInteger(len) || len < 16 || len > 128) {
+          throw new Error('Secret length must be an integer between 16 and 128.');
+        }
+        var cryptoApi = (typeof crypto !== 'undefined' && crypto) || (globalScope && globalScope.crypto);
+        if (!cryptoApi || typeof cryptoApi.getRandomValues !== 'function') {
+          throw new Error('crypto.getRandomValues is required for secure secret generation.');
+        }
+        var randomBytes = new Uint8Array(len);
+        cryptoApi.getRandomValues(randomBytes);
+        var out = '';
+        for (var i = 0; i < randomBytes.length; i++) {
+          out += SECRET_ALPHABET.charAt(randomBytes[i] % SECRET_ALPHABET.length);
+        }
+        return out;
+      }
+
+      var GaslyGuide = {
+        fillPlaceholders: fillPlaceholders,
+        validateConfig: validateConfig,
+        generateSecret: generateSecret
+      };
+
+      globalScope.GaslyGuide = GaslyGuide;
+
+      function loadChecklistState_() {
+        try {
+          if (typeof localStorage !== 'undefined' && localStorage) {
+            var raw = localStorage.getItem(STORAGE_CHECKLIST_KEY);
+            if (raw) {
+              var parsed = JSON.parse(raw);
+              if (parsed && typeof parsed === 'object') return parsed;
+            }
+          }
+        } catch (e) {}
+        return {};
+      }
+
+      function saveChecklistState_(stateObj) {
+        try {
+          if (typeof localStorage !== 'undefined' && localStorage) {
+            localStorage.setItem(STORAGE_CHECKLIST_KEY, JSON.stringify(stateObj));
+          }
+        } catch (e) {}
+      }
+
+      function copyTextSafe_(text, buttonEl) {
+        var origLabel = buttonEl ? buttonEl.textContent : '';
+        function markCopied() {
+          if (!buttonEl) return;
+          buttonEl.textContent = 'Tersalin!';
+          setTimeout(function() {
+            buttonEl.textContent = origLabel;
+          }, 1500);
+        }
+        if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          navigator.clipboard.writeText(text).then(markCopied).catch(function() {
+            markCopied();
+          });
+          return;
+        }
+        markCopied();
+      }
+
+      function initDom_() {
+        var doc = globalScope.document;
+        if (!doc) return;
+
+        var inputSheet = doc.getElementById('cfg-spreadsheet-id');
+        var inputGas = doc.getElementById('cfg-gas-url');
+        var inputClient = doc.getElementById('cfg-google-client-id');
+        var inputDomain = doc.getElementById('cfg-pages-domain');
+        var msgEl = doc.getElementById('cfg-validation-msg');
+
+        function refreshSnippets() {
+          var currentValues = {
+            SPREADSHEET_ID: inputSheet ? inputSheet.value.trim() : '',
+            GAS_EXEC_URL: inputGas ? inputGas.value.trim() : '',
+            GOOGLE_CLIENT_ID: inputClient ? inputClient.value.trim() : '',
+            PAGES_DOMAIN: inputDomain ? inputDomain.value.trim() : ''
+          };
+
+          var validation = validateConfig(currentValues);
+          if (!validation.valid) {
+            var errKeys = Object.keys(validation.errors);
+            if (msgEl) {
+              msgEl.textContent = 'Input ditolak: ' + validation.errors[errKeys[0]];
+            }
+            return;
+          }
+
+          if (msgEl) {
+            msgEl.textContent = 'Konfigurasi valid. Seluruh snippet telah diperbarui via textContent.';
+          }
+
+          var snippetNodes = doc.querySelectorAll('[data-template]');
+          for (var i = 0; i < snippetNodes.length; i++) {
+            var node = snippetNodes[i];
+            var tpl = node.getAttribute('data-template') || '';
+            node.textContent = fillPlaceholders(tpl, currentValues);
+          }
+        }
+
+        [inputSheet, inputGas, inputClient, inputDomain].forEach(function(inp) {
+          if (inp) inp.addEventListener('input', refreshSnippets);
+        });
+
+        var btnGen = doc.getElementById('btn-gen-secret');
+        var secretOut = doc.getElementById('generated-secret-output');
+        if (btnGen && secretOut) {
+          btnGen.addEventListener('click', function() {
+            secretOut.textContent = generateSecret(32);
+          });
+        }
+
+        var copyButtons = doc.querySelectorAll('[data-copy-target]');
+        for (var c = 0; c < copyButtons.length; c++) {
+          (function(btn) {
+            btn.addEventListener('click', function() {
+              var targetId = btn.getAttribute('data-copy-target');
+              var targetEl = doc.getElementById(targetId);
+              if (targetEl) {
+                copyTextSafe_(targetEl.textContent || '', btn);
+              }
+            });
+          })(copyButtons[c]);
+        }
+
+        var checkboxes = doc.querySelectorAll('[data-step-checkbox]');
+        var checkState = loadChecklistState_();
+
+        function updateProgressUi() {
+          var total = checkboxes.length;
+          var done = 0;
+          for (var i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].checked) done++;
+          }
+          var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          var badge = doc.getElementById('progress-badge');
+          var fill = doc.getElementById('progress-bar-fill');
+          var wrap = doc.getElementById('progress-bar-Wrap');
+          if (badge) badge.textContent = done + ' / ' + total + ' Langkah Selesai (' + pct + '%)';
+          if (fill) fill.style.width = pct + '%';
+          if (wrap) wrap.setAttribute('aria-valuenow', String(pct));
+        }
+
+        for (var k = 0; k < checkboxes.length; k++) {
+          (function(cb) {
+            var stepKey = cb.getAttribute('data-step-checkbox');
+            cb.checked = Boolean(checkState[stepKey]);
+            cb.addEventListener('change', function() {
+              checkState[stepKey] = Boolean(cb.checked);
+              saveChecklistState_(checkState);
+              updateProgressUi();
+            });
+          })(checkboxes[k]);
+        }
+        updateProgressUi();
+      }
+
+      if (typeof globalScope.document !== 'undefined' && globalScope.document && typeof globalScope.document.addEventListener === 'function') {
+        globalScope.document.addEventListener('DOMContentLoaded', initDom_);
+      }
+    })(typeof globalThis !== 'undefined' ? globalThis : window);
+  </script>
+</body>
+</html>

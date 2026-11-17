@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panduan Instalasi — FixtureApp (P4 / TIER_1_DECOUPLED_WORKSPACE)</title>
+  <style>
+    :root, [data-theme="light"] {
+      --bg-base: #F1F5F9;
+      --bg-surface: #FFFFFF;
+      --bg-interactive: #E2E8F0;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-helper: #475569;
+      --border-subtle: #CBD5E1;
+      --border-focus: #1D4ED8;
+      --accent-solid: #1D4ED8;
+      --accent-text-on-solid: #FFFFFF;
+      --success-solid: #047857;
+      --success-text-on-solid: #FFFFFF;
+      --warning-solid: #B45309;
+      --warning-text-on-solid: #FFFFFF;
+      --danger-solid: #B91C1C;
+      --danger-text-on-solid: #FFFFFF;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-base: #0B0F19;
+        --bg-surface: #111827;
+        --bg-interactive: #1E293B;
+        --text-primary: #F8FAFC;
+        --text-secondary: #CBD5E1;
+        --text-helper: #94A3B8;
+        --border-subtle: #1E293B;
+        --border-focus: #3B82F6;
+        --accent-solid: #2563EB;
+        --accent-text-on-solid: #FFFFFF;
+      }
+    }
+    body { margin: 0; padding: 20px; background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); }
+    .card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    pre { background: var(--bg-base); border: 1px solid var(--border-subtle); padding: 10px; border-radius: 6px; font-family: var(--font-mono); overflow-x: auto; }
+    button, input { min-height: 40px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); }
+    *:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="card">
+      <h1>Panduan Instalasi FixtureApp</h1>
+      <p>Profil: <code>INTERNAL_APP</code> • Akses: <code>P4</code> • Stack: <code>html-tailwind</code> • Hosting: <code>cloudflare_pages</code></p>
+      <p id="progress-badge">0 / 4 Langkah Selesai (0%)</p>
+    </header>
+
+    <section class="card">
+      <h2>Konfigurasi Parameter Live</h2>
+      <label for="cfg-spreadsheet-id">Spreadsheet ID</label>
+      <input id="cfg-spreadsheet-id" type="text">
+      <label for="cfg-gas-url">URL Web App /exec</label>
+      <input id="cfg-gas-url" type="url">
+      <label for="cfg-google-client-id">Google Client ID</label>
+      <input id="cfg-google-client-id" type="text">
+      <label for="cfg-pages-domain">Domain Cloudflare Pages</label>
+      <input id="cfg-pages-domain" type="text">
+      <p id="cfg-validation-msg" role="status" aria-live="polite">Siap.</p>
+    </section>
+
+    <section class="card">
+      <h2>Pembuat Secret Acak Lokal (CSPRNG)</h2>
+      <button type="button" id="btn-gen-secret">Generate Secret</button>
+      <pre id="generated-secret-output">[Hanya tampil di memori — salin sekarang]</pre>
+    </section>
+
+    <section class="card install-step" data-install-step="step-1"
+      data-step-purpose="Inisialisasi sheet ITEMS (CONFIDENTIAL, Drive private) serta pembuatan otomatis AUTH_HMAC_SECRET dan AUTH_PEPPER."
+      data-step-action="Buka Spreadsheet {{SPREADSHEET_ID}}, salin setup.gs dan code.gs ke Extensions > Apps Script, lalu jalankan initialSetupDatabase()."
+      data-step-expected="Tabel ITEMS terbentuk dengan 16 baris SEED dan folder upload Drive berstatus private."
+      data-step-source="src/gas/config.md"
+      data-step-verified="UNVERIFIED">
+      <h3>Langkah 1 — Setup Database &amp; <code>initialSetupDatabase()</code></h3>
+      <label><input type="checkbox" data-step-checkbox="step-1"> Selesai</label>
+      <pre id="snippet-1" data-template="https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit">https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit</pre>
+    </section>
+
+    <section class="card install-step" data-install-step="step-2"
+      data-step-purpose="Mengatur hash passphrase admin dan PIN step-up tanpa menulis plaintext di kode."
+      data-step-action="Tambahkan ADMIN_PASSPHRASE_INIT, ADMIN_PIN_INIT, ACCESS_PROFILE=P4, dan GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}} di Script Properties lalu jalankan setupAdminCredentials()."
+      data-step-expected="Hash tersimpan di ScriptProperties dan properti sementara ADMIN_PASSPHRASE_INIT serta ADMIN_PIN_INIT terhapus otomatis."
+      data-step-source="src/gas/config.md &amp; https://developers.google.com/apps-script/guides/properties"
+      data-step-verified="UNVERIFIED">
+      <h3>Langkah 2 — Kredensial Admin via <code>setupAdminCredentials()</code></h3>
+      <label><input type="checkbox" data-step-checkbox="step-2"> Selesai</label>
+      <pre id="snippet-2" data-template="ACCESS_PROFILE=P4&#10;GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}">ACCESS_PROFILE=P4
+GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}</pre>
+    </section>
+
+    <section class="card install-step" data-install-step="step-3"
+      data-step-purpose="Menghubungkan frontend html-tailwind di Cloudflare Pages ({{PAGES_DOMAIN}}) ke endpoint {{GAS_EXEC_URL}}."
+      data-step-action="Salin konfigurasi di bawah ke src/config.js dan deploy ke Cloudflare Pages."
+      data-step-expected="FixtureApp aktif di {{PAGES_DOMAIN}} dengan login passphrase dan Google Sign-In."
+      data-step-source="src/core/facts.md &amp; src/stacks/html-tailwind.md"
+      data-step-verified="2026-11-16">
+      <h3>Langkah 3 — Konfigurasi Frontend (<code>html-tailwind</code>)</h3>
+      <label><input type="checkbox" data-step-checkbox="step-3"> Selesai</label>
+      <pre id="snippet-3" data-template="window.GASLY_CONFIG = { EXEC_URL: '{{GAS_EXEC_URL}}', GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}', ORIGIN: '{{PAGES_DOMAIN}}' };">window.GASLY_CONFIG = { EXEC_URL: '{{GAS_EXEC_URL}}', GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}', ORIGIN: '{{PAGES_DOMAIN}}' };</pre>
+    </section>
+
+    <section class="card install-step" data-install-step="step-4"
+      data-step-purpose="Verifikasi respons endpoint /exec dengan perintah curl."
+      data-step-action="Salin dan jalankan perintah curl di terminal."
+      data-step-expected="Mengembalikan JSON Response Envelope kanonik."
+      data-step-source="src/core/contract.md"
+      data-step-verified="2026-11-16">
+      <h3>Langkah 4 — Uji Koneksi Endpoint <code>/exec</code></h3>
+      <label><input type="checkbox" data-step-checkbox="step-4"> Selesai</label>
+      <pre id="snippet-4" data-template="curl -sL -X POST '{{GAS_EXEC_URL}}' -H 'Content-Type: text/plain;charset=utf-8' -d '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">curl -sL -X POST '{{GAS_EXEC_URL}}' -H 'Content-Type: text/plain;charset=utf-8' -d '{"action":"items.list","v":1,"auth":null,"idem":null,"payload":{}}'</pre>
+    </section>
+  </main>
+
+  <script>
+    (function(globalScope) {
+      'use strict';
+      var STORAGE_KEY = 'gasly_install_fixtureapp_v1';
+      var FORBIDDEN_RE = /[<>"'\s]/;
+      var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
+      function validateConfig(cfg) {
+        var c = cfg || {};
+        var errors = {};
+        var urlStr = String(c.gasExecUrl || c.GAS_EXEC_URL || '');
+        if (urlStr) {
+          if (FORBIDDEN_RE.test(urlStr)) {
+            errors.GAS_EXEC_URL = 'Karakter terlarang pada URL.';
+          } else {
+            try {
+              var u = new URL(urlStr);
+              if (u.protocol !== 'https:' || u.hostname !== 'script.google.com' || u.pathname.indexOf('/macros/') === -1 || !/\/exec$/.test(u.pathname)) {
+                errors.GAS_EXEC_URL = 'URL bukan endpoint /exec Apps Script.';
+              }
+            } catch (e) {
+              errors.GAS_EXEC_URL = 'Format URL tidak valid.';
+            }
+          }
+        }
+        return { valid: Object.keys(errors).length === 0, errors: errors };
+      }
+
+      function fillPlaceholders(templateStr, valuesObj) {
+        var vals = valuesObj || {};
+        Object.keys(vals).forEach(function(k) {
+          if (vals[k] && FORBIDDEN_RE.test(String(vals[k]))) {
+            throw new Error('Invalid character in ' + k);
+          }
+        });
+        return String(templateStr || '').replace(/\{\{([A-Z0-9_]+)\}\}/g, function(m, key) {
+          return vals[key] ? String(vals[key]) : m;
+        });
+      }
+
+      function generateSecret(length) {
+        var len = Number(length || 32);
+        if (!Number.isInteger(len) || len < 16 || len > 128) throw new Error('Invalid length');
+        var cryptoApi = (typeof crypto !== 'undefined' && crypto) || globalScope.crypto;
+        var buf = new Uint8Array(len);
+        cryptoApi.getRandomValues(buf);
+        var out = '';
+        for (var i = 0; i < buf.length; i++) out += ALPHABET.charAt(buf[i] % ALPHABET.length);
+        return out;
+      }
+
+      globalScope.GaslyGuide = {
+        fillPlaceholders: fillPlaceholders,
+        validateConfig: validateConfig,
+        generateSecret: generateSecret
+      };
+
+      if (typeof globalScope.document !== 'undefined' && globalScope.document) {
+        try {
+          var saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) JSON.parse(saved);
+        } catch (e) {}
+        var badge = globalScope.document.getElementById('progress-badge');
+        if (badge) badge.textContent = '0 / 4 Langkah Selesai (0%)';
+      }
+    })(typeof globalThis !== 'undefined' ? globalThis : window);
+  </script>
+</body>
+</html>

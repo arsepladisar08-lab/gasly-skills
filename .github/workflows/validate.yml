@@ -42,6 +42,10 @@ jobs:
         run: |
           test -f tests/harness.js
           node tests/harness.js
+          test -f tests/harness_gas.js
+          node tests/harness_gas.js
+          test -f tests/harness_install.js
+          node tests/harness_install.js
 
       - name: Publish regenerated dist packages (push only)
         if: github.event_name == 'push'

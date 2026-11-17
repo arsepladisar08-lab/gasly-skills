@@ -57,7 +57,7 @@ function fetchExternalWithBreaker_(serviceName, url, fetchOptions, maxRetries) {
     };
   }
 
-  var retries = Math.min(2, Math.max(0, Number(maxRetries) || 1));
+  var retries = maxRetries !== undefined && maxRetries !== null && !isNaN(Number(maxRetries)) ? Math.min(2, Math.max(0, Number(maxRetries))) : 1;
   var opts = fetchOptions || {};
   opts.muteHttpExceptions = true;
 
@@ -120,7 +120,7 @@ function sendEmailWithQuotaGuard_(recipient, subject, htmlBody) {
     return { sent: false, code: 'VALIDATION_ERROR', remainingQuota: 0, message: 'Alamat email tujuan tidak valid.' };
   }
   var remaining = MailApp.getRemainingDailyQuota();
-  if (remaining < 5) {
+  if (remaining <= 5) {
     return {
       sent: false,
       code: 'RATE_LIMITED',
@@ -301,4 +301,138 @@ function enqueueOutboxJob_(jobType, payloadObj) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * Handler: payment.createCheckout
+ * Looks up price_amount strictly from the server PLANS sheet (ignores any client-supplied price)
+ * and creates a PENDING subscription invoice in SUBSCRIPTIONS.
+ * TODO-VERIFY: Sesuaikan endpoint dan field payload gateway pembayaran (Midtrans / Xendit / Duitku) saat diuji di runtime GAS.
+ */
+function handlePaymentCreateCheckout_(req) {
+  if (!req.session || !req.session.sub) {
+    return createResponse_('error', null, 'Sesi login diperlukan untuk membuat checkout.', 'FORBIDDEN');
+  }
+
+  var p = req.payload || {};
+  var planCode = String(p.planCode || p.plan_code || '').trim().toUpperCase();
+  if (!planCode) {
+    return createResponse_('error', null, 'planCode wajib disertakan.', 'VALIDATION_ERROR');
+  }
+
+  var plansRes = readSheetObjects_('PLANS');
+  if (!plansRes.ok) return plansRes.errorResponse;
+
+  var matchedPlan = null;
+  for (var i = 0; i < plansRes.records.length; i++) {
+    var pl = plansRes.records[i];
+    if (
+      String(pl.plan_code || '').trim().toUpperCase() === planCode &&
+      String(pl.status || '').toUpperCase() === 'ACTIVE'
+    ) {
+      matchedPlan = pl;
+      break;
+    }
+  }
+
+  if (!matchedPlan) {
+    return createResponse_('error', null, 'Paket langganan tidak ditemukan atau tidak aktif.', 'NOT_FOUND');
+  }
+
+  var serverPrice = Number(matchedPlan.price_amount);
+  if (!isFinite(serverPrice) || serverPrice <= 0) {
+    return createResponse_('error', null, 'Harga paket pada server belum valid.', 'INTERNAL_ERROR');
+  }
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    return createResponse_('error', null, 'Server sedang sibuk.', 'LOCK_TIMEOUT');
+  }
+
+  var newSubRecord = null;
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var subsSheet = ss.getSheetByName('SUBSCRIPTIONS');
+    if (!subsSheet) {
+      return createResponse_('error', null, 'Tabel SUBSCRIPTIONS belum diinisialisasi.', 'NOT_FOUND');
+    }
+
+    var lastCol = subsSheet.getLastColumn();
+    var headers = subsSheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
+    var tz = Session.getScriptTimeZone() || DEFAULT_TZ;
+    var now = new Date();
+    var nowIso = formatIsoOffset_(now);
+    var ymd = Utilities.formatDate(now, tz, 'yyyyMMdd');
+    var subId = generateNextId_(subsSheet, 'SUB');
+    var extInvoiceId = 'INV-' + ymd + '-' + Utilities.getUuid().slice(0, 8).toUpperCase();
+    var userEmail = String(req.session.sub).trim().toLowerCase();
+
+    newSubRecord = {
+      id: subId,
+      user_email: escapeFormula_(userEmail),
+      plan_code: escapeFormula_(planCode),
+      status: 'PENDING',
+      period_start: '',
+      period_end: '',
+      external_invoice_id: extInvoiceId,
+      provider_event_id: '',
+      created_at: nowIso,
+      updated_at: nowIso,
+      is_seed: 'FALSE'
+    };
+
+    var rowVals = buildRowFromObject_(headers, newSubRecord);
+    subsSheet.getRange(subsSheet.getLastRow() + 1, 1, 1, lastCol).setValues([rowVals]);
+    SpreadsheetApp.flush();
+  } finally {
+    lock.releaseLock();
+  }
+
+  // TODO-VERIFY: Konfigurasi PAYMENT_GATEWAY_URL dan PAYMENT_GATEWAY_SECRET di ScriptProperties sesuai dokumentasi resmi gateway pilihan.
+  var props = PropertiesService.getScriptProperties();
+  var gatewayUrl = props.getProperty('PAYMENT_GATEWAY_URL') || '';
+  var gatewaySecret = props.getProperty('PAYMENT_GATEWAY_SECRET') || '';
+  var paymentUrl = '';
+
+  if (gatewayUrl && gatewaySecret) {
+    var gwRes = fetchExternalWithBreaker_(
+      'payment_gateway',
+      gatewayUrl,
+      {
+        method: 'post',
+        contentType: 'application/json',
+        headers: { Authorization: gatewaySecret },
+        payload: JSON.stringify({
+          external_id: newSubRecord.external_invoice_id,
+          subscription_id: newSubRecord.id,
+          plan_code: planCode,
+          amount: serverPrice,
+          payer_email: newSubRecord.user_email
+        })
+      },
+      1
+    );
+    if (!gwRes.ok) {
+      return createResponse_('error', { subscriptionId: newSubRecord.id, externalInvoiceId: newSubRecord.external_invoice_id }, gwRes.errorMessage, 'INTERNAL_ERROR');
+    }
+    try {
+      var parsedGw = JSON.parse(gwRes.bodyText || '{}');
+      paymentUrl = String(parsedGw.payment_url || parsedGw.invoice_url || parsedGw.redirect_url || '');
+    } catch (e) {}
+  }
+
+  return createResponse_(
+    'success',
+    {
+      subscriptionId: newSubRecord.id,
+      externalInvoiceId: newSubRecord.external_invoice_id,
+      planCode: planCode,
+      amount: serverPrice,
+      billingPeriod: String(matchedPlan.billing_period || 'MONTHLY'),
+      status: 'PENDING',
+      paymentUrl: paymentUrl
+    },
+    'Invoice langganan berhasil dibuat dengan harga resmi server.',
+    'OK'
+  );
 }

@@ -290,7 +290,17 @@ if (accountId === 'admin') {
     }
 
     var candidateHash = computeIteratedHash_(passphrase.trim(), storedSalt, pepper, iterations);
-    var usersRes = readSheetObjects_('USERS', true);
+    if (!constantTimeEqual_(candidateHash, storedHash)) {
+      recordAuthFailure_(rl);
+      return createResponse_('error', null, 'Kredensial tidak valid.', 'FORBIDDEN');
+    }
+
+    clearAuthFailures_(rl);
+    var issued = issueSessionToken_(accountId, 'ADMIN');
+    return createResponse_('success', issued, 'Login berhasil.', 'OK');
+  }
+
+  var usersRes = readSheetObjects_('USERS', true);
   if (!usersRes.ok) return usersRes.errorResponse;
 
   var matchedUser = null;
@@ -307,27 +317,16 @@ if (accountId === 'admin') {
   var computedUserHash = computeIteratedHash_(passphrase.trim(), userSalt, pepper, iterations);
 
   if (!matchedUser || !userHash || !constantTimeEqual_(computedUserHash, userHash)) {
-      recordAuthFailure_(rl);
-      return createResponse_('error', null, 'Kredensial tidak valid.', 'FORBIDDEN');
-    }
-
-    var userRole = String(matchedUser.role || 'STAFF').toUpperCase();
-    if (ROLE_RANK_[userRole] === undefined) userRole = 'STAFF';
-
-    clearAuthFailures_(rl);
-    var issuedUser = issueSessionToken_(accountId, userRole);
-    return createResponse_('success', issuedUser, 'Login berhasil.', 'OK');
-   }
-
-  var candidateHash = computeIteratedHash_(passphrase.trim(), storedSalt, pepper, iterations);
-  if (!constantTimeEqual_(candidateHash, storedHash)) {
     recordAuthFailure_(rl);
     return createResponse_('error', null, 'Kredensial tidak valid.', 'FORBIDDEN');
   }
 
+  var userRole = String(matchedUser.role || 'STAFF').toUpperCase();
+  if (ROLE_RANK_[userRole] === undefined) userRole = 'STAFF';
+
   clearAuthFailures_(rl);
-  var issued = issueSessionToken_(accountId, 'ADMIN');
-  return createResponse_('success', issued, 'Login berhasil.', 'OK');
+  var issuedUser = issueSessionToken_(accountId, userRole);
+  return createResponse_('success', issuedUser, 'Login berhasil.', 'OK');
 }
 
 /**
@@ -498,6 +497,8 @@ function handleAuthSetCredentials_(req) {
 
   var newPassphrase = p.newPassphrase !== undefined ? String(p.newPassphrase) : '';
   var newPin = p.newPin !== undefined ? String(p.newPin).trim() : '';
+  var currentPassphrase = p.currentPassphrase !== undefined ? String(p.currentPassphrase) : '';
+
   if (!newPassphrase && !newPin) {
     return createResponse_('error', null, 'Sertakan newPassphrase atau newPin yang akan diperbarui.', 'VALIDATION_ERROR');
   }
@@ -506,6 +507,52 @@ function handleAuthSetCredentials_(req) {
   }
   if (newPin && !/^\d{6}$/.test(newPin)) {
     return createResponse_('error', null, 'PIN step-up wajib tepat 6 digit angka.', 'VALIDATION_ERROR');
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  var pepper = props.getProperty('AUTH_PEPPER') || '';
+  var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
+
+  // Jika ADMIN mengubah pengguna lain, wajib stepUpToken milik ADMIN untuk 'auth.setCredentials'
+  if (targetEmail !== callerEmail) {
+    if (!verifyAndConsumeStepUp_(req, 'auth.setCredentials')) {
+      return createResponse_('error', null, 'Verifikasi PIN step-up diperlukan.', 'FORBIDDEN');
+    }
+  } else if (callerEmail === 'admin') {
+    // Bootstrap 'admin' mengubah kredensial sendiri di ScriptProperties
+    var rlAdmin = checkAuthRateLimit_('admin');
+    if (!rlAdmin.allowed) {
+      return createResponse_('error', null, 'Terlalu banyak percobaan gagal.', 'FORBIDDEN', { retryAfterSeconds: rlAdmin.retryAfterSeconds });
+    }
+    var adminSalt = props.getProperty('ADMIN_PASSPHRASE_SALT') || '';
+    var adminHash = props.getProperty('ADMIN_PASSPHRASE_HASH') || '';
+    if (!currentPassphrase || currentPassphrase.trim().length < 12 || !adminSalt || !adminHash) {
+      recordAuthFailure_(rlAdmin);
+      return createResponse_('error', null, 'currentPassphrase wajib disertakan dan valid.', 'FORBIDDEN');
+    }
+    var candAdmin = computeIteratedHash_(currentPassphrase.trim(), adminSalt, pepper, iterations);
+    if (!constantTimeEqual_(candAdmin, adminHash)) {
+      recordAuthFailure_(rlAdmin);
+      return createResponse_('error', null, 'currentPassphrase tidak sesuai.', 'FORBIDDEN');
+    }
+    clearAuthFailures_(rlAdmin);
+    var existingAdminPinHash = props.getProperty('ADMIN_PIN_HASH') || '';
+    if (newPin && existingAdminPinHash) {
+      if (!verifyAndConsumeStepUp_(req, 'auth.setCredentials')) {
+        return createResponse_('error', null, 'Verifikasi PIN step-up diperlukan.', 'FORBIDDEN');
+      }
+    }
+    if (newPassphrase) {
+      var newAdminSalt = generateRandomSecret_(16);
+      props.setProperty('ADMIN_PASSPHRASE_SALT', newAdminSalt);
+      props.setProperty('ADMIN_PASSPHRASE_HASH', computeIteratedHash_(newPassphrase.trim(), newAdminSalt, pepper, iterations));
+    }
+    if (newPin) {
+      var newAdminPinSalt = generateRandomSecret_(16);
+      props.setProperty('ADMIN_PIN_SALT', newAdminPinSalt);
+      props.setProperty('ADMIN_PIN_HASH', computeIteratedHash_(newPin, newAdminPinSalt, pepper, iterations));
+    }
+    return createResponse_('success', { email: 'admin', updated: true }, 'Kredensial admin berhasil diperbarui.', 'OK');
   }
 
   var lock = LockService.getScriptLock();
@@ -543,9 +590,27 @@ function handleAuthSetCredentials_(req) {
       return createResponse_('error', null, 'Pengguna tidak ditemukan pada tabel USERS.', 'NOT_FOUND');
     }
 
-    var props = PropertiesService.getScriptProperties();
-    var pepper = props.getProperty('AUTH_PEPPER') || '';
-    var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
+    if (targetEmail === callerEmail) {
+      var rlSelf = checkAuthRateLimit_(callerEmail);
+      if (!rlSelf.allowed) {
+        return createResponse_('error', null, 'Terlalu banyak percobaan gagal.', 'FORBIDDEN', { retryAfterSeconds: rlSelf.retryAfterSeconds });
+      }
+      var curSalt = passSaltIdx >= 0 ? String(existingRow[passSaltIdx] || '') : '';
+      var curHash = passHashIdx >= 0 ? String(existingRow[passHashIdx] || '') : '';
+      // Jika akun sudah punya password_hash (atau bahkan jika P2-lite, currentPassphrase wajib saat punya hash; jika belum punya hash maka wajib menyertakan currentPassphrase minimal 12 karakter atau gagal bila kosong)
+      if (!currentPassphrase || (curHash && (!curSalt || !constantTimeEqual_(computeIteratedHash_(currentPassphrase.trim(), curSalt, pepper, iterations), curHash)))) {
+        recordAuthFailure_(rlSelf);
+        return createResponse_('error', null, 'currentPassphrase wajib disertakan dan valid.', 'FORBIDDEN');
+      }
+      clearAuthFailures_(rlSelf);
+
+      var existingPinHash = pinHashIdx >= 0 ? String(existingRow[pinHashIdx] || '').trim() : '';
+      if (newPin && existingPinHash) {
+        if (!verifyAndConsumeStepUp_(req, 'auth.setCredentials')) {
+          return createResponse_('error', null, 'Verifikasi PIN step-up diperlukan.', 'FORBIDDEN');
+        }
+      }
+    }
 
     if (newPassphrase && passSaltIdx >= 0 && passHashIdx >= 0) {
       var pSalt = generateRandomSecret_(16);
@@ -596,26 +661,40 @@ function handleAuthVerifyPin_(req) {
     return createResponse_('error', null, 'PIN wajib terdiri dari 6 digit angka.', 'VALIDATION_ERROR');
   }
 
-  var usersRes = readSheetObjects_('USERS', true);
-  if (!usersRes.ok) return usersRes.errorResponse;
-
-  var matchedUser = null;
-  for (var i = 0; i < usersRes.records.length; i++) {
-    var row = usersRes.records[i];
-    if (String(row.email || '').trim().toLowerCase() === subEmail && String(row.status || '').toUpperCase() === 'ACTIVE') {
-      matchedUser = row;
-      break;
-    }
-  }
-
   var props = PropertiesService.getScriptProperties();
   var pepper = props.getProperty('AUTH_PEPPER') || '';
   var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
-  var pinSalt = matchedUser && matchedUser.pin_salt ? String(matchedUser.pin_salt) : 'dummy_pin_salt_anti_timing_000000';
-  var pinHash = matchedUser && matchedUser.pin_hash ? String(matchedUser.pin_hash) : '';
+  var pinSalt = 'dummy_pin_salt_anti_timing_000000';
+  var pinHash = '';
+  var foundIdentity = false;
+
+  if (subEmail === 'admin') {
+    var adminPinSalt = props.getProperty('ADMIN_PIN_SALT') || '';
+    var adminPinHash = props.getProperty('ADMIN_PIN_HASH') || '';
+    if (adminPinSalt && adminPinHash) {
+      pinSalt = adminPinSalt;
+      pinHash = adminPinHash;
+      foundIdentity = true;
+    }
+  }
+
+  if (!foundIdentity) {
+    var usersRes = readSheetObjects_('USERS', true);
+    if (!usersRes.ok) return usersRes.errorResponse;
+    for (var i = 0; i < usersRes.records.length; i++) {
+      var row = usersRes.records[i];
+      if (String(row.email || '').trim().toLowerCase() === subEmail && String(row.status || '').toUpperCase() === 'ACTIVE') {
+        pinSalt = row.pin_salt ? String(row.pin_salt) : pinSalt;
+        pinHash = row.pin_hash ? String(row.pin_hash) : '';
+        foundIdentity = true;
+        break;
+      }
+    }
+  }
+
   var candidatePinHash = computeIteratedHash_(pin, pinSalt, pepper, iterations);
 
-  if (!matchedUser || !pinHash || !constantTimeEqual_(candidatePinHash, pinHash)) {
+  if (!foundIdentity || !pinHash || !constantTimeEqual_(candidatePinHash, pinHash)) {
     var nextFail = failCount + 1;
     cache.put(pinFailKey, String(nextFail), 900);
     if (nextFail >= 3 && req.session.jti) {
@@ -636,10 +715,13 @@ function verifyAndConsumeStepUp_(req, expectedAction) {
   var cache = CacheService.getScriptCache();
   var raw = cache.get('stepup:' + token);
   if (!raw) return false;
-  cache.remove('stepup:' + token);
   try {
     var data = JSON.parse(raw);
-    return data.sub === String(req.session.sub).trim().toLowerCase() && data.action === expectedAction;
+    if (data.sub !== String(req.session.sub).trim().toLowerCase() || data.action !== expectedAction) {
+      return false;
+    }
+    cache.remove('stepup:' + token);
+    return true;
   } catch (e) {
     return false;
   }

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+</head>
+<body>
+  <script>
+    async function runBad() {
+      if (window.confirm('Hapus?')) {
+        const res = await callGasAction('items.list', {});
+        if (res.status === 'ok') console.log('bad status');
+      }
+    }
+  </script>
+</body>
+</html>

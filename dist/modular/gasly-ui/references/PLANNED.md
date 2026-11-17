@@ -23,9 +23,10 @@ Item yang tercantum di dalam dokumen ini berstatus **`PLANNED` (Direncanakan unt
 
 - **Tujuan:** Mengizinkan ribuan pengguna publik mendaftar mandiri, melakukan reset kata sandi, dan hanya membaca/mengubah baris data milik mereka sendiri (*row-level ownership*).
 - **Mengapa Ditunda ke Tahap Berikutnya:** Google Apps Script dan Google Sheets tidak dirancang sebagai penyedia identitas publik berskala besar (kuota pengiriman email harian terbatas dan latensi Sheet meningkat pada tabel pengguna besar). Rencana tahap berikutnya adalah mengintegrasikan **Supabase Auth** sebagai penyedia identitas eksternal sementara data bisnis tetap disimpan di Google Sheets/Drive.
-- **Alternatif Saat Ini:**
-  - Gunakan **`P3` (`public-plus-admin`)** jika pengunjung publik hanya perlu mengirim formulir/unggah bukti (dengan tiket sekali pakai `file.ticket`) dan melacak status menggunakan kode referensi unik, sementara persetujuan dilakukan oleh Admin.
-  - Gunakan **`P4` (`internal-only`)** dengan login Google ID Token (`auth.google` + sheet `ALLOWLIST`) jika seluruh pengguna adalah anggota tim atau mitra yang emailnya sudah terdaftar.
+- **Alternatif Saat Ini (Sudah Didukung di v2.3.0):**
+  - Gunakan **`P2-lite`** pada `gasly-data` (`P2_LITE_AUTO_PROVISION = 'TRUE'` di `ScriptProperties` bersama `auth.google` dan tabel `USERS` berklasifikasi `SENSITIVE_PII`) untuk pendaftaran mandiri ber-rate-limit (maks. 10/10 menit) tanpa menguras kuota `MailApp`, dilengkapi pengaturan passphrase/PIN via `auth.setCredentials` dan step-up PIN 6 digit via `auth.verifyPin`.
+  - Gunakan **`P3` (`public-plus-admin`)** jika pengunjung publik hanya perlu mengirim formulir/unggah bukti (dengan tiket sekali pakai `file.ticket`) dan melacak status menggunakan `tracking_token`, sementara persetujuan dilakukan oleh Admin.
+  - Gunakan **`P4` (`internal-only`)** dengan login multi-user `USERS` (`auth.login`) atau Google ID Token (`auth.google` + sheet `USERS`/`ALLOWLIST`) jika seluruh pengguna adalah anggota tim atau mitra terdaftar.
 
 ---
 

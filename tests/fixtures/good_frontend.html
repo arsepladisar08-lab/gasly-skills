@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <script>
+    async function run() {
+      await callGasAction('auth.google', {});
+      await callGasAction('items.list', {});
+      const uploadRes = await callGasAction('file.upload', {});
+      if (uploadRes.status === 'success' && uploadRes.code === 'OK') {
+        console.log(driveImageUrl('123', 400));
+      }
+    }
+  </script>
+</body>
+</html>

@@ -96,6 +96,7 @@ function sendJsonOutput_(envelope) {
 var handleMailSend_;
 var handleNotifyWhatsapp_;
 var handleAiGenerate_;
+var handlePaymentCreateCheckout_;
 
 /**
  * Central Action Registry (Allowlist).
@@ -132,6 +133,24 @@ function getActionRegistry_() {
       requireIdem: false,
       rolesByProfile: { P1: 'ADMIN', P3: 'STAFF', P4: 'STAFF' },
       handler: handleAuthVerifyPin_
+    },
+    'plans.list': {
+      method: 'ANY',
+      requireIdem: false,
+      rolesByProfile: { P1: 'PUBLIC', P3: 'PUBLIC', P4: 'PUBLIC' },
+      handler: handlePlansList_
+    },
+    'subscription.get': {
+      method: 'ANY',
+      requireIdem: false,
+      rolesByProfile: { P1: 'STAFF', P3: 'STAFF', P4: 'STAFF' },
+      handler: handleSubscriptionGet_
+    },
+    'payment.createCheckout': {
+      method: 'POST',
+      requireIdem: true,
+      rolesByProfile: { P1: 'STAFF', P3: 'STAFF', P4: 'STAFF' },
+      handler: handlePaymentCreateCheckout_
     },
     'items.list': {
       method: 'ANY',
