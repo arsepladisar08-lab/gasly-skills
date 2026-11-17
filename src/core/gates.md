@@ -31,7 +31,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 3. **Anti-Fabrikasi Klaim Bisnis (`U-03`):**
    - Dilarang mengarang jumlah pengguna/pelanggan, logo klien, testimoni palsu, badge *verified*, persentase peningkatan ROI/efisiensi, jaminan mutlak bebas biaya server, kebijakan *refund/free trial*, maupun angka harga paket yang tidak diberikan oleh pengguna. Gunakan data asli dari pengguna, slot `{{...}}`, atau *Role-Based Use Cases* dan kapabilitas nyata dari kode.
 4. **Canonical Response Envelope & Sanitized Errors (`U-04`):**
-   - Seluruh komunikasi server-ke-client wajib memakai `{ status, data, message, code, meta }` dengan kode `OK`, `VALIDATION_ERROR`, `NOT_FOUND`, `FORBIDDEN`, `CONFLICT`, `LOCK_TIMEOUT`, `INTERNAL_ERROR`. Dilarang membocorkan `err.stack` atau `err.toString()` mentah ke client.
+   - Seluruh komunikasi server-ke-client wajib memakai `{ status: 'success' | 'error', data, message, code, meta }` dengan kode `OK`, `VALIDATION_ERROR`, `NOT_FOUND`, `FORBIDDEN`, `CONFLICT`, `LOCK_TIMEOUT`, `INTERNAL_ERROR`. Dilarang membocorkan `err.stack` atau `err.toString()` mentah ke client.
 5. **Kontras Warna WCAG AA (`U-05`):**
    - Setiap pasangan warna teks dan permukaan (*base*, *card*, *interactive hover*, dan *solid button*) pada semua preset wajib memenuhi rasio kontras minimum **4,5:1** untuk teks normal dan **3:1** untuk teks besar/komponen UI. Token *muted* yang di bawah 4,5:1 hanya boleh digunakan pada elemen `disabled` atau garis dekoratif.
 6. **Ukuran Target Sentuh Minimum (`U-06`):**
@@ -42,17 +42,25 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
    - Setiap tampilan dan form wajib menangani state `INITIAL`, `LOADING`, `EMPTY`, `ERROR` (dengan tombol Retry), `SAVING` (mengunci tombol submit agar tidak terjadi *double-submit*), dan `RECOVERY` (mempertahankan ketikan pengguna di form saat simpan gagal).
 9. **Batas Aman Optimistic UI (`U-09`):**
    - *Optimistic UI* hanya diizinkan untuk toggle ringan non-kritikal yang memiliki logika *rollback* otomatis. Pembuatan data ber-ID baru, mutasi keuangan/stok, unggahan Drive, dan penghapusan wajib menunggu respon `status === 'success'` dari server.
+10. **Klasifikasi Data Sensitif & Privasi Drive Mutlak (`U-10`):**
+    - Setiap entitas wajib diberi label `dataClassification`: `PUBLIC`, `INTERNAL`, `CONFIDENTIAL`, atau `SENSITIVE_PII`.
+    - Dokumen pajak (NPWP, SPT, SP2DK, rekap omzet), rekam/rujukan medis, identitas pribadi (KTP/KK), dan bukti keuangan/reimburse wajib diklasifikasikan sebagai `CONFIDENTIAL` atau `SENSITIVE_PII` dengan pengaturan Google Drive **wajib mutlak `visibility: 'private'`** (`DriveApp.Access.PRIVATE`). Dilarang keras memakai `ANYONE_WITH_LINK` hanya demi menampilkan thumbnail di UI web.
+11. **Sinkronisasi Kontrak Spec-ke-UI & Larangan Regresi Tahap (`U-11`):**
+    - Setiap aksi atau metode login yang berstatus `ENABLED` di spesifikasi/backend (seperti `auth.google`) wajib memiliki komponen pemicu nyata di kode frontend.
+    - Tahap pemaketan ulang (seperti bundling ke satu file `index.html` untuk Canvas atau iterasi fitur) dilarang menurunkan keamanan, dilarang menghapus pemeriksaan hasil `file.upload`, dan dilarang menghilangkan state `RECOVERY`.
+12. **Slot Regulasi & Disclaimer Wajib (`U-12`):**
+    - Setiap fitur kalkulator, simulasi tarif, atau indikator kepatuhan pada domain pajak, keuangan, medis, atau hukum wajib mencantumkan dasar peraturan resmi, tanggal verifikasi aturan terakhir, dan *disclaimer* eksplisit bahwa hasil bersifat estimasi indikatif.
 
 ---
 
 ## 3. Kelas 2: `GAS-ONLY` Gates (Khusus Backend Apps Script)
 
 1. **Aturan Runtime V8 Murni (`G-01`):**
-   - Kode Apps Script dilarang menggunakan `import`/`export` ES module, paket npm, API Node.js/browser (`fetch`, `crypto`, `Buffer`, `window`), melainkan hanya layanan resmi GAS (`SpreadsheetApp`, `DriveApp`, `LockService`, `CacheService`, `PropertiesService`, `Utilities`, `ContentService`, `UrlFetchApp`).
+   - Kode Apps Script dilarang menggunakan `import`/`export` ES module, paket npm, API Node.js/browser (`fetch`, `crypto`, `Buffer`, `window`), melainkan hanya layanan resmi GAS (`SpreadsheetApp`, `DriveApp`, `LockService`, `CacheService`, `PropertiesService`, `Utilities`, `ContentService`, `UrlFetchApp`). Pembuatan secret/token wajib memakai `Utilities.getUuid()`, dilarang memakai `Math.random()`.
 2. **Sinkronisasi Zona Waktu & Sanitasi `Date` Rekursif (`G-02`):**
    - `setup.gs` wajib menyamakan zona waktu Spreadsheet dengan zona waktu Script (`ss.setSpreadsheetTimeZone(tz)`). Seluruh nilai kembalian dari Sheet wajib melewati `sanitizeForClient_()` untuk mengubah instance `Date` menjadi `"yyyy-MM-dd'T'HH:mm:ssXXX"`.
 3. **LockService, Pengecekan `updated_at` & Flush Sebelum Release (`G-03`):**
-   - Semua mutasi Sheet wajib memperoleh `LockService.getScriptLock().tryLock(10000)` (`LOCK_TIMEOUT`), memverifikasi kecocokan `updated_at` pada operasi edit/hapus (`CONFLICT`), dan memanggil `SpreadsheetApp.flush()` di dalam blok `try` tepat sebelum `lock.releaseLock()` di blok `finally`.
+   - Semua mutasi Sheet wajib memperoleh `LockService.getScriptLock().tryLock(10000)` (`LOCK_TIMEOUT`), memverifikasi kecocokan `updated_at` pada operasi edit/hapus mutlak (`CONFLICT`), dan memanggil `SpreadsheetApp.flush()` di dalam blok `try` tepat sebelum `lock.releaseLock()` di blok `finally`.
 4. **Penomoran ID Harian via `maxSeq + 1` (`G-04`):**
    - ID harian (`[PREFIX]-YYYYMMDD-0001`) wajib dihitung di dalam lock dengan mencari nilai integer maksimum dari 4 digit terakhir pada tanggal `YYYYMMDD` berjalan (`maxSeq + 1`), tidak pernah menggunakan `jumlah_baris + 1` atau indeks loop lintas tanggal.
 5. **Batch I/O, Pemetaan Header `snake_case` & Larangan Self-Heal Baca (`G-05`):**
@@ -64,7 +72,16 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 8. **Akhiran Underscore (`_`) pada Fungsi Internal (`G-08`):**
    - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `initialSetupDatabase`, `runDiagnostics`) yang ditulis tanpa akhiran `_`.
 9. **Keamanan Unggahan Drive & Penulisan Sheet Atomik (`G-09`):**
-   - Aksi `file.upload` wajib memvalidasi profil akses / tiket sekali pakai (`file.ticket`), membatasi ukuran byte hasil decode (default `<= 5 MB`), memeriksa daftar putih MIME (`image/jpeg`, `image/png`, `image/webp`) **sekaligus** *magic bytes* header biner, menyanitasi nama file, menyimpan ke `ROOT/<entity>/<yyyy-mm>`, mengatur izin berbagi sesuai klasifikasi (`public` vs `private`), dan menulis `file_id` serta `file_url` ke baris Sheet di dalam satu operasi ber-lock (serta menghapus file Drive bila update Sheet gagal).
+   - Aksi `file.upload` wajib memvalidasi profil akses / tiket sekali pakai (`file.ticket`), membatasi ukuran byte hasil decode (default `<= 5 MB`), memeriksa daftar putih MIME (`image/jpeg`, `image/png`, `image/webp`) **sekaligus** *magic bytes* header biner, menyanitasi nama file, menyimpan ke `ROOT/<entity>/<yyyy-mm>`, mengatur izin berbagi sesuai klasifikasi (`private` sebagai default mutlak untuk data sensitif), dan menulis `file_id` serta `file_url` ke baris Sheet di dalam satu operasi ber-lock (serta menghapus file Drive bila update Sheet gagal).
+10. **Anti-Enumerasi Endpoint Pelacakan Publik (`G-10`):**
+    - Setiap endpoint pelacakan/lookup publik tanpa login (`*.track`, `*.lookupPublic`) dilarang hanya mengandalkan ID urut harian (`SUB-YYYYMMDD-0001`) + 4 digit nomor telepon/WhatsApp.
+    - Saat record dibuat, server wajib menerbitkan kolom `tracking_token` acak berentropi tinggi (`Utilities.getUuid()`) yang diverifikasi dengan `constantTimeEqual_()` dan dilindungi *rate-limit* `CacheService` per tiket (maks. 5 gagal / 15 menit) serta batas global.
+11. **Konkurensi Delta vs Optimistic Version (`G-11`):**
+    - Untuk operasi mutasi berbasis penambahan/pengurangan (*delta*) seperti mutasi stok barang keluar/masuk (`IN`/`OUT`) yang sudah diserialkan di dalam `LockService`, server cukup memvalidasi kecukupan saldo akhir (`stockAfter >= 0`) di dalam lock tanpa memblokir transaksi dengan error `CONFLICT` akibat perubahan `updated_at` oleh staf lain di detik yang sama.
+    - Pemeriksaan `expected_updated_at` (`CONFLICT`) hanya diterapkan pada operasi timpa nilai mutlak (*overwrite*) seperti `item.update`, koreksi opname `ADJUST`, atau perubahan status persetujuan.
+12. **Seed Berbasis Objek & Cek Kolom Ekuivalen Saat Migrasi (`G-12`):**
+    - Di dalam `setup.gs`, seluruh baris data awal (`seedRows`) wajib disusun sebagai *Array of Objects* (`{ id: '...', ... }`) yang dipetakan ke urutan header menggunakan `buildRowFromObject_(headers, obj)` agar tidak pernah gagal `setValues()` saat jumlah kolom bertambah.
+    - Saat memproses permintaan penambahan kolom baru dari pengguna, periksa daftar header yang sudah ada: bila sudah terdapat kolom dengan makna ekuivalen (contoh: `storage_rack` vs `lokasi_rak`), gunakan kolom yang sudah ada tanpa membuat kolom duplikat.
 
 ---
 
@@ -85,7 +102,10 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 7. **Pencegahan XSS (`W-07`):**
    - Saat merakit string HTML dinamis pada DOM vanilla (`html-tailwind`), seluruh data wajib dilewatkan ke fungsi `escapeHtml()`.
 8. **Helper Tunggal Gambar Drive (`W-08`):**
-   - Seluruh penampilan foto Drive di frontend wajib menggunakan helper `driveImageUrl(fileId, width)` dengan rantai fallback thumbnail `drive.google.com/thumbnail` ke `lh3.googleusercontent.com/d/`, dilengkapi atribut `referrerpolicy="no-referrer" loading="lazy"`.
+   - Seluruh penampilan foto Drive publik di frontend wajib menggunakan helper `driveImageUrl(fileId, width)` dengan rantai fallback thumbnail `drive.google.com/thumbnail` ke `lh3.googleusercontent.com/d/`, dilengkapi atribut `referrerpolicy="no-referrer" loading="lazy"`. Untuk file berklasifikasi `private`, tampilkan tombol buka tautan `file_url` Google Drive bagi Admin terautentikasi (bukan merender thumbnail publik).
+9. **Verifikasi Hasil Upload & Isolasi Mode Demo Produksi (`W-09`):**
+   - Pada alur unggah file (`file.ticket` -> `file.upload`), kode frontend wajib menyimpan respons `file.upload` ke variabel dan memastikan `uploadRes.status === 'success' && uploadRes.code === 'OK'` sebelum menampilkan banner sukses; jika gagal, tampilkan state `RECOVERY` untuk unggah ulang tanpa membuat duplikasi tiket.
+   - Tombol pengisi kredensial demo (`Isi Demo`) dan bar pengubah URL `/exec` runtime hanya boleh dirender saat `isSimulationMode() === true` (ketika variabel environment produksi kosong), dan wajib disembunyikan/dinonaktifkan sepenuhnya pada konfigurasi produksi.
 
 ---
 
@@ -96,3 +116,4 @@ Gerbang berikut tetap berlaku penuh ketika agen menjalankan skill legacy `gasly-
 2. **Larangan Default `ALLOWALL` (`L-02`):** Tidak memanggil `.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)` kecuali *iframe embedding* diminta secara eksplisit.
 3. **Arsitektur 3-File vs 6-File `HtmlService` (`L-03`):** Menggunakan `createHtmlOutputFromFile('index')` untuk 3-file default dan `createTemplateFromFile('index').evaluate()` + `include()` untuk 6-file.
 4. **In-Browser `google.script.run` Sandbox Preview Guard (`L-04`):** Menyediakan `IS_GAS_ENV`, `handleMockAction_()` berparitas 100% dengan fungsi publik `code.gs`, penyimpanan memori default, serta badge **Preview Mode** kiri-bawah dengan tombol `"Reset data preview"`.
+5. **Protokol Pengiriman Bertahap (`L-05`):** Apabila pengguna meminta pembuatan kode monolitik lengkap (`setup.gs`, `code.gs`, dan `index.html`) sekaligus, kirimkan dalam 2 tahap berurutan (Tahap 1: `setup.gs` + `code.gs` utuh; Tahap 2: `index.html` + `VERIFY.md` utuh) untuk mencegah pemotongan token atau kegagalan respons model.

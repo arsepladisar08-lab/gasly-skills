@@ -28,6 +28,7 @@ SRC_DESIGN_DIR = SRC_DIR / "design"
 SRC_GAS_DIR = SRC_DIR / "gas"
 SRC_STACKS_DIR = SRC_DIR / "stacks"
 SRC_SKILLS_DIR = SRC_DIR / "skills"
+SCHEMAS_DIR = ROOT_DIR / "schemas"
 
 DIST_DIR = ROOT_DIR / "dist"
 STAGING_DIR = ROOT_DIR / ".dist_staging"
@@ -50,7 +51,8 @@ KB_ORDER = [
     "boilerplates.md",
 ]
 
-CORE_FILES = ["contract.md", "access-profiles.md", "gates.md"]
+CORE_FILES = ["contract.md", "access-profiles.md", "gates.md", "monetization-and-tiers.md"]
+OPTIONAL_CORE_FILES = ["facts.md", "hardening-gates-p0.md"]
 DESIGN_DOCS = ["dials.md", "presets.md"]
 GAS_FILES = [
     "config.md",
@@ -59,6 +61,7 @@ GAS_FILES = [
     "sheets-repository.md",
     "drive-upload.md",
     "webhook-receiver.md",
+    "integrations.md",
 ]
 STACK_FILES = [
     "html-tailwind.md",
@@ -75,7 +78,7 @@ DIGEST_PATTERN = re.compile(
     r"<!--\s*DIGEST:START\s*-->(.*?)<!--\s*DIGEST:END\s*-->",
     re.DOTALL,
 )
-FRONTMATTER_PATTERN = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
+FRONTMATTER_PATTERN = re.compile(r"^\ufeff?\s*---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 
 
 def extract_version(content: str, label: str) -> str:
@@ -83,6 +86,14 @@ def extract_version(content: str, label: str) -> str:
     if not match:
         raise ValueError(f"[ERROR] Header <!-- KB_VERSION: x.y.z --> not found in {label}")
     return match.group(1)
+
+
+def inject_version_tokens(contents: dict[str, str], kb_version: str) -> dict[str, str]:
+    """Replaces {{KB_VERSION}} and {{SKILL_VERSION}} across all markdown reference files."""
+    return {
+        fname: text.replace("{{KB_VERSION}}", kb_version).replace("{{SKILL_VERSION}}", SKILL_VERSION)
+        for fname, text in contents.items()
+    }
 
 
 def parse_and_validate_frontmatter(skill_slug: str, content: str) -> dict[str, str]:
@@ -179,11 +190,12 @@ def build_spec_digest(kb_contents: dict[str, str], kb_version: str) -> str:
     toc_lines.append(f"7. [Checklist Keputusan Spesifikasi](#{checklist_anchor})")
 
     checklist = f"""## {checklist_heading}
-- [ ] **Versi KB Tercantum:** Header `KB_VERSION` ditulis eksplisit di dalam Master Prompt.
-- [ ] **Access Profile & Identitas:** Profil (`P1`, `P3`, `P4`; `P2` berstatus `PLANNED`) dan mekanisme sesi ditetapkan.
-- [ ] **Skema & Seed Idempoten:** Semua nama kolom menggunakan `snake_case`, tipe data mentah (Number & ISO Date ber-offset), penomoran urut per-hari, serta penanda `SEED-` + `SCHEMA_VERSION`.
-- [ ] **Kontrak Konkurensi:** Setiap pembuatan ID harian atau mutasi data sensitif ditandai membutuhkan `LockService` + pengecekan `updated_at` (`CONFLICT`) + `SpreadsheetApp.flush()` sebelum `releaseLock()`.
-- [ ] **De-Fabrikasi Bukti Bisnis:** Tidak ada angka klaim pelanggan, testimoni, logo, klaim bebas biaya server, atau harga tetap yang dikarang sendiri; semuanya memakai data pengguna atau slot `{{...}}`.
+- [ ] **Versi KB Tercantum:** Header `KB_VERSION: {kb_version}` ditulis eksplisit di dalam Master Prompt dan `GASLY_CONTRACT_JSON`.
+- [ ] **Access Profile & Klasifikasi Data:** Profil (`P1`–`P4`), `surface_profile`, serta klasifikasi privasi (`PUBLIC` vs `CONFIDENTIAL`/`SENSITIVE_PII` -> Drive wajib `private`) ditetapkan.
+- [ ] **Skema & Seed Berbasis Objek:** Semua nama kolom menggunakan `snake_case`, tipe data mentah (Number & ISO Date ber-offset), seed data berbentuk *Array of Objects*, serta cek kolom ekuivalen sebelum migrasi.
+- [ ] **Kontrak Konkurensi (Delta vs Optimistic):** Mutasi saldo/kuota berbasis *delta* (`IN`/`OUT`) cukup mengecek saldo akhir (`>= 0`) di dalam `LockService`, sedangkan operasi timpa mutlak memeriksa `expected_updated_at` (`CONFLICT`) + `SpreadsheetApp.flush()`.
+- [ ] **Anti-Enumerasi & Integritas Upload:** Endpoint pelacakan publik wajib memakai `tracking_token` berentropi tinggi + *rate-limit*, dan hasil `file.upload` wajib diperiksa sebelum status sukses.
+- [ ] **De-Fabrikasi & Slot Regulasi:** Tidak ada angka klaim pelanggan/testimoni karangan; fitur kalkulator pajak/medis wajib mencantumkan dasar hukum, tanggal verifikasi, dan *disclaimer*.
 - [ ] **Kepatuhan Kontras & Aksesibilitas:** Seluruh pasangan warna preset lulus WCAG AA (`>= 4.5:1`), dan viewport tidak mematikan zoom."""
 
     header = f"""<!-- KB_VERSION: {kb_version} -->
@@ -247,6 +259,38 @@ def verify_headless_registry_handlers(gas_contents: dict[str, str]) -> None:
         raise ValueError(f"[ERROR] Action registry handlers missing in src/gas/*.md: {sorted(missing)}")
 
 
+def audit_gas_security_patterns(gas_contents: dict[str, str], strict: bool = False) -> None:
+    """Audits src/gas/*.md for weak randomness in secrets or positional 2D seed arrays."""
+    warnings: list[str] = []
+    config_md = gas_contents.get("config.md", "")
+    if "Math.floor(Math.random()" in config_md:
+        warnings.append(
+            "src/gas/config.md still calls Math.random() for secret generation. Replace with Utilities.getUuid()."
+        )
+
+    if re.search(r"seedRows\.push\(\s*\[", config_md):
+        warnings.append(
+            "src/gas/config.md still pushes positional 2D seed arrays. Use buildRowFromObject_()."
+        )
+
+    for w in warnings:
+        if strict:
+            raise ValueError(f"[ERROR] Security audit failed: {w}")
+        print(f"[AUDIT-WARN] {w}")
+
+
+def verify_no_unreplaced_tokens(staging_dir: Path) -> None:
+    """Ensures {{KB_VERSION}} or {{SKILL_VERSION}} never leaks into dist/."""
+    for fpath in sorted(staging_dir.rglob("*")):
+        if fpath.is_file() and fpath.suffix in {".md", ".json", ".css"}:
+            text = fpath.read_text(encoding="utf-8")
+            if "{{KB_VERSION}}" in text or "{{SKILL_VERSION}}" in text:
+                rel = fpath.relative_to(staging_dir).as_posix()
+                raise ValueError(
+                    f"[ERROR] Unreplaced version placeholder found in compiled output: {rel}"
+                )
+
+
 def verify_line_budget(skill_name: str, content: str) -> int:
     line_count = len(content.splitlines())
     if line_count > MAX_SKILL_BODY_LINES:
@@ -288,7 +332,12 @@ def compute_sha256(filepath: Path) -> str:
     return h.hexdigest()
 
 
-def load_markdown_group(directory: Path, filenames: list[str], versions: set[str]) -> dict[str, str]:
+def load_markdown_group(
+    directory: Path,
+    filenames: list[str],
+    versions: set[str],
+    optional_filenames: list[str] | None = None,
+) -> dict[str, str]:
     loaded: dict[str, str] = {}
     for fname in filenames:
         fpath = directory / fname
@@ -297,6 +346,15 @@ def load_markdown_group(directory: Path, filenames: list[str], versions: set[str
         text = fpath.read_text(encoding="utf-8")
         versions.add(extract_version(text, f"{directory.name}/{fname}"))
         loaded[fname] = text
+
+    for opt_name in optional_filenames or []:
+        opt_path = directory / opt_name
+        if opt_path.exists():
+            text = opt_path.read_text(encoding="utf-8")
+            if VERSION_PATTERN.search(text):
+                versions.add(extract_version(text, f"{directory.name}/{opt_name}"))
+            loaded[opt_name] = text
+
     return loaded
 
 
@@ -307,12 +365,19 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Allow build to succeed if some skill templates are not present yet.",
     )
+    parser.add_argument(
+        "--strict-security",
+        action="store_true",
+        help="Fail build if security audit warnings (e.g., Math.random in config.md) are found.",
+    )
     args = parser.parse_args(argv)
 
     try:
         detected_versions: set[str] = set()
         kb_contents = load_markdown_group(SRC_KB_DIR, KB_ORDER, detected_versions)
-        core_contents = load_markdown_group(SRC_CORE_DIR, CORE_FILES, detected_versions)
+        core_contents = load_markdown_group(
+            SRC_CORE_DIR, CORE_FILES, detected_versions, OPTIONAL_CORE_FILES
+        )
         design_doc_contents = load_markdown_group(SRC_DESIGN_DIR, DESIGN_DOCS, detected_versions)
         gas_contents = load_markdown_group(SRC_GAS_DIR, GAS_FILES, detected_versions)
         stack_contents = load_markdown_group(SRC_STACKS_DIR, STACK_FILES, detected_versions)
@@ -323,8 +388,16 @@ def main(argv: list[str] | None = None) -> int:
         kb_version = detected_versions.pop()
         print(f"[OK] Source files verified at KB_VERSION={kb_version}, SKILL_VERSION={SKILL_VERSION}")
 
+        # Replace {{KB_VERSION}} and {{SKILL_VERSION}} across ALL reference groups
+        kb_contents = inject_version_tokens(kb_contents, kb_version)
+        core_contents = inject_version_tokens(core_contents, kb_version)
+        design_doc_contents = inject_version_tokens(design_doc_contents, kb_version)
+        gas_contents = inject_version_tokens(gas_contents, kb_version)
+        stack_contents = inject_version_tokens(stack_contents, kb_version)
+
         verify_boilerplate_rpc_contract(kb_contents["boilerplates.md"])
         verify_headless_registry_handlers(gas_contents)
+        audit_gas_security_patterns(gas_contents, strict=args.strict_security)
 
         # Prepare clean staging directory
         if STAGING_DIR.exists():
@@ -332,6 +405,7 @@ def main(argv: list[str] | None = None) -> int:
         STAGING_DIR.mkdir(parents=True, exist_ok=True)
 
         spec_digest_content = build_spec_digest(kb_contents, kb_version)
+        contract_schema_path = SCHEMAS_DIR / "gasly-contract.schema.json"
 
         for skill_slug in ALL_SKILLS:
             src_skill_file = SRC_SKILLS_DIR / skill_slug / "SKILL.md"
@@ -341,8 +415,10 @@ def main(argv: list[str] | None = None) -> int:
                     continue
                 raise FileNotFoundError(f"[ERROR] Missing skill file: {src_skill_file}")
 
-            raw_skill = src_skill_file.read_text(encoding="utf-8")
-            compiled_skill = raw_skill.replace("{{KB_VERSION}}", kb_version)
+            raw_skill = src_skill_file.read_text(encoding="utf-8").lstrip("\ufeff\r\n ")
+            compiled_skill = raw_skill.replace("{{KB_VERSION}}", kb_version).replace(
+                "{{SKILL_VERSION}}", SKILL_VERSION
+            )
             parse_and_validate_frontmatter(skill_slug, compiled_skill)
             line_count = verify_line_budget(skill_slug, compiled_skill)
 
@@ -350,6 +426,9 @@ def main(argv: list[str] | None = None) -> int:
             mod_ref_dir = mod_dir / "references"
             mod_ref_dir.mkdir(parents=True, exist_ok=True)
             (mod_dir / "SKILL.md").write_text(compiled_skill, encoding="utf-8")
+
+            if contract_schema_path.exists() and skill_slug in {"gasly-prompt", "gasly-data", "gasly-ui"}:
+                shutil.copy2(contract_schema_path, mod_ref_dir / "gasly-contract.schema.json")
 
             # Populate modular references per skill routing contract
             if skill_slug == "gasly-prompt":
@@ -424,6 +503,9 @@ def main(argv: list[str] | None = None) -> int:
                 validate_and_report_flat_size(f"flat-lite/{skill_slug}", flat_lite_content, strict_warn=True)
 
             print(f"[OK] Modular {skill_slug}/SKILL.md built ({line_count}/{MAX_SKILL_BODY_LINES} lines)")
+
+        # Final gate: ensure no unreplaced {{KB_VERSION}} or {{SKILL_VERSION}} exists anywhere in staging
+        verify_no_unreplaced_tokens(STAGING_DIR)
 
         # Generate dist/manifest.json with SHA-256 hashes
         files_manifest: dict[str, dict[str, int | str]] = {}

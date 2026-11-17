@@ -19,10 +19,10 @@ Laporan komunitas menunjukkan bahwa `multipart/form-data` tidak dapat di-parse s
    - Browser meminta `action: "file.ticket"` dengan `{ entity, entityId, uploadNonce }`. Server hanya menerbitkan tiket jika nonce cocok, record dibuat maksimal 15 menit sebelumnya, record belum diarsipkan, dan `file_id`/`file_url` masih kosong.
    - Tiket berisi scope `entity + entityId + uploadNonce`, berlaku 5 menit, dan dikonsumsi di dalam `LockService` ketika upload diproses. Tiket tidak boleh dipakai untuk record lain atau dipakai ulang.
    - Pengunggah tanpa sesi terautentikasi tidak boleh menimpa file yang sudah ada. Hanya sesi bertanda tangan dengan role `ADMIN` atau `STAFF` yang boleh mengganti attachment.
-2. **Struktur Folder & Klasifikasi Berbagi (`public` vs `private`):**
+2. **Struktur Folder & Klasifikasi Berbagi (`private` sebagai Default Mutlak):**
    - File disimpan ke dalam sub-folder `ROOT/<entity>/<yyyy-mm>` di bawah folder `DRIVE_ROOT_FOLDER_ID`.
-   - Jika klasifikasi entitas adalah `public` (mis. foto katalog produk), izin file disetel ke `DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW`.
-   - Jika klasifikasi entitas adalah `private` (mis. foto bukti transfer/KTP/inspeksi internal), file **tidak** dibagikan secara publik; hanya admin yang dapat mengaksesnya.
+   - **Aturan Keras `Gate U-10`:** Jika entitas memuat dokumen pajak (NPWP, SPT, SP2DK, rekap omzet), rekam/rujukan medis, identitas (KTP/KK), atau struk/bukti keuangan (`dataClassification: 'CONFIDENTIAL' | 'SENSITIVE_PII'`), `visibility` **WAJIB disetel ke `'private'`** (`DriveApp.Access.PRIVATE, DriveApp.Permission.NONE`). Dilarang keras memakai `ANYONE_WITH_LINK` untuk dokumen pelanggan/pasien.
+   - Pengaturan `visibility: 'public'` (`DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW`) **HANYA** boleh digunakan untuk entitas katalog/poster/avatar publik (`dataClassification: 'PUBLIC'`).
 3. **Penulisan Atomik & Rollback File Yatim:**
    - Di dalam satu blok `LockService.getScriptLock()`, server memastikan baris target (`entityId`) ada di Sheet, membuat file di Drive, lalu menulis `file_id` dan `file_url` kanonik (`https://drive.google.com/file/d/<id>/view`) ke baris tersebut. Jika penulisan ke Sheet gagal, file Drive yang baru dibuat langsung dibuang (`file.setTrashed(true)`).
 
@@ -52,7 +52,8 @@ Untuk deployment publik (`P3`) dengan trafik tinggi, pemilik proyek dapat menamb
 var ENTITY_UPLOAD_CONFIG_ = {
   ITEMS: {
     sheetName: 'ITEMS',
-    visibility: 'public', // 'public' | 'private'
+    dataClassification: 'CONFIDENTIAL', // 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'SENSITIVE_PII'
+    visibility: 'private', // 'private' (default wajib untuk data sensitif) | 'public' (khusus katalog/poster publik)
     allowedMimes: ['image/jpeg', 'image/png', 'image/webp']
   }
 };
@@ -374,13 +375,21 @@ function handleFileUpload_(req) {
     var blob = Utilities.newBlob(decodedBytes, mimeType, safeName);
     createdFile = targetFolder.createFile(blob);
 
-    if (entityCfg.visibility === 'public') {
+    // Gate U-10: Hanya bagikan ke publik jika secara eksplisit PUBLIC dan bukan data sensitif
+    var isStrictlyPublic =
+      entityCfg.visibility === 'public' &&
+      entityCfg.dataClassification === 'PUBLIC';
+
+    if (isStrictlyPublic) {
       createdFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } else {
+      createdFile.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
     }
 
     var fileId = createdFile.getId();
     var canonicalUrl = 'https://drive.google.com/file/d/' + fileId + '/view';
     var nowIso = formatIsoOffset_(new Date());
+    var previousFileId = String(existingRow[fileIdIdx] || '').trim();
 
     existingRow[fileIdIdx] = fileId;
     existingRow[fileUrlIdx] = canonicalUrl;
@@ -390,6 +399,12 @@ function handleFileUpload_(req) {
     sheet.getRange(targetRowNumber, 1, 1, lastCol).setValues([existingRow]);
     SpreadsheetApp.flush();
 
+    if (previousFileId && previousFileId !== fileId) {
+      try {
+        DriveApp.getFileById(previousFileId).setTrashed(true);
+      } catch (oldTrashErr) {}
+    }
+
     return createResponse_(
       'success',
       {
@@ -397,6 +412,7 @@ function handleFileUpload_(req) {
         entityId: entityId,
         fileId: fileId,
         fileUrl: canonicalUrl,
+        visibility: isStrictlyPublic ? 'public' : 'private',
         updatedAt: nowIso
       },
       'File berhasil diunggah dan ditautkan ke data.',
@@ -414,4 +430,95 @@ function handleFileUpload_(req) {
     lock.releaseLock();
   }
 }
-```
+/**
+ * Handler: file.replace
+ * Replaces an existing attachment for an authenticated STAFF/MANAGER/ADMIN session
+ * and moves the previous Drive file to Trash after Sheet flush.
+ */
+function handleFileReplace_(req) {
+  var role = req.session ? String(req.session.role || '').toUpperCase() : '';
+  if (role !== 'ADMIN' && role !== 'MANAGER' && role !== 'STAFF') {
+    return createResponse_('error', null, 'Penggantian file memerlukan sesi terautentikasi.', 'FORBIDDEN');
+  }
+  return handleFileUpload_(req);
+}
+
+/**
+ * Handler: file.delete
+ * Clears file_id and file_url on the target entity row inside LockService and trashes the Drive file.
+ */
+function handleFileDelete_(req) {
+  var role = req.session ? String(req.session.role || '').toUpperCase() : '';
+  if (role !== 'ADMIN' && role !== 'MANAGER' && role !== 'STAFF') {
+    return createResponse_('error', null, 'Penghapusan file memerlukan sesi terautentikasi.', 'FORBIDDEN');
+  }
+
+  var p = req.payload || {};
+  var entityKey = String(p.entity || 'ITEMS').trim().toUpperCase();
+  var entityId = String(p.entityId || '').trim();
+  var entityCfg = ENTITY_UPLOAD_CONFIG_[entityKey];
+
+  if (!entityCfg || !entityId) {
+    return createResponse_('error', null, 'Entitas dan entityId wajib disertakan.', 'VALIDATION_ERROR');
+  }
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    return createResponse_('error', null, 'Server sedang sibuk. Silakan coba lagi.', 'LOCK_TIMEOUT');
+  }
+
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(entityCfg.sheetName);
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return createResponse_('error', null, 'Tabel tujuan tidak ditemukan.', 'NOT_FOUND');
+    }
+
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    var allData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
+    var idIdx = headers.indexOf('id');
+    var fileIdIdx = headers.indexOf('file_id');
+    var fileUrlIdx = headers.indexOf('file_url');
+    var updatedIdx = headers.indexOf('updated_at');
+
+    if (idIdx < 0 || fileIdIdx < 0 || fileUrlIdx < 0) {
+      return createResponse_('error', null, 'Skema kolom file belum tersedia.', 'INTERNAL_ERROR');
+    }
+
+    var targetRowNumber = -1;
+    var existingRow = null;
+    for (var r = 0; r < allData.length; r++) {
+      if (String(allData[r][idIdx]) === entityId) {
+        targetRowNumber = r + 2;
+        existingRow = allData[r];
+        break;
+      }
+    }
+    if (targetRowNumber === -1) {
+      return createResponse_('error', null, 'Record tidak ditemukan.', 'NOT_FOUND');
+    }
+
+    var oldFileId = String(existingRow[fileIdIdx] || '').trim();
+    if (!oldFileId) {
+      return createResponse_('error', null, 'Record ini tidak memiliki lampiran file.', 'NOT_FOUND');
+    }
+
+    var nowIso = formatIsoOffset_(new Date());
+    existingRow[fileIdIdx] = '';
+    existingRow[fileUrlIdx] = '';
+    if (updatedIdx >= 0) existingRow[updatedIdx] = nowIso;
+
+    sheet.getRange(targetRowNumber, 1, 1, lastCol).setValues([existingRow]);
+    SpreadsheetApp.flush();
+
+    try {
+      DriveApp.getFileById(oldFileId).setTrashed(true);
+    } catch (trashErr) {}
+
+    return createResponse_('success', { entity: entityKey, entityId: entityId, deletedFileId: oldFileId, updatedAt: nowIso }, 'Lampiran file berhasil dihapus.', 'OK');
+  } finally {
+    lock.releaseLock();
+  }
+}

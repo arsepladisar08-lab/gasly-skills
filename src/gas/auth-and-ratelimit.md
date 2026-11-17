@@ -253,7 +253,7 @@ function verifySessionToken_(tokenStr) {
  * Handler: auth.login (Default passphrase authentication)
  */
 function handleAuthLogin_(req) {
-  var accountId = String(req.payload.account || 'admin').trim().toLowerCase();
+  var accountId = String(req.payload.account || req.payload.email || 'admin').trim().toLowerCase();
   var passphrase = String(req.payload.passphrase || '');
 
   var rl = checkAuthRateLimit_(accountId);
@@ -273,19 +273,51 @@ function handleAuthLogin_(req) {
   }
 
   var props = PropertiesService.getScriptProperties();
-  var storedSalt = props.getProperty('ADMIN_PASSPHRASE_SALT');
-  var storedHash = props.getProperty('ADMIN_PASSPHRASE_HASH');
   var pepper = props.getProperty('AUTH_PEPPER') || '';
   var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
 
-  if (!storedSalt || !storedHash) {
-    return createResponse_(
-      'error',
-      null,
-      'Passphrase admin belum dikonfigurasi di ScriptProperties.',
-      'INTERNAL_ERROR'
-    );
+if (accountId === 'admin') {
+    var storedSalt = props.getProperty('ADMIN_PASSPHRASE_SALT');
+    var storedHash = props.getProperty('ADMIN_PASSPHRASE_HASH');
+
+    if (!storedSalt || !storedHash) {
+      return createResponse_(
+        'error',
+        null,
+        'Passphrase admin belum dikonfigurasi di ScriptProperties.',
+        'INTERNAL_ERROR'
+      );
+    }
+
+    var candidateHash = computeIteratedHash_(passphrase.trim(), storedSalt, pepper, iterations);
+    var usersRes = readSheetObjects_('USERS', true);
+  if (!usersRes.ok) return usersRes.errorResponse;
+
+  var matchedUser = null;
+  for (var i = 0; i < usersRes.records.length; i++) {
+    var row = usersRes.records[i];
+    if (String(row.email || '').trim().toLowerCase() === accountId && String(row.status || '').toUpperCase() === 'ACTIVE') {
+      matchedUser = row;
+      break;
+    }
   }
+
+  var userSalt = matchedUser && matchedUser.password_salt ? String(matchedUser.password_salt) : 'dummy_salt_anti_timing_00000000';
+  var userHash = matchedUser && matchedUser.password_hash ? String(matchedUser.password_hash) : '';
+  var computedUserHash = computeIteratedHash_(passphrase.trim(), userSalt, pepper, iterations);
+
+  if (!matchedUser || !userHash || !constantTimeEqual_(computedUserHash, userHash)) {
+      recordAuthFailure_(rl);
+      return createResponse_('error', null, 'Kredensial tidak valid.', 'FORBIDDEN');
+    }
+
+    var userRole = String(matchedUser.role || 'STAFF').toUpperCase();
+    if (ROLE_RANK_[userRole] === undefined) userRole = 'STAFF';
+
+    clearAuthFailures_(rl);
+    var issuedUser = issueSessionToken_(accountId, userRole);
+    return createResponse_('success', issuedUser, 'Login berhasil.', 'OK');
+   }
 
   var candidateHash = computeIteratedHash_(passphrase.trim(), storedSalt, pepper, iterations);
   if (!constantTimeEqual_(candidateHash, storedHash)) {
@@ -348,15 +380,72 @@ function handleAuthGoogle_(req) {
   }
 
   var email = String(tokenInfo.email).trim().toLowerCase();
-  var allowRes = readSheetObjects_('ALLOWLIST');
-  if (!allowRes.ok) return allowRes.errorResponse;
-
   var matchedRole = null;
-  for (var i = 0; i < allowRes.records.length; i++) {
-    var row = allowRes.records[i];
-    if (String(row.email || '').trim().toLowerCase() === email && String(row.status) === 'ACTIVE') {
-      matchedRole = String(row.role || 'STAFF').toUpperCase();
-      break;
+  var usersRes = readSheetObjects_('USERS');
+  if (usersRes.ok) {
+    for (var u = 0; u < usersRes.records.length; u++) {
+      var uRow = usersRes.records[u];
+      if (String(uRow.email || '').trim().toLowerCase() === email && String(uRow.status || '').toUpperCase() === 'ACTIVE') {
+        matchedRole = String(uRow.role || 'STAFF').toUpperCase();
+        break;
+      }
+    }
+  }
+
+  if (!matchedRole) {
+    var allowRes = readSheetObjects_('ALLOWLIST');
+    if (!allowRes.ok && !usersRes.ok) return allowRes.errorResponse;
+    if (allowRes.ok) {
+      for (var i = 0; i < allowRes.records.length; i++) {
+        var row = allowRes.records[i];
+        if (String(row.email || '').trim().toLowerCase() === email && String(row.status) === 'ACTIVE') {
+          matchedRole = String(row.role || 'STAFF').toUpperCase();
+          break;
+        }
+      }
+    }
+    }
+
+    if (!matchedRole && PropertiesService.getScriptProperties().getProperty('P2_LITE_AUTO_PROVISION') === 'TRUE') {
+    var cache = CacheService.getScriptCache();
+    var signupRateKey = 'rl:p2signup:global';
+    var signupCount = Number(cache.get(signupRateKey) || 0);
+    if (signupCount >= 10) {
+      return createResponse_('error', null, 'Batas pendaftaran mandiri sementara penuh. Coba beberapa saat lagi.', 'FORBIDDEN', { retryAfterSeconds: 600 });
+    }
+    var lock = LockService.getScriptLock();
+    if (!lock.tryLock(10000)) {
+     return createResponse_('error', null, 'Server sedang sibuk.', 'LOCK_TIMEOUT');
+    }
+    try {
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+     var usersSheet = ss.getSheetByName('USERS');
+      if (!usersSheet) {
+        return createResponse_('error', null, 'Tabel USERS belum diinisialisasi.', 'NOT_FOUND');
+      }
+      var lastCol = usersSheet.getLastColumn();
+      var headers = usersSheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
+      var nowIso = formatIsoOffset_(new Date());
+      var newUserObj = {
+        id: generateNextId_(usersSheet, 'USR'),
+        email: escapeFormula_(email),
+        name: escapeFormula_(String(tokenInfo.name || email.split('@')[0]).trim()),
+        role: 'STAFF',
+       status: 'ACTIVE',
+        password_salt: '',
+        password_hash: '',
+        pin_salt: '',
+        pin_hash: '',
+        created_at: nowIso,
+        updated_at: nowIso
+      };
+      var rowVals = buildRowFromObject_(headers, newUserObj);
+      usersSheet.getRange(usersSheet.getLastRow() + 1, 1, 1, lastCol).setValues([rowVals]);
+      SpreadsheetApp.flush();
+      cache.put(signupRateKey, String(signupCount + 1), 600);
+      matchedRole = 'STAFF';
+    } finally {
+      lock.releaseLock();
     }
   }
 
@@ -364,6 +453,8 @@ function handleAuthGoogle_(req) {
     recordAuthFailure_(rl);
     return createResponse_('error', null, 'Email Google Anda tidak terdaftar pada daftar izin akses.', 'FORBIDDEN');
   }
+
+  if (ROLE_RANK_[matchedRole] === undefined) matchedRole = 'STAFF';
 
   clearAuthFailures_(rl);
   var issued = issueSessionToken_(email, matchedRole);
@@ -381,4 +472,175 @@ function handleAuthLogout_(req) {
   }
   return createResponse_('success', { loggedOut: true }, 'Sesi berhasil diakhiri.', 'OK');
 }
-```
+
+var STEP_UP_ALLOWED_ACTIONS_ = [
+  'items.delete',
+  'admin.purgeSeed',
+  'file.delete',
+  'auth.setCredentials'
+];
+
+/**
+ * Handler: auth.setCredentials (Sets or rotates user passphrase >=12 chars and/or 6-digit step-up PIN in USERS)
+ */
+function handleAuthSetCredentials_(req) {
+  if (!req.session || !req.session.sub) {
+    return createResponse_('error', null, 'Sesi otentikasi diperlukan.', 'FORBIDDEN');
+  }
+  var p = req.payload || {};
+  var callerEmail = String(req.session.sub).trim().toLowerCase();
+  var callerRole = String(req.session.role || '').toUpperCase();
+  var targetEmail = p.email ? String(p.email).trim().toLowerCase() : callerEmail;
+
+  if (targetEmail !== callerEmail && callerRole !== 'ADMIN') {
+    return createResponse_('error', null, 'Hanya ADMIN yang dapat mengatur kredensial pengguna lain.', 'FORBIDDEN');
+  }
+
+  var newPassphrase = p.newPassphrase !== undefined ? String(p.newPassphrase) : '';
+  var newPin = p.newPin !== undefined ? String(p.newPin).trim() : '';
+  if (!newPassphrase && !newPin) {
+    return createResponse_('error', null, 'Sertakan newPassphrase atau newPin yang akan diperbarui.', 'VALIDATION_ERROR');
+  }
+  if (newPassphrase && newPassphrase.trim().length < 12) {
+    return createResponse_('error', null, 'Passphrase wajib minimal 12 karakter.', 'VALIDATION_ERROR');
+  }
+  if (newPin && !/^\d{6}$/.test(newPin)) {
+    return createResponse_('error', null, 'PIN step-up wajib tepat 6 digit angka.', 'VALIDATION_ERROR');
+  }
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    return createResponse_('error', null, 'Server sedang sibuk.', 'LOCK_TIMEOUT');
+  }
+
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('USERS');
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return createResponse_('error', null, 'Tabel USERS belum tersedia.', 'NOT_FOUND');
+    }
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    var allData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
+    var emailIdx = headers.indexOf('email');
+    var passSaltIdx = headers.indexOf('password_salt');
+    var passHashIdx = headers.indexOf('password_hash');
+    var pinSaltIdx = headers.indexOf('pin_salt');
+    var pinHashIdx = headers.indexOf('pin_hash');
+    var updatedIdx = headers.indexOf('updated_at');
+
+    var targetRowNumber = -1;
+    var existingRow = null;
+    for (var r = 0; r < allData.length; r++) {
+      if (String(allData[r][emailIdx] || '').trim().toLowerCase() === targetEmail) {
+        targetRowNumber = r + 2;
+        existingRow = allData[r];
+        break;
+      }
+    }
+    if (targetRowNumber === -1) {
+      return createResponse_('error', null, 'Pengguna tidak ditemukan pada tabel USERS.', 'NOT_FOUND');
+    }
+
+    var props = PropertiesService.getScriptProperties();
+    var pepper = props.getProperty('AUTH_PEPPER') || '';
+    var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
+
+    if (newPassphrase && passSaltIdx >= 0 && passHashIdx >= 0) {
+      var pSalt = generateRandomSecret_(16);
+      existingRow[passSaltIdx] = pSalt;
+      existingRow[passHashIdx] = computeIteratedHash_(newPassphrase.trim(), pSalt, pepper, iterations);
+    }
+    if (newPin && pinSaltIdx >= 0 && pinHashIdx >= 0) {
+      var pinSalt = generateRandomSecret_(16);
+      existingRow[pinSaltIdx] = pinSalt;
+      existingRow[pinHashIdx] = computeIteratedHash_(newPin, pinSalt, pepper, iterations);
+    }
+    if (updatedIdx >= 0) existingRow[updatedIdx] = formatIsoOffset_(new Date());
+
+    sheet.getRange(targetRowNumber, 1, 1, lastCol).setValues([existingRow]);
+    SpreadsheetApp.flush();
+    return createResponse_('success', { email: targetEmail, updated: true }, 'Kredensial berhasil diperbarui.', 'OK');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Handler: auth.verifyPin (Step-up 6-digit PIN verification after primary login; server-scoped action)
+ */
+function handleAuthVerifyPin_(req) {
+  if (!req.session || !req.session.sub) {
+    return createResponse_('error', null, 'Sesi login aktif diperlukan untuk verifikasi PIN.', 'FORBIDDEN');
+  }
+  var p = req.payload || {};
+  var pin = String(p.pin || '').trim();
+  var targetAction = String(p.targetAction || '').trim();
+
+  if (STEP_UP_ALLOWED_ACTIONS_.indexOf(targetAction) === -1) {
+    return createResponse_('error', null, 'Action tujuan step-up tidak diizinkan oleh server.', 'VALIDATION_ERROR');
+  }
+
+  var subEmail = String(req.session.sub).trim().toLowerCase();
+  var cache = CacheService.getScriptCache();
+  var pinFailKey = 'rl:pin:' + subEmail.slice(0, 120);
+  var failCount = Number(cache.get(pinFailKey) || 0);
+  if (failCount >= 3) {
+    if (req.session.jti) cache.put('revoked:' + req.session.jti, '1', 7200);
+    return createResponse_('error', null, 'Terlalu banyak kegagalan PIN. Sesi dicabut.', 'FORBIDDEN', { retryAfterSeconds: 900 });
+  }
+
+  if (!/^\d{6}$/.test(pin)) {
+    cache.put(pinFailKey, String(failCount + 1), 900);
+    return createResponse_('error', null, 'PIN wajib terdiri dari 6 digit angka.', 'VALIDATION_ERROR');
+  }
+
+  var usersRes = readSheetObjects_('USERS', true);
+  if (!usersRes.ok) return usersRes.errorResponse;
+
+  var matchedUser = null;
+  for (var i = 0; i < usersRes.records.length; i++) {
+    var row = usersRes.records[i];
+    if (String(row.email || '').trim().toLowerCase() === subEmail && String(row.status || '').toUpperCase() === 'ACTIVE') {
+      matchedUser = row;
+      break;
+    }
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  var pepper = props.getProperty('AUTH_PEPPER') || '';
+  var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
+  var pinSalt = matchedUser && matchedUser.pin_salt ? String(matchedUser.pin_salt) : 'dummy_pin_salt_anti_timing_000000';
+  var pinHash = matchedUser && matchedUser.pin_hash ? String(matchedUser.pin_hash) : '';
+  var candidatePinHash = computeIteratedHash_(pin, pinSalt, pepper, iterations);
+
+  if (!matchedUser || !pinHash || !constantTimeEqual_(candidatePinHash, pinHash)) {
+    var nextFail = failCount + 1;
+    cache.put(pinFailKey, String(nextFail), 900);
+    if (nextFail >= 3 && req.session.jti) {
+      cache.put('revoked:' + req.session.jti, '1', 7200);
+    }
+    return createResponse_('error', null, 'PIN tidak valid.', 'FORBIDDEN');
+  }
+
+  cache.remove(pinFailKey);
+  var stepUpToken = Utilities.getUuid();
+  cache.put('stepup:' + stepUpToken, JSON.stringify({ sub: subEmail, action: targetAction }), 300);
+  return createResponse_('success', { stepUpToken: stepUpToken, targetAction: targetAction, expiresInSeconds: 300 }, 'Verifikasi PIN berhasil.', 'OK');
+}
+
+function verifyAndConsumeStepUp_(req, expectedAction) {
+  var token = req.payload && req.payload.stepUpToken ? String(req.payload.stepUpToken).trim() : '';
+  if (!token || !req.session || !req.session.sub) return false;
+  var cache = CacheService.getScriptCache();
+  var raw = cache.get('stepup:' + token);
+  if (!raw) return false;
+  cache.remove('stepup:' + token);
+  try {
+    var data = JSON.parse(raw);
+    return data.sub === String(req.session.sub).trim().toLowerCase() && data.action === expectedAction;
+  } catch (e) {
+    return false;
+  }
+}

@@ -11,6 +11,7 @@
 5. [Idempotensi Mutasi (`idem`)](#5-idempotensi-mutasi-idem)
 6. [Format Data pada Jalur Komunikasi & URL Gambar Drive](#6-format-data-pada-jalur-komunikasi--url-gambar-drive)
 7. [Aturan Deployment Berkelanjutan (URL `/exec` Tetap)](#7-aturan-deployment-berkelanjutan-url-exec-tetap)
+8. [Kontrak Proyek Terbaca-Mesin (`GASLY_CONTRACT_JSON`) & Tangga Arsitektur](#8-kontrak-proyek-terbaca-mesin-gasly_contract_json--tangga-arsitektur)
 
 ---
 
@@ -49,7 +50,7 @@ Endpoint Web App Google Apps Script (`.../exec`) merespons permintaan dengan pen
     .setMimeType(ContentService.MimeType.JSON);
   ```
 - Jika terjadi *uncaught exception* di Apps Script, Google akan mengembalikan halaman HTML error bawaan tanpa header CORS, yang akan terlihat di browser sebagai error CORS palsu dan menyembunyikan penyebab aslinya.
-- Jangan berasumsi Apps Script dapat membaca HTTP request header atau alamat IP client pada objek `e`. Oleh sebab itu, token sesi selalu dikirim di dalam properti `auth` pada body/query, dan pembatasan laju (*throttling*) dihitung per pengidentifikasi akun ditambah batas global di `CacheService`.
+- Jangan berasumsi Apps Script dapat membaca HTTP request header atau alamat IP client pada objek `e`. Oleh sebab itu, token sesi selalu dikirim di dalam properti `auth` pada body/query, dan pembatasan laju (*throttling*) dihitung per pengidentifikasi akun/tiket ditambah batas global di `CacheService`.
 
 ---
 
@@ -114,7 +115,7 @@ Arsitektur ini menggunakan kembali **Response Envelope Kanonik** repositori Gasl
 | `VALIDATION_ERROR` | `error` | JSON body rusak, versi `v` tidak didukung, field wajib kosong, tipe/panjang salah, MIME/magic-byte file tidak valid, atau ukuran file melebihi batas. |
 | `NOT_FOUND` | `error` | `action` tidak terdaftar di registry, baris data dengan `id` terkait tidak ditemukan, sheet belum diinisialisasi, atau `ticket` upload tidak ditemukan/kedaluwarsa. |
 | `FORBIDDEN` | `error` | Token `auth` kosong/tidak valid/kedaluwarsa, peran pengguna tidak memiliki izin pada `action` tersebut, kredensial login salah, atau akun/sistem sedang dikunci oleh *rate limiter* (sertakan `meta.retryAfterSeconds` bila terkena throttle). |
-| `CONFLICT` | `error` | Kegagalan konkurensi optimis (`payload.updated_at` berbeda dengan nilai `updated_at` saat ini di Sheet) atau duplikasi kunci unik. |
+| `CONFLICT` | `error` | Kegagalan konkurensi optimis (`payload.updated_at` berbeda dengan nilai `updated_at` saat ini di Sheet pada operasi timpa mutlak) atau duplikasi kunci unik. |
 | `LOCK_TIMEOUT` | `error` | `LockService.getScriptLock().tryLock(10000)` gagal memperoleh kunci dalam batas waktu karena antrean tulis sedang padat. |
 | `INTERNAL_ERROR` | `error` | Kesalahan tak terduga di sisi server. Detail teknis dicatat ke `console.error`, sedangkan `message` berisi teks aman bagi pengguna. |
 
@@ -138,13 +139,30 @@ Arsitektur ini menggunakan kembali **Response Envelope Kanonik** repositori Gasl
 2. **Waktu Ber-Offset (`ISO-8601`):** Seluruh waktu dikirim sebagai string berformat `"yyyy-MM-dd'T'HH:mm:ssXXX"` sesuai zona waktu skrip (contoh: `"2026-11-14T09:30:00+07:00"`). Objek `Date` mentah dilarang keluar menuju JSON serializer tanpa melewati `sanitizeForClient_()`.
 3. **Penyimpanan & Penampilan Gambar Google Drive:**
    - Pada baris Google Sheets, simpan dua kolom untuk setiap foto: `file_id` (sumber kebenaran utama) dan `file_url` (tautan kanonik `https://drive.google.com/file/d/<fileId>/view`).
-   - Frontend dilarang menulis URL tampilan gambar secara *hardcoded* di komponen. Seluruh komponen wajib memanggil satu fungsi helper `driveImageUrl(fileId, width)` yang memiliki rantai fallback:
+   - Untuk entitas berklasifikasi `PUBLIC` (`visibility: 'public'`), frontend memanggil satu fungsi helper `driveImageUrl(fileId, width)` dengan rantai fallback:
      1) Utama: `https://drive.google.com/thumbnail?id=<fileId>&sz=w<width>`
      2) Cadangan (`onerror`): `https://lh3.googleusercontent.com/d/<fileId>=w<width>`
+   - Untuk entitas berklasifikasi `CONFIDENTIAL` / `SENSITIVE_PII` (`visibility: 'private'`), file tidak memiliki thumbnail publik; dashboard Admin menyediakan tautan langsung ke `file_url` Google Drive yang hanya terbuka bagi akun Google yang memiliki izin akses.
 
 ---
 
 ## 7. Aturan Deployment Berkelanjutan (URL `/exec` Tetap)
 
 - Saat pertama kali men-deploy Apps Script sebagai Web App, pilih **Execute as: Me** dan **Who has access: Anyone** agar endpoint `/exec` dapat menerima permintaan lintas-origin dari aplikasi frontend eksternal.
-- Untuk setiap pembaruan kode berikutnya, **jangan membuat deployment baru** (karena akan mengubah URL `/exec` dan memutus konfigurasi frontend). Selalu gunakan menu **Deploy > Manage deployments > Edit (ikon pensil) > Version: New version > Deploy** sehingga URL `/exec` tetap sama.
+- Untuk setiap pembaruan kode berikutnya, **jangan membuat deployment baru** (karena akan mengubah URL `/exec` dan memutus konfigurasi frontend). Selalu gunakan menu **Deploy > Manage deployments > Edit (pensil) > Version: New version > Deploy** sehingga URL `/exec` tetap sama.
+
+---
+
+## 8. Kontrak Proyek Terbaca-Mesin (`GASLY_CONTRACT_JSON`) & Tangga Arsitektur
+
+Untuk mencegah perbedaan antara spesifikasi `gasly-prompt`, backend `gasly-data`, dan frontend `gasly-ui`, setiap `MASTER INSTRUCTIONAL PROMPT` wajib menyertakan blok **`GASLY_CONTRACT_JSON`** (atau file `gasly.project.json`) yang mengunci keputusan berikut:
+
+1. **Pemilihan `surface_profile`:**
+   - `INTERNAL_APP`: Langsung menuju layar login & workspace operasional padat data (tanpa landing page pemasaran).
+   - `PUBLIC_SERVICE`: Papan informasi/antrean/formulir layanan publik + panel petugas terproteksi.
+   - `MARKETPLACE` / `SAAS_PLATFORM`: *Dual-Surface* terpisah (Landing Page akuisisi publik pada rute utama `/` dan Dashboard terotentikasi pada rute/view `/app`).
+2. **Pemilihan Tangga Arsitektur & Lisensi Hosting:**
+   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS untuk alat sederhana satu pintu.
+   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis/SSR di **Cloudflare Pages** (diizinkan untuk komersial gratis) + Backend GAS `/exec`. *(Catatan: GitHub Pages dan Vercel Hobby hanya boleh direkomendasikan untuk prototipe/demo non-komersial).*
+   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy Cloudflare Worker / Vercel Function (`/api/gas`) dengan tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* untuk Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
+   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dan **Vercel Pro**, sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.

@@ -93,6 +93,10 @@ function sendJsonOutput_(envelope) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+var handleMailSend_;
+var handleNotifyWhatsapp_;
+var handleAiGenerate_;
+
 /**
  * Central Action Registry (Allowlist).
  * Every supported action and its minimum role per Access Profile is declared here.
@@ -116,6 +120,18 @@ function getActionRegistry_() {
       requireIdem: false,
       rolesByProfile: { P1: 'STAFF', P3: 'ADMIN', P4: 'STAFF' },
       handler: handleAuthLogout_
+    },
+    'auth.setCredentials': {
+      method: 'POST',
+      requireIdem: true,
+      rolesByProfile: { P1: 'ADMIN', P3: 'STAFF', P4: 'STAFF' },
+      handler: handleAuthSetCredentials_
+    },
+    'auth.verifyPin': {
+      method: 'POST',
+      requireIdem: false,
+      rolesByProfile: { P1: 'ADMIN', P3: 'STAFF', P4: 'STAFF' },
+      handler: handleAuthVerifyPin_
     },
     'items.list': {
       method: 'ANY',
@@ -159,6 +175,18 @@ function getActionRegistry_() {
       rolesByProfile: { P1: 'ADMIN', P3: 'PUBLIC', P4: 'STAFF' },
       handler: handleFileUpload_
     },
+    'file.replace': {
+      method: 'POST',
+      requireIdem: true,
+      rolesByProfile: { P1: 'ADMIN', P3: 'STAFF', P4: 'STAFF' },
+      handler: handleFileReplace_
+    },
+    'file.delete': {
+      method: 'POST',
+      requireIdem: true,
+      rolesByProfile: { P1: 'ADMIN', P3: 'ADMIN', P4: 'STAFF' },
+      handler: handleFileDelete_
+    },
     'admin.purgeSeed': {
       method: 'POST',
       requireIdem: true,
@@ -170,6 +198,24 @@ function getActionRegistry_() {
       requireIdem: false,
       rolesByProfile: { P1: 'ADMIN', P3: 'ADMIN', P4: 'ADMIN' },
       handler: handleAdminDiagnostics_
+    },
+    'mail.send': {
+      method: 'POST',
+      requireIdem: true,
+      rolesByProfile: { P1: 'ADMIN', P3: 'ADMIN', P4: 'STAFF' },
+      handler: handleMailSend_
+    },
+    'notify.whatsapp': {
+      method: 'POST',
+      requireIdem: true,
+      rolesByProfile: { P1: 'ADMIN', P3: 'ADMIN', P4: 'STAFF' },
+      handler: handleNotifyWhatsapp_
+    },
+    'ai.generate': {
+      method: 'POST',
+      requireIdem: false,
+      rolesByProfile: { P1: 'ADMIN', P3: 'STAFF', P4: 'STAFF' },
+      handler: handleAiGenerate_
     },
     'webhook.receive': {
       method: 'POST',

@@ -20,8 +20,8 @@ Seluruh rahasia dan parameter konfigurasi lingkungan disimpan di dalam `Properti
 | `ACCESS_PROFILE` | Profil akses aplikasi (`P1`, `P3`, atau `P4`). | `"P3"` |
 | `AUTH_HMAC_SECRET` | Kunci rahasia 32-byte (base64url) untuk menandatangani session token HMAC-SHA256. | Dibuat otomatis saat `initialSetupDatabase()` |
 | `AUTH_PEPPER` | Rahasia tambahan di server untuk *salted iterated passphrase hashing*. | Dibuat otomatis saat `initialSetupDatabase()` |
-| `ADMIN_PASSPHRASE_SALT` | Salt acak 16-byte (base64url) untuk passphrase admin. | Dibuat oleh `setupAdminPassphrase()` |
-| `ADMIN_PASSPHRASE_HASH` | Hash hasil iterasi SHA-256 dari passphrase admin (minimal 12 karakter). | Dibuat oleh `setupAdminPassphrase()` |
+| `ADMIN_PASSPHRASE_SALT` | Salt acak 16-byte (base64url) untuk passphrase admin. | Dibuat oleh `configureAdminPassphrase_()` |
+| `ADMIN_PASSPHRASE_HASH` | Hash hasil iterasi SHA-256 dari passphrase admin (minimal 12 karakter). | Dibuat oleh `configureAdminPassphrase_()` |
 | `ADMIN_PASSPHRASE_ITER` | Jumlah iterasi SHA-256 (default `2000`). | `"2000"` |
 | `SESSION_TTL_SECONDS` | Masa berlaku session token dalam detik (default 2 jam). | `"7200"` |
 | `LOCKOUT_THRESHOLD` | Jumlah maksimum gagal login berturut-turut per akun sebelum dikunci. | `"5"` |
@@ -30,6 +30,7 @@ Seluruh rahasia dan parameter konfigurasi lingkungan disimpan di dalam `Properti
 | `DRIVE_ROOT_FOLDER_ID` | ID folder Google Drive induk tempat file unggahan (`ROOT/<entity>/<yyyy-mm>`) disimpan. | Dibuat/diisi saat setup |
 | `MAX_UPLOAD_BYTES` | Batas ukuran byte file hasil decode pada `file.upload` (default 5 MB). | `"5242880"` |
 | `WEBHOOK_SHARED_SECRET` | Rahasia bersama untuk memverifikasi payload dari proxy webhook pembayaran. | `"<opsional>"` |
+| `P2_LITE_AUTO_PROVISION` | Mengizinkan pembuatan baris `STAFF` otomatis pada sheet `USERS` saat login `auth.google` (`P2-lite`). | `"FALSE"` |
 
 ---
 
@@ -62,22 +63,63 @@ var DB_SCHEMAS = {
     'role',
     'status',
     'created_at'
+  ],
+  USERS: [
+    'id',
+    'email',
+    'name',
+    'role',
+    'status',
+    'password_salt',
+    'password_hash',
+    'pin_salt',
+    'pin_hash',
+    'created_at',
+    'updated_at'
   ]
+  };
+
+var DB_CLASSIFICATIONS = {
+  ITEMS: 'CONFIDENTIAL',
+  ALLOWLIST: 'INTERNAL',
+  USERS: 'SENSITIVE_PII'
 };
 
 /**
- * Generates random web-safe base64 string for secrets and salts.
+ * Generates cryptographic web-safe base64 string for secrets and salts
+ * using multiple CSPRNG UUIDv4 rounds (Zero Math.random()).
  */
 function generateRandomSecret_(byteLength) {
-  var seeds = [];
-  for (var i = 0; i < (byteLength || 32); i++) {
-    seeds.push(Math.floor(Math.random() * 256) - 128);
+  var targetLen = byteLength || 32;
+  var entropyPool = [];
+  var rounds = Math.ceil(targetLen / 16) + 2;
+  for (var i = 0; i < rounds; i++) {
+    entropyPool.push(Utilities.getUuid());
   }
   var raw = Utilities.computeDigest(
     Utilities.DigestAlgorithm.SHA_256,
-    Utilities.getUuid() + ':' + new Date().getTime() + ':' + seeds.join(',')
+    entropyPool.join(':')
   );
-  return Utilities.base64EncodeWebSafe(raw).replace(/=+$/, '');
+  var encoded = Utilities.base64EncodeWebSafe(raw).replace(/=+$/, '');
+  while (encoded.length < targetLen) {
+    var extra = Utilities.computeDigest(
+      Utilities.DigestAlgorithm.SHA_256,
+      encoded + ':' + Utilities.getUuid()
+    );
+    encoded += Utilities.base64EncodeWebSafe(extra).replace(/=+$/, '');
+  }
+  return encoded.slice(0, targetLen);
+}
+
+/**
+ * Maps a record object to an ordered row array matching expectedHeaders (Gate G-12).
+ * Prevents setValues() column count mismatch during non-destructive schema migrations.
+ */
+function buildRowFromObject_(expectedHeaders, recordObj) {
+  return expectedHeaders.map(function(col) {
+    var val = recordObj[col];
+    return val === undefined || val === null ? '' : val;
+  });
 }
 
 /**
@@ -151,7 +193,7 @@ function initialSetupDatabase() {
       }
     });
 
-    // 4. Seed 16 historical rows with per-day sequence numbers if not yet seeded
+    // 4. Seed 16 historical rows using Schema-Driven Object Mapping (Gate G-12)
     var itemsSheet = ss.getSheetByName('ITEMS');
     if (itemsSheet.getLastRow() <= 1 && props.getProperty('SEED_INITIALIZED') !== 'TRUE') {
       var now = new Date();
@@ -159,7 +201,7 @@ function initialSetupDatabase() {
       var categories = ['Operasional', 'Pemasaran', 'Infrastruktur', 'Lisensi'];
       var statuses = ['ACTIVE', 'ACTIVE', 'COMPLETED', 'PENDING'];
       var seqByDay = {};
-      var seedRows = [];
+      var seedObjects = [];
 
       for (var i = 0; i < dayOffsets.length; i++) {
         var d = new Date(now.getTime() - dayOffsets[i] * 86400000);
@@ -168,21 +210,26 @@ function initialSetupDatabase() {
         seqByDay[ymd] = (seqByDay[ymd] || 0) + 1;
         var seqStr = ('0000' + seqByDay[ymd]).slice(-4);
 
-        seedRows.push([
-          'SEED-' + ymd + '-' + seqStr,
-          isoOffset,
-          isoOffset,
-          'Contoh Transaksi #' + (i + 1),
-          categories[i % categories.length],
-          (i + 1) * 125000,
-          statuses[i % statuses.length],
-          '',
-          '',
-          '',
-          'TRUE'
-        ]);
+        seedObjects.push({
+          id: 'SEED-' + ymd + '-' + seqStr,
+          created_at: isoOffset,
+          updated_at: isoOffset,
+          title: 'Contoh Transaksi #' + (i + 1),
+          category: categories[i % categories.length],
+          amount: (i + 1) * 125000,
+          status: statuses[i % statuses.length],
+          file_id: '',
+          file_url: '',
+          upload_nonce: '',
+          is_seed: 'TRUE'
+        });
       }
-      itemsSheet.getRange(2, 1, seedRows.length, DB_SCHEMAS.ITEMS.length).setValues(seedRows);
+
+      var activeHeaders = itemsSheet.getRange(1, 1, 1, itemsSheet.getLastColumn()).getValues()[0];
+      var seedRows = seedObjects.map(function(obj) {
+        return buildRowFromObject_(activeHeaders, obj);
+      });
+      itemsSheet.getRange(2, 1, seedRows.length, activeHeaders.length).setValues(seedRows);
       props.setProperty('SEED_INITIALIZED', 'TRUE');
     }
 

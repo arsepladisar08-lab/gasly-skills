@@ -240,9 +240,10 @@ Seluruh fungsi publik di `code.gs` yang dipanggil oleh `google.script.run` harus
 ---
 
 ## 7. Checklist Keputusan Spesifikasi
-- [ ] **Versi KB Tercantum:** Header `KB_VERSION` ditulis eksplisit di dalam Master Prompt.
-- [ ] **Access Profile & Identitas:** Profil (`P1`, `P3`, `P4`; `P2` berstatus `PLANNED`) dan mekanisme sesi ditetapkan.
-- [ ] **Skema & Seed Idempoten:** Semua nama kolom menggunakan `snake_case`, tipe data mentah (Number & ISO Date ber-offset), penomoran urut per-hari, serta penanda `SEED-` + `SCHEMA_VERSION`.
-- [ ] **Kontrak Konkurensi:** Setiap pembuatan ID harian atau mutasi data sensitif ditandai membutuhkan `LockService` + pengecekan `updated_at` (`CONFLICT`) + `SpreadsheetApp.flush()` sebelum `releaseLock()`.
-- [ ] **De-Fabrikasi Bukti Bisnis:** Tidak ada angka klaim pelanggan, testimoni, logo, klaim bebas biaya server, atau harga tetap yang dikarang sendiri; semuanya memakai data pengguna atau slot `{...}`.
+- [ ] **Versi KB Tercantum:** Header `KB_VERSION: 2.1.0` ditulis eksplisit di dalam Master Prompt dan `GASLY_CONTRACT_JSON`.
+- [ ] **Access Profile & Klasifikasi Data:** Profil (`P1`–`P4`), `surface_profile`, serta klasifikasi privasi (`PUBLIC` vs `CONFIDENTIAL`/`SENSITIVE_PII` -> Drive wajib `private`) ditetapkan.
+- [ ] **Skema & Seed Berbasis Objek:** Semua nama kolom menggunakan `snake_case`, tipe data mentah (Number & ISO Date ber-offset), seed data berbentuk *Array of Objects*, serta cek kolom ekuivalen sebelum migrasi.
+- [ ] **Kontrak Konkurensi (Delta vs Optimistic):** Mutasi saldo/kuota berbasis *delta* (`IN`/`OUT`) cukup mengecek saldo akhir (`>= 0`) di dalam `LockService`, sedangkan operasi timpa mutlak memeriksa `expected_updated_at` (`CONFLICT`) + `SpreadsheetApp.flush()`.
+- [ ] **Anti-Enumerasi & Integritas Upload:** Endpoint pelacakan publik wajib memakai `tracking_token` berentropi tinggi + *rate-limit*, dan hasil `file.upload` wajib diperiksa sebelum status sukses.
+- [ ] **De-Fabrikasi & Slot Regulasi:** Tidak ada angka klaim pelanggan/testimoni karangan; fitur kalkulator pajak/medis wajib mencantumkan dasar hukum, tanggal verifikasi, dan *disclaimer*.
 - [ ] **Kepatuhan Kontras & Aksesibilitas:** Seluruh pasangan warna preset lulus WCAG AA (`>= 4.5:1`), dan viewport tidak mematikan zoom.

@@ -41,12 +41,26 @@ function handleWebhookReceive_(req) {
     return createResponse_('error', null, 'Parameter entityId atau newStatus pada webhook tidak valid.', 'VALIDATION_ERROR');
   }
 
+  var providerEventId = String(p.providerEventId || '').trim();
+  var cache = CacheService.getScriptCache();
+  var dedupKey = providerEventId ? 'idem:webhook:' + providerEventId.slice(0, 120) : '';
+
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) {
     return createResponse_('error', null, 'Server sedang sibuk.', 'LOCK_TIMEOUT');
   }
 
   try {
+    if (dedupKey) {
+      var cachedRaw = cache.get(dedupKey);
+      if (cachedRaw) {
+        var cachedRes = JSON.parse(cachedRaw);
+        cachedRes.meta = cachedRes.meta || {};
+        cachedRes.meta.idempotentReplay = true;
+        return cachedRes;
+      }
+    }
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName('ITEMS');
     if (!sheet || sheet.getLastRow() <= 1) {
@@ -82,14 +96,17 @@ function handleWebhookReceive_(req) {
     sheet.getRange(targetRowNumber, 1, 1, lastCol).setValues([existingRow]);
     SpreadsheetApp.flush();
 
-    return createResponse_(
+    var response = createResponse_(
       'success',
       { id: entityId, status: newStatus, updatedAt: nowIso },
       'Status transaksi berhasil diperbarui melalui webhook.',
       'OK'
     );
+    if (dedupKey) {
+      cache.put(dedupKey, JSON.stringify(response), 21600);
+    }
+    return response;
   } finally {
     lock.releaseLock();
   }
 }
-```
