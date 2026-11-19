@@ -20,8 +20,16 @@ body:
     attributes:
       label: Affected package
       options:
-        - gasly-pro
+        - gasly-start
         - gasly-prd
+        - gasly-prd-to-uiux
+        - gasly-pro-api
+        - gasly-data
+        - gasly-ui
+        - gasly-deploy-guide
+        - gasly-pro
+        - gasly-prompt
+        - gasly-install
         - build/compiler
         - documentation
         - generated distribution
