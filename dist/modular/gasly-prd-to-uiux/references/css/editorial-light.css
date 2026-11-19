@@ -1,0 +1,70 @@
+/* Gasly Design Tokens Export — Preset: editorial-light (v2.1.0) */
+:root,
+[data-theme="light"] {
+  --bg-base: #FAF8F5;
+  --bg-surface: #FFFFFF;
+  --bg-interactive: #F2EFE9;
+  --text-primary: #1C1917;
+  --text-secondary: #44403C;
+  --text-helper: #57534E;
+  --text-disabled: #A8A29E;
+  --border-subtle: #E7E5E4;
+  --border-focus: #9A3412;
+  --accent-solid: #9A3412;
+  --accent-text-on-solid: #FFFFFF;
+  --success-solid: #166534;
+  --success-text-on-solid: #FFFFFF;
+  --warning-solid: #F59E0B;
+  --warning-text-on-solid: #1C1917;
+  --danger-solid: #991B1B;
+  --danger-text-on-solid: #FFFFFF;
+
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Newsreader', 'Georgia', 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --grid-base: 8px;
+}
+
+[data-theme="dark"],
+.dark {
+  --bg-base: #12100E;
+  --bg-surface: #1C1917;
+  --bg-interactive: #262320;
+  --text-primary: #F5F5F4;
+  --text-secondary: #D6D3D1;
+  --text-helper: #A8A29E;
+  --text-disabled: #78716C;
+  --border-subtle: #292524;
+  --border-focus: #EA580C;
+  --accent-solid: #C2410C;
+  --accent-text-on-solid: #FFFFFF;
+  --success-solid: #15803D;
+  --success-text-on-solid: #FFFFFF;
+  --warning-solid: #F59E0B;
+  --warning-text-on-solid: #12100E;
+  --danger-solid: #B91C1C;
+  --danger-text-on-solid: #FFFFFF;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

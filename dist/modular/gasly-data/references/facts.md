@@ -22,8 +22,8 @@
 | **Vercel (Hobby Plan)** | **Dilarang untuk komersial** (*Personal / Non-Commercial Only*). Penggunaan komersial wajib **Vercel Pro ($20/bulan)** | Gunakan Hobby hanya untuk Dev/Preview; gunakan **Vercel Pro** untuk SaaS komersial berbasis Next.js SSR |
 | **GitHub Pages** | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (sesuai GitHub Terms of Service) | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial** |
 
-## 3. Referensi Dokumentasi & Status Verifikasi Langkah Antarmuka Pihak Ketiga (`gasly-install`)
-- **Aturan Provenance (`Gate I-05`):** Setiap langkah antarmuka pihak ketiga di dalam `gasly-install` wajib mencantumkan URL dokumentasi resmi dan status verifikasi. Karena antarmuka web pihak ketiga dapat berubah tanpa pemberitahuan di luar repositori statis, langkah klik menu spesifik ditandai `UNVERIFIED` dan dicatat pada `VERIFY.md` (`A-12`).
+## 3. Referensi Dokumentasi & Status Verifikasi Langkah Antarmuka Pihak Ketiga (`gasly-deploy-guide`)
+- **Aturan Provenance (`Gate I-05`):** Setiap langkah antarmuka pihak ketiga di dalam `gasly-deploy-guide` wajib mencantumkan URL dokumentasi resmi dan status verifikasi. Karena antarmuka web pihak ketiga dapat berubah tanpa pemberitahuan di luar repositori statis, langkah klik menu spesifik ditandai `UNVERIFIED` dan dicatat pada `VERIFY.md` (`A-12`).
 - **Google Apps Script Editor & Deployment (`/exec`):**
   - Dokumentasi Resmi: `https://developers.google.com/apps-script/guides/web` (`Status UI: UNVERIFIED — mengacu pada prosedur internal src/gas/config.md Seksi 3, dicatat di VERIFY.md`).
   - Jalur yang digunakan: **Extensions > Apps Script**, tombol **Run** (`initialSetupDatabase`, `setupAdminCredentials`, `runDiagnostics`), **Deploy > New deployment** (jenis **Web app**, **Execute as: Me**, **Who has access: Anyone**), serta pembaruan rilis via **Deploy > Manage deployments > Edit (ikon pensil) > Version: New version > Deploy**.

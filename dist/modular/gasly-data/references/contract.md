@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # GASLY HEADLESS ARCHITECTURE & WIRE CONTRACT (`core/contract.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Selalu dimuat oleh `gasly-prompt`, `gasly-data`, dan `gasly-ui`.
+**Kondisi Muat:** Selalu dimuat oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, dan `gasly-ui`.
 
 ## Daftar Isi
 1. [Topologi Arsitektur Tunggal](#1-topologi-arsitektur-tunggal)
@@ -156,7 +156,7 @@ Arsitektur ini menggunakan kembali **Response Envelope Kanonik** repositori Gasl
 
 ## 8. Kontrak Proyek Terbaca-Mesin (`GASLY_CONTRACT_JSON`) & Tangga Arsitektur
 
-Untuk mencegah perbedaan antara spesifikasi `gasly-prompt`, backend `gasly-data`, dan frontend `gasly-ui`, setiap `MASTER INSTRUCTIONAL PROMPT` wajib menyertakan blok **`GASLY_CONTRACT_JSON`** (atau file `gasly.project.json`) yang mengunci keputusan berikut:
+Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, dan frontend `gasly-ui`, setiap `MASTER INSTRUCTIONAL PROMPT` wajib menyertakan blok **`GASLY_CONTRACT_JSON`** (atau file `gasly.project.json`) yang mengunci keputusan berikut:
 
 1. **Pemilihan `surface_profile`:**
    - `INTERNAL_APP`: Langsung menuju layar login & workspace operasional padat data (tanpa landing page pemasaran).

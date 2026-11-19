@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arsepladisar08-lab/gasly-skills/src/design/tokens.schema.json",
+  "title": "Gasly Design Preset Token Schema",
+  "description": "Neutral JSON source of truth for Gasly design presets and WCAG AA contrast verification.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "version",
+    "defaultMode",
+    "recommendedDials",
+    "typography",
+    "geometry",
+    "modes",
+    "contrastPairs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "enum": ["aura", "editorial-light", "dense-dashboard", "warm-friendly"]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "defaultMode": {
+      "type": "string",
+      "enum": ["light", "dark"]
+    },
+    "recommendedDials": {
+      "type": "object",
+      "required": ["DESIGN_VARIANCE", "MOTION_INTENSITY", "VISUAL_DENSITY"],
+      "additionalProperties": false,
+      "properties": {
+        "DESIGN_VARIANCE": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "MOTION_INTENSITY": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "VISUAL_DENSITY": { "type": "integer", "minimum": 1, "maximum": 10 }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "required": ["fontSans", "fontDisplay", "fontMono", "scale"],
+      "additionalProperties": false,
+      "properties": {
+        "fontSans": { "type": "string", "minLength": 1 },
+        "fontDisplay": { "type": "string", "minLength": 1 },
+        "fontMono": { "type": "string", "minLength": 1 },
+        "scale": {
+          "type": "object",
+          "required": ["display", "h1", "h2", "body", "caption"],
+          "additionalProperties": false,
+          "properties": {
+            "display": { "type": "string" },
+            "h1": { "type": "string" },
+            "h2": { "type": "string" },
+            "body": { "type": "string" },
+            "caption": { "type": "string" }
+          }
+        }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "required": ["radiusSm", "radiusMd", "radiusLg", "radiusXl", "gridBasePx"],
+      "additionalProperties": false,
+      "properties": {
+        "radiusSm": { "type": "string" },
+        "radiusMd": { "type": "string" },
+        "radiusLg": { "type": "string" },
+        "radiusXl": { "type": "string" },
+        "gridBasePx": { "type": "integer", "enum": [4, 8] }
+      }
+    },
+    "modes": {
+      "type": "object",
+      "required": ["light", "dark"],
+      "additionalProperties": false,
+      "properties": {
+        "light": { "$ref": "#/$defs/colorMode" },
+        "dark": { "$ref": "#/$defs/colorMode" }
+      }
+    },
+    "contrastPairs": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["fg", "bg", "minRatio", "usage"],
+        "additionalProperties": false,
+        "properties": {
+          "fg": { "type": "string" },
+          "bg": { "type": "string" },
+          "minRatio": { "type": "number", "minimum": 3.0 },
+          "usage": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "colorMode": {
+      "type": "object",
+      "required": [
+        "bgBase",
+        "bgSurface",
+        "bgInteractive",
+        "textPrimary",
+        "textSecondary",
+        "textHelper",
+        "textDisabled",
+        "borderSubtle",
+        "borderFocus",
+        "accentSolid",
+        "accentTextOnSolid",
+        "successSolid",
+        "successTextOnSolid",
+        "warningSolid",
+        "warningTextOnSolid",
+        "dangerSolid",
+        "dangerTextOnSolid"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "bgBase": { "$ref": "#/$defs/hexColor" },
+        "bgSurface": { "$ref": "#/$defs/hexColor" },
+        "bgInteractive": { "$ref": "#/$defs/hexColor" },
+        "textPrimary": { "$ref": "#/$defs/hexColor" },
+        "textSecondary": { "$ref": "#/$defs/hexColor" },
+        "textHelper": { "$ref": "#/$defs/hexColor" },
+        "textDisabled": { "$ref": "#/$defs/hexColor" },
+        "borderSubtle": { "$ref": "#/$defs/hexColor" },
+        "borderFocus": { "$ref": "#/$defs/hexColor" },
+        "accentSolid": { "$ref": "#/$defs/hexColor" },
+        "accentTextOnSolid": { "$ref": "#/$defs/hexColor" },
+        "successSolid": { "$ref": "#/$defs/hexColor" },
+        "successTextOnSolid": { "$ref": "#/$defs/hexColor" },
+        "warningSolid": { "$ref": "#/$defs/hexColor" },
+        "warningTextOnSolid": { "$ref": "#/$defs/hexColor" },
+        "dangerSolid": { "$ref": "#/$defs/hexColor" },
+        "dangerTextOnSolid": { "$ref": "#/$defs/hexColor" }
+      }
+    }
+  }
+}

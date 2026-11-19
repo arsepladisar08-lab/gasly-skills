@@ -1,6 +1,6 @@
 # GERBANG PENGERASAN INTI (P0 HARDENING GATES)
 
-Seluruh output spesifikasi (`gasly-prompt`), backend (`gasly-data`), dan frontend (`gasly-ui` / `gasly-legacy`) WAJIB mematuhi 7 aturan tidak bisa ditawar berikut:
+Seluruh output spesifikasi (`gasly-prd`), desain (`gasly-prd-to-uiux`), koordinasi implementasi (`gasly-pro-api`), backend (`gasly-data`), dan frontend (`gasly-ui` / `gasly-legacy`) WAJIB mematuhi 7 aturan tidak bisa ditawar berikut:
 
 1. **GATE P0-01 — Proteksi Mutlak Dokumen Sensitif (`SENSITIVE-DATA`):**
    - Setiap entitas yang memuat dokumen pajak (NPWP, SPT, SP2DK, omzet), rekam/rujukan medis, kartu identitas (KTP/KK), atau bukti keuangan internal WAJIB diklasifikasikan sebagai `CONFIDENTIAL` atau `SENSITIVE_PII`.

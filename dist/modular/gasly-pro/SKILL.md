@@ -1,7 +1,7 @@
 ---
 name: gasly-pro
 description: >
-  LEGACY SKILL (GAS-Hosted HtmlService Mode): Gunakan skill ini HANYA ketika pengguna secara eksplisit meminta aplikasi web monolitik yang di-host langsung di dalam iframe Google Apps Script menggunakan HtmlService dan google.script.run (setup.gs, code.gs, index.html), atau sedang melanjutkan revisi proyek legacy HtmlService yang sudah ada. Untuk arsitektur standar Gasly saat ini (frontend eksternal terpisah yang berkomunikasi ke satu URL Apps Script .../exec sebagai headless API atas Google Sheets dan Drive), JANGAN gunakan skill ini—arahkan pembuatan backend ke gasly-data dan pembuatan frontend ke gasly-ui. JANGAN gunakan skill ini untuk tahap perencanaan spesifikasi awal (arahkan ke gasly-prompt) atau untuk skrip makro/trigger latar belakang tanpa antarmuka pengguna.
+  LEGACY SKILL (GAS-Hosted HtmlService Mode): Gunakan skill ini HANYA ketika pengguna secara eksplisit meminta aplikasi web monolitik yang di-host langsung di dalam iframe Google Apps Script menggunakan HtmlService dan google.script.run (setup.gs, code.gs, index.html), atau sedang melanjutkan revisi proyek legacy HtmlService yang sudah ada. Untuk arsitektur standar Gasly saat ini (frontend eksternal terpisah yang berkomunikasi ke satu URL Apps Script .../exec sebagai headless API atas Google Sheets dan Drive), JANGAN gunakan skill ini—arahkan pembuatan backend ke gasly-data dan pembuatan frontend ke gasly-ui. JANGAN gunakan skill ini untuk tahap perencanaan spesifikasi awal (arahkan ke gasly-prd) atau untuk skrip makro/trigger latar belakang tanpa antarmuka pengguna.
 ---
 
 # GASLY PRO [LEGACY] — GAS-HOSTED HTMLSERVICE FULL-STACK ENGINEER

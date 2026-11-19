@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # TOKEN & GATE INHERITANCE FOR 15 ADDITIONAL STACKS (`stacks/INHERIT.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-prompt` dan `gasly-ui` ketika pengguna meminta salah satu dari 15 stack pewaris (*inheriting stacks*).
+**Kondisi Muat:** Dimuat oleh `gasly-prd` dan `gasly-ui` ketika pengguna meminta salah satu dari 15 stack pewaris (*inheriting stacks*).
 
 ## Daftar Isi
 1. [Daftar 15 Stack Pewaris Resmi](#1-daftar-15-stack-pewaris-resmi)

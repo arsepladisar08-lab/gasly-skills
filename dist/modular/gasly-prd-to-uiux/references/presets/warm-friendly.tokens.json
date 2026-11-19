@@ -1,0 +1,85 @@
+{
+  "id": "warm-friendly",
+  "name": "Warm Friendly Retail, Clinic & Community",
+  "version": "2.1.0",
+  "defaultMode": "light",
+  "recommendedDials": {
+    "DESIGN_VARIANCE": 5,
+    "MOTION_INTENSITY": 5,
+    "VISUAL_DENSITY": 4
+  },
+  "typography": {
+    "fontSans": "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "fontDisplay": "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "fontMono": "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+    "scale": {
+      "display": "clamp(2.5rem, 4.8vw, 3.75rem)",
+      "h1": "clamp(2rem, 3.4vw, 2.5rem)",
+      "h2": "clamp(1.25rem, 2vw, 1.5rem)",
+      "body": "0.9375rem",
+      "caption": "0.75rem"
+    }
+  },
+  "geometry": {
+    "radiusSm": "8px",
+    "radiusMd": "12px",
+    "radiusLg": "16px",
+    "radiusXl": "24px",
+    "gridBasePx": 8
+  },
+  "modes": {
+    "light": {
+      "bgBase": "#FDFBF7",
+      "bgSurface": "#FFFFFF",
+      "bgInteractive": "#F3EFE6",
+      "textPrimary": "#132A24",
+      "textSecondary": "#334E48",
+      "textHelper": "#48655E",
+      "textDisabled": "#94A39E",
+      "borderSubtle": "#E4DFD3",
+      "borderFocus": "#0F766E",
+      "accentSolid": "#0F766E",
+      "accentTextOnSolid": "#FFFFFF",
+      "successSolid": "#15803D",
+      "successTextOnSolid": "#FFFFFF",
+      "warningSolid": "#F59E0B",
+      "warningTextOnSolid": "#132A24",
+      "dangerSolid": "#BE123C",
+      "dangerTextOnSolid": "#FFFFFF"
+    },
+    "dark": {
+      "bgBase": "#0C1715",
+      "bgSurface": "#13221F",
+      "bgInteractive": "#1B2E2A",
+      "textPrimary": "#F0FDF4",
+      "textSecondary": "#B2D8D0",
+      "textHelper": "#8EB8B0",
+      "textDisabled": "#56756E",
+      "borderSubtle": "#233B36",
+      "borderFocus": "#14B8A6",
+      "accentSolid": "#14B8A6",
+      "accentTextOnSolid": "#0C1715",
+      "successSolid": "#10B981",
+      "successTextOnSolid": "#0C1715",
+      "warningSolid": "#F59E0B",
+      "warningTextOnSolid": "#0C1715",
+      "dangerSolid": "#E11D48",
+      "dangerTextOnSolid": "#FFFFFF"
+    }
+  },
+  "contrastPairs": [
+    { "fg": "textPrimary", "bg": "bgBase", "minRatio": 4.5, "usage": "Primary heading on warm cream/deep forest canvas" },
+    { "fg": "textPrimary", "bg": "bgSurface", "minRatio": 4.5, "usage": "Primary text on card surface" },
+    { "fg": "textPrimary", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Primary text on sand hover surface" },
+    { "fg": "textSecondary", "bg": "bgBase", "minRatio": 4.5, "usage": "Friendly body copy on base canvas" },
+    { "fg": "textSecondary", "bg": "bgSurface", "minRatio": 4.5, "usage": "Friendly body copy on card surface" },
+    { "fg": "textSecondary", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Friendly body copy on hover surface" },
+    { "fg": "textHelper", "bg": "bgBase", "minRatio": 4.5, "usage": "Helper label on base canvas" },
+    { "fg": "textHelper", "bg": "bgSurface", "minRatio": 4.5, "usage": "Helper label on card surface" },
+    { "fg": "textHelper", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Helper label on hover surface" },
+    { "fg": "accentTextOnSolid", "bg": "accentSolid", "minRatio": 4.5, "usage": "Primary teal CTA button" },
+    { "fg": "successTextOnSolid", "bg": "successSolid", "minRatio": 4.5, "usage": "Success pill/button" },
+    { "fg": "warningTextOnSolid", "bg": "warningSolid", "minRatio": 4.5, "usage": "Warning pill/button" },
+    { "fg": "dangerTextOnSolid", "bg": "dangerSolid", "minRatio": 4.5, "usage": "Danger pill/button" }
+  ]
+}

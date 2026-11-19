@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # SAAS MONETIZATION, P2-LITE BOUNDARIES & TIER PROMOTION MATRIX (`core/monetization-and-tiers.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-prompt`, `gasly-data`, dan `gasly-ui` ketika merancang atau membangun produk SaaS komersial, langganan berbayar, atau peningkatan arsitektur (`Tier 1` s/d `Tier 3`).
+**Kondisi Muat:** Dimuat oleh `gasly-prd`, `gasly-data`, dan `gasly-ui` ketika merancang atau membangun produk SaaS komersial, langganan berbayar, atau peningkatan arsitektur (`Tier 1` s/d `Tier 3`).
 
 ## Daftar Isi
 1. [Skema Monetisasi SaaS (`PLANS` & `SUBSCRIPTIONS`) Tanpa Fabrikasi (`Gate U-03`)](#1-skema-monetisasi-saas-plans--subscriptions-tanpa-fabrikasi-gate-u-03)

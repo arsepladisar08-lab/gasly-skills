@@ -1,0 +1,70 @@
+/* Gasly Design Tokens Export — Preset: warm-friendly (v2.1.0) */
+:root,
+[data-theme="light"] {
+  --bg-base: #FDFBF7;
+  --bg-surface: #FFFFFF;
+  --bg-interactive: #F3EFE6;
+  --text-primary: #132A24;
+  --text-secondary: #334E48;
+  --text-helper: #48655E;
+  --text-disabled: #94A39E;
+  --border-subtle: #E4DFD3;
+  --border-focus: #0F766E;
+  --accent-solid: #0F766E;
+  --accent-text-on-solid: #FFFFFF;
+  --success-solid: #15803D;
+  --success-text-on-solid: #FFFFFF;
+  --warning-solid: #F59E0B;
+  --warning-text-on-solid: #132A24;
+  --danger-solid: #BE123C;
+  --danger-text-on-solid: #FFFFFF;
+
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --grid-base: 8px;
+}
+
+[data-theme="dark"],
+.dark {
+  --bg-base: #0C1715;
+  --bg-surface: #13221F;
+  --bg-interactive: #1B2E2A;
+  --text-primary: #F0FDF4;
+  --text-secondary: #B2D8D0;
+  --text-helper: #8EB8B0;
+  --text-disabled: #56756E;
+  --border-subtle: #233B36;
+  --border-focus: #14B8A6;
+  --accent-solid: #14B8A6;
+  --accent-text-on-solid: #0C1715;
+  --success-solid: #10B981;
+  --success-text-on-solid: #0C1715;
+  --warning-solid: #F59E0B;
+  --warning-text-on-solid: #0C1715;
+  --danger-solid: #E11D48;
+  --danger-text-on-solid: #FFFFFF;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
