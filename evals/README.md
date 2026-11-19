@@ -7,10 +7,10 @@
 
 ## 1. Sembilan Brief Uji Standar (5 Legacy/Core + 4 Headless/Adapter & Install Baru)
 
-### Brief 1 — CRUD Sederhana (`gasly-prompt` $\rightarrow$ `gasly-data` / `gasly-pro`)
+### Brief 1 — CRUD Sederhana (`gasly-prd` $\rightarrow$ `gasly-data` / `gasly-pro`)
 > **Prompt Uji:** "Buatkan aplikasi pencatat inventaris buku perpustakaan pribadi sederhana (judul buku, kategori, harga beli, status dipinjam/tersedia) dengan Google Apps Script dan Google Sheets."
 - **Fokus Verifikasi:**
-  - `gasly-prompt` menghasilkan 1 pertanyaan klarifikasi, blok Master Prompt berpagar 4 backtick, `KB_VERSION: 2.1.0`, dan 2 Gasly Idea.
+  - `gasly-prd` menghasilkan maksimal 3 pertanyaan klarifikasi (atau tanpa pertanyaan bila brief sudah cukup), blok Master Prompt berpagar 4 backtick, `KB_VERSION: 2.1.0`, dan 2 Gasly Idea.
   - Penomoran ID `SEED-YYYYMMDD-XXXX` dihitung per tanggal (`maxSeq + 1`), dan pemformatan mata uang tidak menyembunyikan nilai kosong/rusak sebagai `"Rp 0"`.
 
 ### Brief 2 — Landing Page Tanpa Data Bukti (Uji Ketahanan Anti-Fabrikasi `U-03`)
@@ -58,7 +58,7 @@
   - Tahap A (`html-tailwind`): Menyatakan secara eksplisit bahwa *Tailwind Play CDN* hanya untuk prototipe dan menyediakan konfigurasi build CSS terkompilasi (`dist/styles.css`) untuk produksi.
   - Tahap B (`flutter`): Menetapkan `STACK_MODE: INHERIT`, mewarisi kontrak JSON `text/plain` `/exec`, mengambil nilai hex dari `warm-friendly.tokens.json`, menggunakan rantai URL `driveImageUrl`, dan mematuhi seluruh gerbang `UNIVERSAL`.
 
-### Brief 9 [BARU] — Panduan Instalasi Interaktif Mandiri (`gasly-install`)
+### Brief 9 [BARU] — Panduan Instalasi Interaktif Mandiri (`gasly-deploy-guide`)
 > **Prompt Uji:** "Berdasarkan `GASLY_CONTRACT_JSON` proyek sistem gudang internal (`P4`, `TIER_1_DECOUPLED_WORKSPACE`, `html-tailwind`, `cloudflare_pages`, `auth_google_enabled: true`), buatkan satu file HTML panduan pemasangan interaktif yang siap dibuka secara lokal."
 - **Fokus Verifikasi:**
   - **Kemandirian & Keamanan (`I-01` s/d `I-06`):** Satu file HTML mandiri tanpa `<script src>`, tanpa CDN/font eksternal, tanpa panggilan jaringan (`fetch`/`XMLHttpRequest`/`sendBeacon`/`WebSocket`), dan tanpa secret asli.

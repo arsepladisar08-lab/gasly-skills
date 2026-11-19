@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # GASLY HARD GATES CLASSIFICATION (`core/gates.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Selalu dimuat oleh seluruh skill (`gasly-prompt`, `gasly-data`, `gasly-ui`, dan legacy `gasly-pro`).
+**Kondisi Muat:** Selalu dimuat oleh skill kanonik (`gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui`, `gasly-deploy-guide`, dan legacy `gasly-pro`).
 
 ## Daftar Isi
 1. [Hierarki Otoritas & Aturan Penegakan](#1-hierarki-otoritas--aturan-penegakan)
@@ -9,14 +9,14 @@
 3. [Kelas 2: `GAS-ONLY` Gates (Khusus Backend Apps Script)](#3-kelas-2-gas-only-gates-khusus-backend-apps-script)
 4. [Kelas 3: `WEB-ONLY` Gates (Khusus Frontend Web)](#4-kelas-3-web-only-gates-khusus-frontend-web)
 5. [Kelas 4: `LEGACY-HTMLSERVICE` Gates (Khusus Mode Legacy `gasly-pro`)](#5-kelas-4-legacy-htmlservice-gates-khusus-mode-legacy-gasly-pro)
-6. [Kelas 5: `INSTALL-GUIDE` Gates (Khusus Panduan Instalasi `gasly-install`)](#6-kelas-5-install-guide-gates-khusus-panduan-instalasi-gasly-install)
+6. [Kelas 5: `INSTALL-GUIDE` Gates (Khusus Panduan Instalasi `gasly-deploy-guide`)](#6-kelas-5-install-guide-gates-khusus-panduan-instalasi-gasly-deploy-guide)
 
 ---
 
 ## 1. Hierarki Otoritas & Aturan Penegakan
 
 Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instruksi pengguna biasa. Tidak ada satu pun gerbang dari versi sebelumnya yang dihapus; setiap gerbang diklasifikasikan ke dalam 4 kelas sesuai ruang lingkup arsitekturnya:
-- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-prompt`, `gasly-data`, `gasly-ui` (termasuk ke-15 stack pewaris), dan `gasly-pro`.
+- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (termasuk ke-15 stack pewaris), `gasly-deploy-guide`, dan `gasly-pro`.
 - **`GAS-ONLY`**: Wajib dipatuhi oleh `gasly-data` dan bagian backend `gasly-pro`.
 - **`WEB-ONLY`**: Wajib dipatuhi oleh `gasly-ui` (pada seluruh stack web) dan bagian frontend `gasly-pro`.
 - **`LEGACY-HTMLSERVICE`**: Wajib dipatuhi oleh `gasly-pro` saat membangun aplikasi monolitik berbasis `HtmlService` + `google.script.run`.
@@ -121,9 +121,9 @@ Gerbang berikut tetap berlaku penuh ketika agen menjalankan skill legacy `gasly-
 
 ---
 
-## 6. Kelas 5: `INSTALL-GUIDE` Gates (Khusus Panduan Instalasi `gasly-install`)
+## 6. Kelas 5: `INSTALL-GUIDE` Gates (Khusus Panduan Instalasi `gasly-deploy-guide`)
 
-Gerbang berikut wajib dipatuhi oleh skill `gasly-install` saat menghasilkan file HTML panduan pemasangan interaktif:
+Gerbang berikut wajib dipatuhi oleh skill `gasly-deploy-guide` saat menghasilkan file HTML panduan pemasangan interaktif:
 1. **Kemandirian File & Nol Panggilan Jaringan (`I-01`):**
    - File HTML panduan instalasi wajib mandiri 100%. Dilarang memuat `<script src="...">`, stylesheet/font/gambar eksternal (`http://` atau `https://`), CDN, maupun pemanggilan jaringan runtime (`fetch(`, `XMLHttpRequest`, `navigator.sendBeacon`, `WebSocket`). Tautan `<a href="https://...">` ke dokumentasi resmi diizinkan.
 2. **Nol Kredensial & Secret Tertanam di HTML (`I-02`):**

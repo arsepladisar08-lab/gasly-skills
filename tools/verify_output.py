@@ -198,7 +198,7 @@ ALLOWED_INSTALL_PLACEHOLDERS = {
 
 def check_install_guide(guide_path_str: str, failures: list[str]) -> None:
     """
-    Memeriksa kepatuhan file HTML keluaran gasly-install terhadap Gate I-01 s/d I-06.
+    Memeriksa kepatuhan file HTML keluaran gasly-deploy-guide terhadap Gate I-01 s/d I-06.
     """
     path_obj = Path(guide_path_str)
     if not path_obj.exists():
@@ -278,7 +278,7 @@ def main() -> int:
     parser.add_argument("--contract", required=False, help="Path ke gasly.project.json")
     parser.add_argument("--backend", nargs="+", required=False, help="Path ke file .gs backend")
     parser.add_argument("--frontend", nargs="+", required=False, help="Path ke file frontend")
-    parser.add_argument("--install-guide", required=False, help="Path ke file HTML panduan instalasi (gasly-install)")
+    parser.add_argument("--install-guide", required=False, help="Path ke file HTML panduan instalasi (gasly-deploy-guide)")
     args = parser.parse_args()
 
     failures: list[str] = []

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pratinjau Gaya — {{APP_NAME}}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px; background: #f0eee9; color: #242424; font: 16px/1.5 system-ui, sans-serif; }
+    header { max-width: 1200px; margin: 0 auto 24px; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.5rem, 3vw, 2.25rem); }
+    .grid { max-width: 1200px; margin: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    .option { --bg: {{A_BG}}; --surface: {{A_SURFACE}}; --ink: {{A_TEXT}}; --muted: {{A_MUTED}}; --action: {{A_ACTION}}; --accent: {{A_ACCENT}}; --radius: {{A_RADIUS}}; color: var(--ink); }
+    .option[data-option="B"] { --bg: {{B_BG}}; --surface: {{B_SURFACE}}; --ink: {{B_TEXT}}; --muted: {{B_MUTED}}; --action: {{B_ACTION}}; --accent: {{B_ACCENT}}; --radius: {{B_RADIUS}}; }
+    .option h2 { margin: 0 0 4px; font-size: 1.15rem; }
+    .reason { min-height: 3em; margin: 0 0 12px; color: #454545; }
+    .canvas { padding: 20px; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--bg); box-shadow: 4px 4px 0 var(--ink); }
+    .nav { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--ink); }
+    .nav span { padding: 6px 10px; border-radius: 999px; background: var(--surface); }
+    .nav span:first-child { background: var(--accent); }
+    .headline { margin: 18px 0 4px; font-size: 1.6rem; line-height: 1.2; }
+    .muted { color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+    button { min-height: 44px; padding: 8px 14px; border: 2px solid var(--ink); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-weight: 650; cursor: pointer; }
+    button.primary { background: var(--action); }
+    button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+    .panel { margin-top: 14px; padding: 14px; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--surface); }
+    .row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #aaa; }
+    .row:first-of-type { border-top: 0; }
+    .tag { padding: 2px 8px; border-radius: 999px; background: var(--accent); white-space: nowrap; }
+    .select { margin-top: 14px; width: 100%; }
+    .status { min-height: 1.5em; margin: 8px 0 0; color: var(--ink); }
+    @media (max-width: 760px) { body { padding: 18px 12px; } .grid { grid-template-columns: 1fr; } .canvas { padding: 14px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pilih arah visual untuk {{APP_NAME}}</h1>
+    <p>Konten contoh dibuat sama. Yang dibandingkan adalah nuansa visual dan hierarki tampilannya.</p>
+  </header>
+  <main class="grid">
+    <section class="option" data-option="A">
+      <h2>Gaya A — {{A_NAME}} (Rekomendasi)</h2>
+      <p class="reason">{{A_REASON}}</p>
+      <div class="canvas">
+        <nav class="nav" aria-label="Contoh navigasi"><span>{{NAV_A}}</span><span>{{NAV_B}}</span><span>{{NAV_C}}</span></nav>
+        <h3 class="headline">{{SCREEN_TITLE}}</h3><p class="muted">{{SCREEN_DESCRIPTION}}</p>
+        <div class="actions"><button class="primary" type="button">{{PRIMARY_ACTION}}</button><button type="button">{{SECONDARY_ACTION}}</button></div>
+        <div class="panel"><strong>{{PANEL_TITLE}}</strong>
+          <div class="row"><span>{{ROW_1}}</span><span class="tag">{{STATUS_1}}</span></div>
+          <div class="row"><span>{{ROW_2}}</span><span class="tag">{{STATUS_2}}</span></div>
+          <div class="row"><span>{{ROW_3}}</span><span class="tag">{{STATUS_3}}</span></div>
+        </div>
+        <button class="select primary" type="button" data-choice="A">Pilih Gaya A</button><p class="status" role="status"></p>
+      </div>
+    </section>
+    <section class="option" data-option="B">
+      <h2>Gaya B — {{B_NAME}}</h2>
+      <p class="reason">{{B_REASON}}</p>
+      <div class="canvas">
+        <nav class="nav" aria-label="Contoh navigasi"><span>{{NAV_A}}</span><span>{{NAV_B}}</span><span>{{NAV_C}}</span></nav>
+        <h3 class="headline">{{SCREEN_TITLE}}</h3><p class="muted">{{SCREEN_DESCRIPTION}}</p>
+        <div class="actions"><button class="primary" type="button">{{PRIMARY_ACTION}}</button><button type="button">{{SECONDARY_ACTION}}</button></div>
+        <div class="panel"><strong>{{PANEL_TITLE}}</strong>
+          <div class="row"><span>{{ROW_1}}</span><span class="tag">{{STATUS_1}}</span></div>
+          <div class="row"><span>{{ROW_2}}</span><span class="tag">{{STATUS_2}}</span></div>
+          <div class="row"><span>{{ROW_3}}</span><span class="tag">{{STATUS_3}}</span></div>
+        </div>
+        <button class="select primary" type="button" data-choice="B">Pilih Gaya B</button><p class="status" role="status"></p>
+      </div>
+    </section>
+  </main>
+  <script>
+    document.querySelectorAll('[data-choice]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const choice = button.dataset.choice;
+        const status = button.parentElement.querySelector('.status');
+        status.textContent = `Pilihan Anda: Gaya ${choice}. Kirim pilihan ini melalui chat untuk melanjutkan.`;
+      });
+    });
+  </script>
+</body>
+</html>

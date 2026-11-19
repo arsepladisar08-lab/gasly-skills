@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # PLANNED FEATURES & NEXT-STAGE ROADMAP (`stacks/PLANNED.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-prompt`, `gasly-data`, dan `gasly-ui` ketika pengguna menanyakan fitur atau adapter yang dijadwalkan untuk tahap pengembangan berikutnya.
+**Kondisi Muat:** Dimuat oleh `gasly-prd`, `gasly-data`, dan `gasly-ui` ketika pengguna menanyakan fitur atau adapter yang dijadwalkan untuk tahap pengembangan berikutnya.
 
 ## Daftar Isi
 1. [Status Item `PLANNED` (Dokumentasi Saja — Jangan Diimplementasikan Sebagai Fitur Matang)](#1-status-item-planned-dokumentasi-saja--jangan-diimplementasikan-sebagai-fitur-matang)

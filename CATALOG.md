@@ -1,47 +1,63 @@
-# Katalog Skill & Pemilih Paket Gasly (`CATALOG.md`)
+# Katalog Skill & Pemilih Paket GASLY
 
-Gunakan panduan ini untuk memilih skill dan varian distribusi yang tepat sesuai kebutuhan proyek dan kemampuan platform AI yang Anda gunakan.
+Gunakan katalog ini untuk memilih skill kanonik dan memahami batas tanggung jawab tiap bagian. Alur bertahap adalah rekomendasi, bukan kewajiban bila pengguna sudah memiliki artifact tahap sebelumnya.
 
----
+## 1. Workflow Utama
 
-## 1. Pemilih Skill Berdasarkan Tugas
+| Tahap / Kebutuhan | Skill | Input utama | Output / tanggung jawab |
+|---|---|---|---|
+| Titik masuk dan deteksi kebutuhan | `gasly-start` | Pesan pengguna dan file yang tersedia | Rute skill dan handoff; bukan runtime orchestration otomatis |
+| Ide menjadi spesifikasi produk | `gasly-prd` | Brief/ide atau PRD yang belum lengkap | `PRD-Final.md`, `MASTER-INSTRUCTIONAL-PROMPT.md`, `GASLY_CONTRACT.json` |
+| PRD/referensi gambar menjadi desain | `gasly-prd-to-uiux` | PRD, screenshot, atau keduanya | `Prompt-Desain.md`, `DESIGN.md`, `UIUX_HANDOFF.md`, preview opsional |
+| Implementasi full-stack | `gasly-pro-api` | PRD + kontrak + UI handoff (bila ada) | Koordinasi integrasi dan end-to-end acceptance |
+| Backend GAS | `gasly-data` | Kontrak dan action registry | Backend `.gs`, auth, Sheets, Drive, integrations |
+| Frontend | `gasly-ui` | Kontrak + handoff visual | Frontend sesuai adapter stack yang didukung |
+| Instalasi/deployment | `gasly-deploy-guide` | Kontrak dan daftar file hasil build | Artifact HTML panduan setup/deploy mandiri |
+| Aplikasi monolitik legacy | `gasly-pro` | Permintaan eksplisit `HtmlService` | `HtmlService` + `google.script.run`; legacy only |
 
-| Skenario Penggunaan | Skill yang Dipilih | Urutan Pemanggilan (Stackable Workflow) |
-| :--- | :--- | :--- |
-| Merancang aplikasi baru dari ide mentah (menentukan Access Profile `P1`–`P4`, Preset Desain + 3 Dials, Stack Frontend, Skema Sheet, dan Kebutuhan Upload Drive) | **`gasly-prompt`** | Langkah 1: Panggil `gasly-prompt` $\rightarrow$ Jawab 1 pertanyaan klarifikasi. |
-| Membangun atau merevisi kode backend Google Apps Script (`setup.gs`, `router.gs`, `auth.gs`, `sheets.gs`, `drive.gs`, `webhook.gs`) di balik URL `/exec` | **`gasly-data`** | Langkah 2A: Panggil `gasly-data` menggunakan `MASTER INSTRUCTIONAL PROMPT` dari `gasly-prompt`. |
-| Membangun atau merevisi aplikasi frontend eksternal (`html-tailwind`, `nextjs`+`shadcn`, `astro`, atau 15 stack pewaris) yang berkomunikasi ke URL `/exec` | **`gasly-ui`** | Langkah 2B: Panggil `gasly-ui` menggunakan `MASTER INSTRUCTIONAL PROMPT` yang sama. |
-| Menghasilkan satu file HTML panduan instalasi & deployment interaktif mandiri (tanpa jaringan/CDN) yang spesifik per proyek | **`gasly-install`** | Langkah 3: Panggil `gasly-install` menggunakan `GASLY_CONTRACT_JSON` serta daftar file keluaran dari `gasly-data` dan `gasly-ui`. |
-| **[LEGACY]** Membangun atau memelihara aplikasi monolitik yang disajikan langsung dari dalam iframe `HtmlService` Google Apps Script (`google.script.run`) | **`gasly-pro`** *(Legacy)* | Gunakan hanya jika pengguna secara eksplisit meminta mode `HtmlService` di dalam Google Apps Script. |
+## 2. Batas Tanggung Jawab
 
----
+- `gasly-pro-api` **tidak menggantikan** `gasly-data` atau `gasly-ui`. Backend dan frontend tetap dikelola spesialis masing-masing agar aturan keamanan dan kontrak API tidak diduplikasi.
+- `gasly-prd-to-uiux` menghasilkan prompt dan handoff untuk Google Stitch/Figma AI; skill tidak mengklaim mengoperasikan atau mengedit Stitch/Figma langsung tanpa integrasi.
+- Integrasi Email/WhatsApp/AI harus merujuk handler yang ada di `src/gas/integrations.md`. Fonnte adalah gateway WhatsApp non-resmi; jelaskan risiko, consent, opt-out, dan rate limit.
+- Migrasi database dan document-generation belum dipublikasikan sebagai skill/handler mandiri. Jangan menyebutnya tersedia hingga source, schema, dan tes implementasinya ditambahkan.
+- Skill file adalah instruksi. Router tidak menjamin bahwa LLM dapat memanggil skill lain otomatis; ikuti kemampuan runtime dan lakukan handoff manual bila diperlukan.
 
-## 2. Daftar Paket Distribusi di `dist/`
+## 3. Paket Distribusi
 
-Seluruh konten baru untuk arsitektur headless (`gasly-data`, `gasly-ui`, dan `gasly-install`) dikompilasi secara eksklusif ke dalam **`dist/modular/`**, sementara paket `flat` dan `flat-lite` dipertahankan tanpa perubahan batas ukuran untuk kompatibilitas mundur.
+### Modular (`dist/modular/`) — paket utama
 
-### A. Paket Modular (`dist/modular/` — Direkomendasikan)
-Cocok untuk platform yang mendukung standar `SKILL.md` beserta pemuatan file di dalam subfolder `references/` (Claude Code, Claude.ai Skills/Projects, ChatGPT Skills, Gemini Skills, Cursor, Windsurf):
+- `gasly-start/`: router dan core contracts.
+- `gasly-prd/`: core contracts, design docs, dan `spec-digest.md`.
+- `gasly-prd-to-uiux/`: core contracts, design tokens/presets/CSS, visual-analysis reference, dan template pratinjau.
+- `gasly-pro-api/`: core contracts, GAS references, design docs, dan stack adapters.
+- `gasly-data/`: core contracts dan GAS implementation references.
+- `gasly-ui/`: core contracts, design system, CSS exports, dan stack adapters.
+- `gasly-deploy-guide/`: core contracts, config, install steps, dan HTML guide template.
+- `gasly-pro/`: legacy HtmlService references.
 
-- **`dist/modular/gasly-prompt/`**
-  - `SKILL.md`
-  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/monetization-and-tiers.md`, `references/facts.md`, `references/hardening-gates-p0.md`, `references/gasly-contract.schema.json`, `references/presets.md`, `references/dials.md`, `references/spec-digest.md`
-- **`dist/modular/gasly-data/`**
-  - `SKILL.md`
-  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/monetization-and-tiers.md`, `references/facts.md`, `references/hardening-gates-p0.md`, `references/gasly-contract.schema.json`, `references/config.md`, `references/router-and-envelope.md`, `references/auth-and-ratelimit.md`, `references/sheets-repository.md`, `references/drive-upload.md`, `references/webhook-receiver.md`, `references/integrations.md`
-- **`dist/modular/gasly-ui/`**
-  - `SKILL.md`
-  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/monetization-and-tiers.md`, `references/facts.md`, `references/hardening-gates-p0.md`, `references/gasly-contract.schema.json`, `references/tokens.schema.json`, `references/presets.md`, `references/dials.md`, `references/presets/*.tokens.json`, `references/css/*.css`, `references/html-tailwind.md`, `references/nextjs-shadcn.md`, `references/astro.md`, `references/INHERIT.md`, `references/PLANNED.md`
-- **`dist/modular/gasly-install/`**
-  - `SKILL.md`
-  - `references/contract.md`, `references/access-profiles.md`, `references/gates.md`, `references/monetization-and-tiers.md`, `references/facts.md`, `references/hardening-gates-p0.md`, `references/gasly-contract.schema.json`, `references/config.md`, `references/install-steps.md`, `references/guide-template.html`
-- **`dist/modular/gasly-pro/`** *(Legacy HtmlService Mode)*
-  - `SKILL.md`
-  - `references/aura-design.md`, `references/interaction-primitives.md`, `references/app-ux.md`, `references/landing-conversion.md`, `references/gas-backend.md`, `references/boilerplates.md`
+### Flat (`dist/flat/`) dan Flat-Lite (`dist/flat-lite/`)
 
-### B. Paket Legacy Flat & Flat-Lite (`dist/flat/` & `dist/flat-lite/`)
-Dipertahankan khusus untuk platform yang hanya menerima satu blok teks instruksi tunggal tanpa lampiran file:
+- `dist/flat/gasly-prd/`: PRD skill dengan spec digest inline.
+- `dist/flat/gasly-pro/`: legacy skill dengan knowledge base inline.
+- `dist/flat-lite/gasly-pro/`: legacy skill tanpa boilerplates untuk batas konteks lebih kecil.
 
-- **`dist/flat/gasly-prompt/SKILL.md`** — `gasly-prompt` dengan `spec-digest.md` terintegrasi inline.
-- **`dist/flat/gasly-pro/SKILL.md`** — Skill legacy `gasly-pro` dengan keenam file `src/kb/*.md` terintegrasi inline.
-- **`dist/flat-lite/gasly-pro/SKILL.md`** — Skill legacy `gasly-pro` tanpa `boilerplates.md` (di bawah ambang `48.000` karakter) untuk platform berbatas instruksi ketat.
+### Alias kompatibilitas
+
+- `gasly-prompt` → `gasly-prd`.
+- `gasly-install` → `gasly-deploy-guide`.
+
+Alias hanya menjaga konfigurasi lama; semua pembaruan baru dilakukan pada skill kanonik.
+
+## 4. Validasi
+
+```bash
+python build_skills.py
+python tools/check_contrast.py
+python -m unittest discover -s tests -v
+TZ=Asia/Jakarta node tests/harness.js
+TZ=Asia/Jakarta node tests/harness_gas.js
+TZ=Asia/Jakarta node tests/harness_install.js
+```
+
+Runtime GAS tetap perlu diverifikasi terpisah sesuai checklist `VERIFY.md`.
