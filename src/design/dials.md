@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # CHARACTER DIALS & ANTI-GENERIC UI RULES (`design/dials.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Selalu dimuat oleh `gasly-prompt` dan `gasly-ui`.
+**Kondisi Muat:** Selalu dimuat oleh `gasly-prd`, `gasly-prd-to-uiux`, dan `gasly-ui`.
 
 ## Daftar Isi
 1. [Tiga Dials Karakter Desain (Skala 1–10)](#1-tiga-dials-karakter-desain-skala-110)
@@ -12,7 +12,7 @@
 
 ## 1. Tiga Dials Karakter Desain (Skala 1–10)
 
-Selain memilih satu **Preset Visual**, tahap perencanaan (`gasly-prompt`) wajib menetapkan nilai bulat `1` sampai `10` untuk tiga parameter karakter berikut:
+Selain memilih satu **Preset Visual**, tahap perencanaan/desain (`gasly-prd` dan `gasly-prd-to-uiux`) wajib menetapkan nilai bulat `1` sampai `10` untuk tiga parameter karakter berikut:
 
 1. **`DESIGN_VARIANCE` (`1–10`) — Asimetri & Eksplorasi Komposisi:**
    - Mengatur seberapa seragam atau asimetris struktur tata letak (*grid*), proporsi kartu, dan kontras ukuran tipografi.

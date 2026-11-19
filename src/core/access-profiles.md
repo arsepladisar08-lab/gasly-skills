@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # ACCESS PROFILES & AUTHENTICATION ARCHITECTURE (`core/access-profiles.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Selalu dimuat oleh `gasly-prompt`, `gasly-data`, dan `gasly-ui`.
+**Kondisi Muat:** Selalu dimuat oleh `gasly-start`, `gasly-prd`, `gasly-pro-api`, `gasly-data`, dan `gasly-ui`.
 
 ## Daftar Isi
 1. [Empat Profil Akses (`P1` s/d `P4`)](#1-empat-profil-akses-p1-sd-p4)
@@ -14,7 +14,7 @@
 
 ## 1. Empat Profil Akses (`P1` s/d `P4`)
 
-Setiap aplikasi wajib memilih tepat satu **Access Profile** pada tahap perencanaan (`gasly-prompt`) dan menegakkannya di dalam *Action Registry* pada `gasly-data`:
+Setiap aplikasi wajib memilih tepat satu **Access Profile** pada tahap perencanaan (`gasly-prd`) dan menegakkannya di dalam *Action Registry* pada `gasly-data`:
 
 | Kode | Nama Profil | Status Dukungan | Aturan Otorisasi di Apps Script (`gasly-data`) | Contoh Kasus Penggunaan |
 | :--- | :--- | :--- | :--- | :--- |

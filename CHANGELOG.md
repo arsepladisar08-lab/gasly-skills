@@ -1,3 +1,13 @@
+## [2.4.0] — 2026-11-19
+
+- Renamed `gasly-prompt` to `gasly-prd` and `gasly-install` to `gasly-deploy-guide`; deprecated aliases remain available in compiled distributions.
+- Added `gasly-start` as a workflow router, `gasly-prd-to-uiux` for design prompts/visual analysis, and `gasly-pro-api` as the full-stack integration coordinator.
+- Preserved `gasly-data`, `gasly-ui`, and legacy `gasly-pro` responsibilities to avoid duplicating backend, frontend, and HtmlService contracts.
+- Added an Image-First Visual Analysis checklist and standalone style preview template; design tokens continue to derive from the canonical JSON schema/presets.
+- Updated compiler routing, package manifest, catalog, README, llms.txt, and regression tests for the new skill names.
+- Documented that automatic skill-to-skill orchestration depends on platform runtime support.
+- Documented that dedicated database migration and document-generation skills/handlers remain future work until implemented and tested.
+
 # Changelog (`CHANGELOG.md`)
 
 Seluruh perubahan penting pada repositori **gasly-skills** didokumentasikan di dalam file ini.

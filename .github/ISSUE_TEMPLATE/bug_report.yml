@@ -21,7 +21,7 @@ body:
       label: Affected package
       options:
         - gasly-pro
-        - gasly-prompt
+        - gasly-prd
         - build/compiler
         - documentation
         - generated distribution

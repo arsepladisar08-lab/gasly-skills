@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # KATALOG LANGKAH INSTALASI & PROVENANCE (`install/install-steps.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Selalu dimuat oleh `gasly-install`.
+**Kondisi Muat:** Selalu dimuat oleh `gasly-deploy-guide`.
 
 ## Daftar Isi
 1. [Aturan Struktur Langkah & Provenance (`Gate I-05`)](#1-aturan-struktur-langkah--provenance-gate-i-05)

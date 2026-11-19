@@ -1,7 +1,7 @@
 <!-- KB_VERSION: 2.1.0 -->
 # DESIGN PRESETS SELECTION & APPLICATION GUIDE (`design/presets.md`)
 **KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Selalu dimuat oleh `gasly-prompt` dan `gasly-ui`.
+**Kondisi Muat:** Selalu dimuat oleh `gasly-prd`, `gasly-prd-to-uiux`, dan `gasly-ui`.
 
 ## Daftar Isi
 1. [Aturan Pemilihan Preset (AURA Bukan Default Otomatis)](#1-aturan-pemilihan-preset-aura-bukan-default-otomatis)
@@ -13,7 +13,7 @@
 
 ## 1. Aturan Pemilihan Preset (AURA Bukan Default Otomatis)
 
-`aura` adalah salah satu dari empat preset di dalam sistem desain Gasly dan **tidak pernah menjadi default otomatis**. Tahap perencana (`gasly-prompt`) wajib menganalisis domain bisnis, lingkungan kerja pengguna (apakah di ruangan terang/lapangan atau di depan monitor gelap), serta kepadatan data sebelum menetapkan preset.
+`aura` adalah salah satu dari empat preset di dalam sistem desain Gasly dan **tidak pernah menjadi default otomatis**. Tahap perencana (`gasly-prd`) dan desain (`gasly-prd-to-uiux`) wajib menganalisis domain bisnis, lingkungan kerja pengguna (apakah di ruangan terang/lapangan atau di depan monitor gelap), serta kepadatan data sebelum menetapkan preset.
 
 ---
 

@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
 """
 Gasly Universal Skills Compiler (build_skills.py)
-Builds source files from src/ into dist/ using an atomic staging directory swap:
-  1. dist/modular/gasly-prompt/   (SKILL.md + references/)
-  2. dist/modular/gasly-data/     (SKILL.md + references/)
-  3. dist/modular/gasly-ui/       (SKILL.md + references/)
-  4. dist/modular/gasly-pro/      (SKILL.md [LEGACY] + references/)
-  5. dist/flat/gasly-prompt/      (Legacy flat package)
-  6. dist/flat/gasly-pro/         (Legacy flat package)
-  7. dist/flat-lite/gasly-pro/    (Legacy flat-lite package without boilerplates.md)
-  8. dist/manifest.json           (SKILL_VERSION, KB_VERSION, and SHA-256 per file)
+Builds canonical source skills from src/ into modular/flat distributions, generates deprecated aliases, and records a SHA-256 manifest.
 """
 
 import argparse
@@ -34,14 +26,14 @@ SCHEMAS_DIR = ROOT_DIR / "schemas"
 DIST_DIR = ROOT_DIR / "dist"
 STAGING_DIR = ROOT_DIR / ".dist_staging"
 
-SKILL_VERSION = "2.3.0"
+SKILL_VERSION = "2.4.0"
 MAX_SKILL_BODY_LINES = 500
 MAX_DESCRIPTION_CHARS = 1000
 FLAT_WARN_CHARS = 48000
 FLAT_MAX_CHARS = 95000
 
-ALL_SKILLS = ["gasly-prompt", "gasly-data", "gasly-ui", "gasly-install", "gasly-pro"]
-LEGACY_FLAT_SKILLS = ["gasly-prompt", "gasly-pro"]
+ALL_SKILLS = ["gasly-start", "gasly-prd", "gasly-prd-to-uiux", "gasly-pro-api", "gasly-data", "gasly-ui", "gasly-deploy-guide", "gasly-pro"]
+LEGACY_FLAT_SKILLS = ["gasly-prd", "gasly-pro"]
 
 KB_ORDER = [
     "aura-design.md",
@@ -432,16 +424,46 @@ def main(argv: list[str] | None = None) -> int:
             mod_ref_dir.mkdir(parents=True, exist_ok=True)
             (mod_dir / "SKILL.md").write_text(compiled_skill, encoding="utf-8")
 
-            if contract_schema_path.exists() and skill_slug in {"gasly-prompt", "gasly-data", "gasly-ui", "gasly-install"}:
+            if contract_schema_path.exists() and skill_slug in {"gasly-start", "gasly-prd", "gasly-prd-to-uiux", "gasly-pro-api", "gasly-data", "gasly-ui", "gasly-deploy-guide"}:
                 shutil.copy2(contract_schema_path, mod_ref_dir / "gasly-contract.schema.json")
 
             # Populate modular references per skill routing contract
-            if skill_slug == "gasly-prompt":
+            if skill_slug == "gasly-prd":
                 for fname, text in core_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
                 for fname, text in design_doc_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
                 (mod_ref_dir / "spec-digest.md").write_text(spec_digest_content, encoding="utf-8")
+
+            elif skill_slug == "gasly-start":
+                for fname, text in core_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+
+            elif skill_slug == "gasly-prd-to-uiux":
+                for fname, text in core_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                for fname, text in design_doc_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                shutil.copy2(SRC_DESIGN_DIR / "tokens.schema.json", mod_ref_dir / "tokens.schema.json")
+                presets_dst = mod_ref_dir / "presets"
+                css_dst = mod_ref_dir / "css"
+                presets_dst.mkdir(parents=True, exist_ok=True)
+                css_dst.mkdir(parents=True, exist_ok=True)
+                for pf in sorted((SRC_DESIGN_DIR / "presets").glob("*.tokens.json")):
+                    shutil.copy2(pf, presets_dst / pf.name)
+                for cf in sorted((SRC_DESIGN_DIR / "css").glob("*.css")):
+                    shutil.copy2(cf, css_dst / cf.name)
+
+            elif skill_slug == "gasly-pro-api":
+                for fname, text in core_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                for fname, text in gas_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                for fname, text in design_doc_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                for fname, text in stack_contents.items():
+                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                shutil.copy2(SRC_DESIGN_DIR / "tokens.schema.json", mod_ref_dir / "tokens.schema.json")
 
             elif skill_slug == "gasly-data":
                 for fname, text in core_contents.items():
@@ -466,7 +488,7 @@ def main(argv: list[str] | None = None) -> int:
                 for fname, text in stack_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
 
-            elif skill_slug == "gasly-install":
+            elif skill_slug == "gasly-deploy-guide":
                 for fname, text in core_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
                 (mod_ref_dir / "config.md").write_text(gas_contents["config.md"], encoding="utf-8")
@@ -487,8 +509,24 @@ def main(argv: list[str] | None = None) -> int:
                 for fname, text in kb_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
 
-            # Build legacy flat and flat-lite packages ONLY for gasly-prompt and gasly-pro
-            if skill_slug == "gasly-prompt":
+            # Copy skill-local references and templates (skill-owned assets).
+            for asset_bucket in ("references", "templates"):
+                asset_src = SRC_SKILLS_DIR / skill_slug / asset_bucket
+                if asset_src.exists():
+                    for asset_file in sorted(asset_src.rglob("*")):
+                        if not asset_file.is_file():
+                            continue
+                        rel_asset = asset_file.relative_to(asset_src)
+                        asset_out = mod_ref_dir / rel_asset if asset_bucket == "references" else mod_dir / asset_bucket / rel_asset
+                        asset_out.parent.mkdir(parents=True, exist_ok=True)
+                        if asset_file.suffix.lower() in {".md", ".html", ".css", ".json", ".js"}:
+                            asset_text = asset_file.read_text(encoding="utf-8")
+                            asset_text = asset_text.replace("{{KB_VERSION}}", kb_version).replace("{{SKILL_VERSION}}", SKILL_VERSION)
+                            asset_out.write_text(asset_text, encoding="utf-8")
+                        else:
+                            shutil.copy2(asset_file, asset_out)
+            # Build legacy flat and flat-lite packages ONLY for gasly-prd and gasly-pro
+            if skill_slug == "gasly-prd":
                 flat_dir = STAGING_DIR / "flat" / skill_slug
                 flat_dir.mkdir(parents=True, exist_ok=True)
                 flat_content = (
@@ -526,6 +564,24 @@ def main(argv: list[str] | None = None) -> int:
 
             print(f"[OK] Modular {skill_slug}/SKILL.md built ({line_count}/{MAX_SKILL_BODY_LINES} lines)")
 
+        # Backward-compatible aliases for renamed public skill slugs.
+        alias_specs = {
+            "gasly-prompt": ("gasly-prd", "Use `gasly-prd` for all new work."),
+            "gasly-install": ("gasly-deploy-guide", "Use `gasly-deploy-guide` for all new work."),
+        }
+        for old_slug, (new_slug, note) in alias_specs.items():
+            alias_dir = STAGING_DIR / "modular" / old_slug
+            alias_dir.mkdir(parents=True, exist_ok=True)
+            alias_text = "\n".join(["---", "name: " + old_slug, "description: >",
+                "  Deprecated compatibility alias. Use " + new_slug + " for all new work.", "---", "",
+                "# " + old_slug + " — Deprecated Compatibility Alias", "", note,
+                "Paket ini dipertahankan agar konfigurasi lama tidak langsung rusak.",
+                "Seluruh aturan dan pembaruan aktif dikelola pada skill kanonik.", ""])
+            (alias_dir / "SKILL.md").write_text(alias_text, encoding="utf-8")
+        flat_alias_dir = STAGING_DIR / "flat" / "gasly-prompt"
+        flat_alias_dir.mkdir(parents=True, exist_ok=True)
+        (flat_alias_dir / "SKILL.md").write_text("Nama lama `gasly-prompt` diganti menjadi `gasly-prd`. Gunakan paket `dist/flat/gasly-prd/SKILL.md`.\\n", encoding="utf-8")
+
         # Final gate: ensure no unreplaced {{KB_VERSION}} or {{SKILL_VERSION}} exists anywhere in staging
         verify_no_unreplaced_tokens(STAGING_DIR)
 
@@ -543,11 +599,16 @@ def main(argv: list[str] | None = None) -> int:
             "skillVersion": SKILL_VERSION,
             "kbVersion": kb_version,
             "skills": {
-                "gasly-prompt": {"mode": "active", "packages": ["modular", "flat"]},
+                "gasly-start": {"mode": "active", "packages": ["modular"]},
+                "gasly-prd": {"mode": "active", "packages": ["modular", "flat"]},
+                "gasly-prd-to-uiux": {"mode": "active", "packages": ["modular"]},
+                "gasly-pro-api": {"mode": "active", "packages": ["modular"]},
                 "gasly-data": {"mode": "active", "packages": ["modular"]},
                 "gasly-ui": {"mode": "active", "packages": ["modular"]},
-                "gasly-install": {"mode": "active", "packages": ["modular"]},
+                "gasly-deploy-guide": {"mode": "active", "packages": ["modular"]},
                 "gasly-pro": {"mode": "legacy", "packages": ["modular", "flat", "flat-lite"]},
+                "gasly-prompt": {"mode": "deprecated-alias", "packages": ["modular", "flat"]},
+                "gasly-install": {"mode": "deprecated-alias", "packages": ["modular"]},
             },
             "files": files_manifest,
         }

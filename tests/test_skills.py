@@ -130,7 +130,15 @@ class TestGaslySkillPack(unittest.TestCase):
         # New skills must ONLY be built in dist/modular/
         self.assertFalse((DIST_DIR / "flat" / "gasly-data").exists())
         self.assertFalse((DIST_DIR / "flat" / "gasly-ui").exists())
-        self.assertFalse((DIST_DIR / "flat" / "gasly-install").exists())
+        self.assertFalse((DIST_DIR / "flat" / "gasly-deploy-guide").exists())
+        self.assertFalse((DIST_DIR / "flat" / "gasly-start").exists())
+        self.assertFalse((DIST_DIR / "flat" / "gasly-prd-to-uiux").exists())
+        self.assertFalse((DIST_DIR / "flat" / "gasly-pro-api").exists())
+
+        manifest = json.loads((DIST_DIR / "manifest.json").read_text(encoding="utf-8"))
+        for alias in ("gasly-prompt", "gasly-install"):
+            self.assertEqual(manifest["skills"][alias]["mode"], "deprecated-alias")
+            self.assertTrue((DIST_DIR / "modular" / alias / "SKILL.md").exists())
 
         flat_lite_text = (DIST_DIR / "flat-lite" / "gasly-pro" / "SKILL.md").read_text(encoding="utf-8")
         self.assertLessEqual(len(flat_lite_text), build_skills.FLAT_WARN_CHARS)
@@ -139,6 +147,16 @@ class TestGaslySkillPack(unittest.TestCase):
             flat_text = (DIST_DIR / "flat" / slug / "SKILL.md").read_text(encoding="utf-8")
             self.assertLessEqual(len(flat_text), build_skills.FLAT_MAX_CHARS)
 
+    def test_07_style_preview_template_is_self_contained(self) -> None:
+        preview = DIST_DIR / "modular" / "gasly-prd-to-uiux" / "templates" / "pratinjau-gaya.html"
+        self.assertTrue(preview.is_file(), "Style preview template must be included in the modular package")
+        content = preview.read_text(encoding="utf-8")
+        self.assertIn('<meta name="viewport"', content)
+        self.assertIn("data-choice", content)
+        self.assertIn("textContent", content)
+        self.assertNotIn("innerHTML", content)
+        self.assertNotIn("<script src=", content)
+        self.assertNotIn("TODO", content)
 
 if __name__ == "__main__":
     unittest.main()

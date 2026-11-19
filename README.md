@@ -36,16 +36,22 @@ Payment / External Webhook
 
 ---
 
-## Lima Skill di Dalam Repositori
+## Delapan Skill Kanonik di Dalam Repositori
 
 | Skill | Status | Peran Utama | Paket di `dist/` |
-| :--- | :---: | :--- | :--- |
-| **`gasly-prompt`** | **Aktif** | **Planner / Arsitek:** Menerjemahkan ide bisnis menjadi `MASTER INSTRUCTIONAL PROMPT` 9-seksi beserta `GASLY_CONTRACT_JSON` (Access Profile `P1`–`P4`, Design Preset + 3 Dials, Stack, Data Schema, Upload Needs). | `dist/modular/gasly-prompt`<br>`dist/flat/gasly-prompt` |
-| **`gasly-data`** | **Aktif** | **Headless Backend Engineer:** Membangun API Google Apps Script (`doPost`/`doGet` via `ContentService`) dengan multi-user `USERS`, `P2-lite`, step-up PIN, Sheets CRUD, `file.ticket`/`file.upload`/`file.replace`/`file.delete`, dan konektor `integrations`. | `dist/modular/gasly-data` |
-| **`gasly-ui`** | **Aktif** | **Frontend & Design Engineer:** Membangun aplikasi frontend eksternal yang berbicara ke `/exec` menggunakan adapter penuh (`html-tailwind`, `nextjs`+`shadcn`, `astro`) atau mode pewarisan (`INHERIT` untuk 15 stack lainnya). | `dist/modular/gasly-ui` |
-| **`gasly-install`** | **Aktif** | **Interactive Deployment Guide Compiler:** Menghasilkan satu file HTML panduan instalasi mandiri (tanpa jaringan/CDN) yang spesifik terhadap `GASLY_CONTRACT_JSON` dan siap salin-tempel. | `dist/modular/gasly-install` |
-| **`gasly-pro`** | **LEGACY** | **GAS-Hosted `HtmlService` Engineer:** Dipertahankan khusus untuk pengguna yang secara eksplisit meminta aplikasi monolitik di dalam iframe Google Apps Script (`HtmlService` + `google.script.run`). | `dist/modular/gasly-pro`<br>`dist/flat/gasly-pro`<br>`dist/flat-lite/gasly-pro` |
+|---|---|---|---|
+| `gasly-start` | Aktif | Router alur; mendeteksi titik masuk dan mengarahkan ke spesialis. Tidak mengasumsikan runtime dapat memanggil skill lain otomatis. | `dist/modular/gasly-start` |
+| `gasly-prd` | Aktif | Product discovery dan perencanaan; menghasilkan PRD, master implementation prompt, serta `GASLY_CONTRACT.json`. | `dist/modular/gasly-prd`, `dist/flat/gasly-prd` |
+| `gasly-prd-to-uiux` | Aktif | PRD-to-UIUX, Image-First Visual Analysis, atau gabungan; menghasilkan prompt Stitch/Figma dan handoff. | `dist/modular/gasly-prd-to-uiux` |
+| `gasly-pro-api` | Aktif | Koordinator implementasi full-stack yang menjaga kontrak dan handoff ke spesialis backend/frontend. | `dist/modular/gasly-pro-api` |
+| `gasly-data` | Aktif | Headless Google Apps Script API: auth, Sheets, Drive, router, dan integrasi yang tersedia. | `dist/modular/gasly-data` |
+| `gasly-ui` | Aktif | Frontend eksternal, adapter stack, design system, API client, dan responsive UI. | `dist/modular/gasly-ui` |
+| `gasly-deploy-guide` | Aktif | Menghasilkan panduan instalasi/deployment HTML mandiri berdasarkan kontrak dan file proyek. | `dist/modular/gasly-deploy-guide` |
+| `gasly-pro` | Legacy | Aplikasi monolitik `HtmlService` + `google.script.run`; hanya untuk permintaan legacy eksplisit. | `dist/modular/gasly-pro`, `dist/flat/gasly-pro`, `dist/flat-lite/gasly-pro` |
 
+**Nama lama:** `gasly-prompt` dan `gasly-install` dipertahankan sebagai alias kompatibilitas di paket distribusi, tetapi tidak lagi menjadi skill utama.
+
+Workflow yang disarankan: `gasly-start` → `gasly-prd` → `gasly-prd-to-uiux` → `gasly-pro-api` → `gasly-data` + `gasly-ui` → `gasly-deploy-guide`. Pengguna dapat masuk langsung ke skill yang sesuai bila artifact tahap sebelumnya sudah tersedia.
 ---
 
 ## Dukungan Frontend Stack (`gasly-ui`)
@@ -86,7 +92,7 @@ TZ=Asia/Jakarta node tests/harness_install.js
 ## Cara Memasang Skill per Platform
 
 1. **Claude Code / Gemini CLI / Agentic IDE:**
-   Salin folder `dist/modular/gasly-prompt`, `dist/modular/gasly-data`, dan `dist/modular/gasly-ui` (serta `dist/modular/gasly-pro` bila membutuhkan mode legacy) ke direktori `.claude/skills/` atau `~/.claude/skills/`.
+   Salin folder `dist/modular/gasly-prd`, `dist/modular/gasly-data`, dan `dist/modular/gasly-ui` (serta `dist/modular/gasly-pro` bila membutuhkan mode legacy) ke direktori `.claude/skills/` atau `~/.claude/skills/`.
 2. **Claude.ai (Web Skills / Projects):**
    Kompres masing-masing folder di dalam `dist/modular/<nama-skill>` menjadi file `.zip` dan unggah ke menu Skills, atau lampirkan `SKILL.md` beserta isi folder `references/` ke dalam Project Knowledge.
 3. **Gemini Apps (Web) & ChatGPT:**
