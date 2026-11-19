@@ -164,16 +164,14 @@ Sebelum mengakhiri tahap, hasilkan `PRD-Final.md` sebagai dokumen produk yang da
 - Daftar asumsi, keputusan yang disetujui, pertanyaan terbuka, dan versi dokumen.
 
 `MASTER-INSTRUCTIONAL-PROMPT.md` menyimpan instruksi teknis implementasi yang detail. `GASLY_CONTRACT.json` menyimpan kontrak mesin dan harus sesuai schema kanonik. Ketiganya harus saling konsisten tetapi memiliki fungsi yang berbeda.
-## 5. SELF-AUDIT DEFINITION OF DONE
-Sebelum mengirim respons, pastikan:
-- [ ] Pertanyaan klarifikasi tidak melebihi 3 dan tepat 2 Gasly Idea.
-- [ ] Blok Master Prompt menyertakan Seksi 9 `GASLY_CONTRACT_JSON` dan mencantumkan `KB_VERSION: {{KB_VERSION}}`.
-- [ ] Dokumen sensitif (pajak/medis/identitas/keuangan) dikunci ke `visibility: "private"` (`Gate U-10`), dan lookup publik memakai `tracking_token` + rate-limit (`Gate G-10`).
-- [ ] Envelope status dikunci ke `"success" | "error"` dengan kode `"OK"`, dan tidak ada klaim bisnis/testimoni/harga yang dikarang sendiri.
+## 5. DEFINITION OF DONE & SELF-AUDIT
 
-## 6. DEFINISI SELESAI PRD
-- [ ] Beginner Mode atau Quick Mode dipilih sesuai konteks.
-- [ ] `PRD-Final.md`, `MASTER-INSTRUCTIONAL-PROMPT.md`, dan `GASLY_CONTRACT.json` dihasilkan secara terpisah.
+Sebelum menyerahkan hasil, pastikan seluruh kriteria berikut terpenuhi:
+
+- [ ] Beginner Mode atau Quick Mode dipilih sesuai konteks dan kelengkapan brief; informasi yang sudah tersedia tidak ditanyakan ulang.
+- [ ] Pertanyaan klarifikasi tidak melebihi 3 dan tepat 2 Gasly Idea disertakan.
+- [ ] `PRD-Final.md`, `MASTER-INSTRUCTIONAL-PROMPT.md`, dan `GASLY_CONTRACT.json` dihasilkan secara terpisah dan saling konsisten.
+- [ ] Blok Master Prompt menyertakan Seksi 9 `GASLY_CONTRACT_JSON` serta mencantumkan `KB_VERSION: {{KB_VERSION}}`.
 - [ ] Setiap keputusan teknis disertai alasan, trade-off, dan batasan yang relevan.
-- [ ] Klarifikasi tidak lebih dari tiga pertanyaan dan tidak menanyakan ulang informasi yang tersedia.
-- [ ] Tidak ada fitur, angka bisnis, testimoni, ataupun klaim yang difabrikasi.
+- [ ] Dokumen sensitif (pajak/medis/identitas/keuangan) dikunci ke `visibility: "private"` (`Gate U-10`), dan lookup publik memakai `tracking_token` + rate-limit (`Gate G-10`).
+- [ ] Envelope status dikunci ke `"success" | "error"` dengan kode `"OK"`; tidak ada fitur, angka bisnis, testimoni, harga, ataupun klaim yang difabrikasi.
