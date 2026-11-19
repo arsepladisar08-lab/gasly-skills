@@ -573,14 +573,14 @@ def main(argv: list[str] | None = None) -> int:
             alias_dir = STAGING_DIR / "modular" / old_slug
             alias_dir.mkdir(parents=True, exist_ok=True)
             alias_text = "\n".join(["---", "name: " + old_slug, "description: >",
-                "  Deprecated compatibility alias. Use " + new_slug + " for all new work.", "---", "",
+                "  Deprecated compatibility alias for older GASLY configurations that still reference " + old_slug + ". Use " + new_slug + " for all new work.", "---", "",
                 "# " + old_slug + " — Deprecated Compatibility Alias", "", note,
                 "Paket ini dipertahankan agar konfigurasi lama tidak langsung rusak.",
                 "Seluruh aturan dan pembaruan aktif dikelola pada skill kanonik.", ""])
             (alias_dir / "SKILL.md").write_text(alias_text, encoding="utf-8")
         flat_alias_dir = STAGING_DIR / "flat" / "gasly-prompt"
         flat_alias_dir.mkdir(parents=True, exist_ok=True)
-        (flat_alias_dir / "SKILL.md").write_text("Nama lama `gasly-prompt` diganti menjadi `gasly-prd`. Gunakan paket `dist/flat/gasly-prd/SKILL.md`.\\n", encoding="utf-8")
+        (flat_alias_dir / "SKILL.md").write_text("Nama lama `gasly-prompt` diganti menjadi `gasly-prd`. Gunakan paket `dist/flat/gasly-prd/SKILL.md`.\n", encoding="utf-8")
 
         # Final gate: ensure no unreplaced {{KB_VERSION}} or {{SKILL_VERSION}} exists anywhere in staging
         verify_no_unreplaced_tokens(STAGING_DIR)
