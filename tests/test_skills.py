@@ -147,6 +147,47 @@ class TestGaslySkillPack(unittest.TestCase):
             flat_text = (DIST_DIR / "flat" / slug / "SKILL.md").read_text(encoding="utf-8")
             self.assertLessEqual(len(flat_text), build_skills.FLAT_MAX_CHARS)
 
+    def test_08_alias_metadata_and_flat_compatibility_newline(self) -> None:
+        for alias in ("gasly-prompt", "gasly-install"):
+            alias_path = DIST_DIR / "modular" / alias / "SKILL.md"
+            self.assertTrue(alias_path.is_file(), f"Missing deprecated alias: {alias}")
+            content = alias_path.read_text(encoding="utf-8")
+            description_lines = []
+            in_description = False
+            for line in content.splitlines():
+                if line.startswith("description:"):
+                    in_description = True
+                    continue
+                if in_description:
+                    if line.startswith("  "):
+                        description_lines.append(line.strip())
+                    else:
+                        break
+            description = " ".join(description_lines)
+            self.assertGreaterEqual(
+                len(description),
+                100,
+                f"{alias} description must be at least 100 characters",
+            )
+
+        flat_alias = (DIST_DIR / "flat" / "gasly-prompt" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertTrue(flat_alias.endswith("\n"), "Flat alias text must end with a real newline")
+        self.assertNotIn(chr(92) + "n", flat_alias, "Flat alias must not contain a literal escaped newline")
+
+    def test_09_issue_template_lists_all_canonical_skills(self) -> None:
+        issue_template = (ROOT_DIR / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml").read_text(encoding="utf-8")
+        for slug in (
+            "gasly-start",
+            "gasly-prd",
+            "gasly-prd-to-uiux",
+            "gasly-pro-api",
+            "gasly-data",
+            "gasly-ui",
+            "gasly-deploy-guide",
+            "gasly-pro",
+        ):
+            self.assertRegex(issue_template, rf"(?m)^\s+- {re.escape(slug)}$")
+
     def test_07_style_preview_template_is_self_contained(self) -> None:
         preview = DIST_DIR / "modular" / "gasly-prd-to-uiux" / "templates" / "pratinjau-gaya.html"
         self.assertTrue(preview.is_file(), "Style preview template must be included in the modular package")
