@@ -38,6 +38,12 @@ class TestGaslyQualityScanner(unittest.TestCase):
         self.write("web/config.js", 'const apiKey = "AIza' + ("A" * 36) + '";\n')
         findings, _, _ = scan(self.root)
         self.assertEqual([x[0] for x in findings], ["GQ-03"])
+    def test_comments_and_string_examples_do_not_trigger_code_rules(self):
+        self.write("gas/auth.gs", "function issueSessionToken_(){ /* Math.random() */ return \"safe\"; }\\n")
+        self.write("web/app.js", "// window.confirm('sample')\\nconst note = \"window.alert() is discouraged\";\\n")
+        findings, _, _ = scan(self.root)
+        self.assertEqual(findings, [])
+
     def test_dynamic_action_and_dependency_output_are_ignored(self):
         self.write("gas/router.gs", "function getActionRegistry_(){ return { 'items.list': {} }; }\n")
         self.write("web/app.js", "callGasAction(actionFromConfig, {});\n")
