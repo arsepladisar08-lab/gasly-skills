@@ -26,7 +26,7 @@ def without_fenced_code(markdown):
     visible = []
     fence_char = None
     fence_size = 0
-    for line in without_fenced_code(markdown).splitlines():
+    for line in markdown.splitlines():
         stripped = line.lstrip()
         opening = re.match(r"(\x60{3,}|~{3,})", stripped)
         if fence_char is None and opening:
@@ -45,7 +45,7 @@ def without_fenced_code(markdown):
 def heading_anchors(markdown):
     counts = defaultdict(int)
     anchors = set()
-    for line in markdown.splitlines():
+    for line in without_fenced_code(markdown).splitlines():
         match = HEADING.match(line)
         if not match:
             continue
