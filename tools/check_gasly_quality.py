@@ -12,7 +12,7 @@ SKIP = {".git", "node_modules", "dist", "build", ".next", ".astro", "coverage", 
 
 ACTION_CALL_START = re.compile(
     r"(?:\b(?:callApi|callGasAction|gasRequest|gasPost)\s*\(|"
-    r"\b(?:gasClient|GASLY_API)\s*\.\s*request\s*\()\s*"
+    r"\b(?:gasClient|GASLY_API)\s*\.\s*request\s*\()"
 )
 ACTION_LITERAL = re.compile(r"""\s*(['"])([a-z][\w]*\.[A-Za-z][\w]*)\1""")
 REGISTRY = re.compile(
