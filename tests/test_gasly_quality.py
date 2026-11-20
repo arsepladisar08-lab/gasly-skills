@@ -35,7 +35,7 @@ class TestGaslyQualityScanner(unittest.TestCase):
         findings, _, _ = scan(self.root)
         self.assertEqual([x[0] for x in findings], ["GQ-05"])
     def test_high_confidence_secret_signature(self):
-        self.write("web/config.js", 'const apiKey = "AIza' + ("A" * 36) + '";\n')
+        self.write("web/.env.local", "NEXT_PUBLIC_GEMINI_API_KEY=AIza" + ("A" * 36) + "\n")
         findings, _, _ = scan(self.root)
         self.assertEqual([x[0] for x in findings], ["GQ-03"])
     def test_comments_and_string_examples_do_not_trigger_code_rules(self):
