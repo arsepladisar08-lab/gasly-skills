@@ -27,7 +27,7 @@ def heading_anchors(markdown):
         match = HEADING.match(line)
         if not match:
             continue
-        title = re.sub(r"!? \[([^\]]+)\]\([^)]*\)", r"\1", match.group(1))
+        title = re.sub(r"!?\[([^\]]+)\]\([^)]*\)", r"\1", match.group(1))
         title = title.replace(chr(96), "")
         slug = re.sub(r"[^\w -]", "", title.lower(), flags=re.UNICODE)
         slug = re.sub(r" ", "-", slug.strip())
