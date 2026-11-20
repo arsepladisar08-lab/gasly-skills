@@ -20,7 +20,7 @@ class TestGaslyQualityScanner(unittest.TestCase):
  return { 'items.list': { handler: list_ }, 'items.create': { handler: create_ } };
 }
 """)
-        self.write("web/app.js", "callGasAction('items.list', {});\ncallApi('items.delete', {});\n")
+        self.write("web/app.js", "callGasAction('items.list', {});\ncallApi('items.delete', {});\nconst sample = \"callApi('items.fake')\";\n// callApi('items.ghost');\n")
         findings, _, has_registry = scan(self.root)
         self.assertTrue(has_registry)
         self.assertEqual([(x[0], x[4].split("'")[1]) for x in findings], [("GQ-01", "items.delete")])
@@ -39,11 +39,10 @@ class TestGaslyQualityScanner(unittest.TestCase):
         findings, _, _ = scan(self.root)
         self.assertEqual([x[0] for x in findings], ["GQ-03"])
     def test_comments_and_string_examples_do_not_trigger_code_rules(self):
-        self.write("gas/auth.gs", "function issueSessionToken_(){ /* Math.random() */ return \"safe\"; }\\n")
-        self.write("web/app.js", "// window.confirm('sample')\\nconst note = \"window.alert() is discouraged\";\\n")
+        self.write("gas/auth.gs", "function issueSessionToken_(){ /* Math.random() */ return \"safe\"; }\n")
+        self.write("web/app.js", "// window.confirm('sample')\nconst note = \"window.alert() is discouraged\";\n")
         findings, _, _ = scan(self.root)
         self.assertEqual(findings, [])
-
     def test_dynamic_action_and_dependency_output_are_ignored(self):
         self.write("gas/router.gs", "function getActionRegistry_(){ return { 'items.list': {} }; }\n")
         self.write("web/app.js", "callGasAction(actionFromConfig, {});\n")
