@@ -16,8 +16,8 @@ DOCS = [
     ROOT / "src/core/contract.md",
     *sorted((ROOT / "src/skills").glob("*/SKILL.md")),
 ]
-LINK = re.compile(r"(?<!!)\\[[^\\]]*\\]\\(([^)]+)\\)")
-HEADING = re.compile(r"^#{1,6}\\s+(.+?)\\s*#*\\s*$")
+LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
+HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$")
 
 def heading_anchors(markdown):
     counts = defaultdict(int)
@@ -63,7 +63,7 @@ class TestMarkdownLinks(unittest.TestCase):
                     normalized = fragment.lower().replace(" ", "-")
                     if normalized not in anchors:
                         errors.append(f"{source.relative_to(ROOT)}: missing anchor {raw}")
-        self.assertEqual(errors, [], "\\n".join(errors))
+        self.assertEqual(errors, [], "\n".join(errors))
 
 if __name__ == "__main__":
     unittest.main()
