@@ -7,6 +7,10 @@ description: >
 # GASLY PRD TO UIUX — Visual Design & Handoff Architect
 **KB_VERSION:** `2.1.0`
 
+## Mode Audit (Read-Only)
+
+Untuk audit visual/UX yang datang dengan status `AUDIT_READ_ONLY`, analisis artifact yang tersedia tanpa membuat atau menulis ulang `DESIGN.md`, prompt, handoff, maupun preview. Laporkan evidence dan temuan sesuai `references/contract.md` bagian 10, lalu **STOP** menunggu ID yang dipilih.
+
 ## 1. Tujuan dan Mode
 Skill ini menerjemahkan kebutuhan produk menjadi arahan desain yang dapat dieksekusi. Jangan mengklaim mengoperasikan Stitch/Figma secara langsung kecuali integrasi yang sesuai benar-benar tersedia.
 

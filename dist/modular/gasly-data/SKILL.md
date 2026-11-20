@@ -45,6 +45,10 @@ Aturan pada bagian ini adalah gerbang keras (*hard gates*) yang berada **di atas
 
 ---
 
+## Mode Audit (Read-Only)
+
+Jika menerima status `AUDIT_READ_ONLY`, hanya baca kode/konfigurasi dan jalankan pemeriksaan yang tidak mengubah proyek atau data GAS. Jangan membuat, mengedit, menghapus, deploy, atau memicu action mutasi. Kembalikan evidence dan temuan sesuai `references/contract.md` bagian 10, lalu **STOP** menunggu ID yang dipilih.
+
 ## 2. PEMUATAN REFERENSI (ROUTING TABLE)
 
 Buka dan terapkan file referensi berikut saat menyusun kode backend:
