@@ -16,8 +16,9 @@ DOCS = [
     ROOT / "src/core/contract.md",
     *sorted((ROOT / "src/skills").glob("*/SKILL.md")),
 ]
-LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
+LINK = re.compile(r"(?<!)\[[^\]]*\]\(([^)]+)\)")
 HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$")
+
 
 def heading_anchors(markdown):
     counts = defaultdict(int)
@@ -26,18 +27,19 @@ def heading_anchors(markdown):
         match = HEADING.match(line)
         if not match:
             continue
-        title = re.sub(r"!?\\[([^\\]]+)\\]\\([^)]*\\)", r"\\1", match.group(1))
+        title = re.sub(r"!? \[([^\]]+)\]\([^)]*\)", r"\1", match.group(1))
         title = title.replace(chr(96), "")
-        slug = re.sub(r"[^\\w -]", "", title.lower(), flags=re.UNICODE)
+        slug = re.sub(r"[^\w -]", "", title.lower(), flags=re.UNICODE)
         slug = re.sub(r" ", "-", slug.strip())
         count = counts[slug]
         counts[slug] += 1
         anchors.add(slug if count == 0 else f"{slug}-{count}")
     return anchors
 
+
 class TestMarkdownLinks(unittest.TestCase):
     def test_key_markdown_files_exist(self):
-        missing = [str(p.relative_to(ROOT)) for p in DOCS if not p.is_file()]
+        missing = [str(path.relative_to(ROOT)) for path in DOCS if not path.is_file()]
         self.assertEqual(missing, [], f"Missing canonical docs: {missing}")
 
     def test_local_markdown_targets_and_anchors_resolve(self):
@@ -64,6 +66,7 @@ class TestMarkdownLinks(unittest.TestCase):
                     if normalized not in anchors:
                         errors.append(f"{source.relative_to(ROOT)}: missing anchor {raw}")
         self.assertEqual(errors, [], "\n".join(errors))
+
 
 if __name__ == "__main__":
     unittest.main()
