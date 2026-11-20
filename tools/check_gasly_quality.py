@@ -14,7 +14,7 @@ ACTION_CALL_START = re.compile(
     r"(?:\b(?:callApi|callGasAction|gasRequest|gasPost)\s*\(|"
     r"\b(?:gasClient|GASLY_API)\s*\.\s*request\s*\()\s*"
 )
-ACTION_LITERAL = re.compile(r"""(['"])([a-z][\w]*\.[A-Za-z][\w]*)\1""")
+ACTION_LITERAL = re.compile(r"""\s*(['"])([a-z][\w]*\.[A-Za-z][\w]*)\1""")
 REGISTRY = re.compile(
     r"(?:function\s+getActionRegistry_\s*\([^)]*\)\s*\{|(?:var|let|const)\s+ACTION_REGISTRY_\s*=)"
 )
@@ -105,7 +105,7 @@ def mask_non_code(content: str, mask_strings: bool = False) -> str:
     return "".join(chars)
 
 
-def extract_registry_block(code: str):
+def extract_registry_bounds(code: str):
     match = REGISTRY.search(code)
     if not match:
         return None
@@ -117,7 +117,7 @@ def extract_registry_block(code: str):
         elif code[index] == "}":
             depth -= 1
             if depth == 0:
-                return code[start : index + 1]
+                return start, index + 1
     return None
 
 
@@ -141,12 +141,12 @@ def scan(root: Path):
         if path.suffix.lower() != ".gs":
             continue
         raw = path.read_text(encoding="utf-8", errors="replace")
-        code = mask_non_code(raw, mask_strings=False)
-        block = extract_registry_block(code)
-        if block:
-            # Keys are string literals, so collect them from the original block.
-            original_block = raw[block_start(code, block) : block_start(code, block) + len(block)] if False else raw
-            registries.update(REGISTRY_KEY.findall(raw))
+        structure = mask_non_code(raw, mask_strings=True)
+        bounds = extract_registry_bounds(structure)
+        if bounds:
+            start, end = bounds
+            registry_source = mask_non_code(raw[start:end], mask_strings=False)
+            registries.update(REGISTRY_KEY.findall(registry_source))
 
     has_registry = bool(registries)
     findings = []
