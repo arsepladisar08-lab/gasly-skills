@@ -45,6 +45,10 @@ Aturan pada bagian ini adalah gerbang keras (*hard gates*) yang berada **di atas
 
 ---
 
+## Mode Audit (Read-Only)
+
+Jika menerima status `AUDIT_READ_ONLY`, hanya inspeksi frontend, adapter, dan UI states; jangan membuat, mengedit, menghapus, atau memformat ulang file. Kembalikan evidence dan temuan sesuai `references/contract.md` bagian 10, lalu **STOP** menunggu ID yang dipilih.
+
 ## 2. PEMUATAN REFERENSI (ROUTING TABLE)
 
 Buka file referensi yang relevan dengan preset desain dan stack frontend target:

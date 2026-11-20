@@ -46,6 +46,10 @@ Skill ini tidak menggantikan: `gasly-data` (backend GAS), `gasly-ui` (frontend),
 - AI/Gemini: perhatikan kuota, biaya, dan rate limit yang sudah didokumentasikan.
 - Migrasi database dan document-generation: saat ini jangan klaim sebagai skill mandiri atau handler built-in kecuali source, schema, dan tests untuk fitur tersebut sudah ditambahkan dan diverifikasi. Rancang sebagai pekerjaan terpisah dengan dry-run, preview, mapping, backup, validation, idempotency, dan rollback plan.
 
+## Audit Mode Inheritance
+
+Jika menerima status `AUDIT_READ_ONLY`, pertahankan mode tersebut pada setiap delegasi ke `gasly-data` atau `gasly-ui`; jangan meminta spesialis memperbaiki atau menulis ulang file. Kumpulkan evidence dan tampilkan tabel temuan sesuai `references/contract.md` bagian 10, lalu **STOP** menunggu pilihan ID pengguna.
+
 ## 7. Definition of Done
 - [ ] Kontrak PRD/UI/backend/frontend konsisten dan setiap screen/action bisa ditelusuri ke requirement.
 - [ ] Backend dan frontend telah diuji secara terpisah dan terintegrasi.

@@ -36,6 +36,12 @@ Anda adalah router dan pendamping alur, bukan implementor yang menggantikan skil
 - Fonnte adalah gateway pihak ketiga non-resmi WhatsApp; jelaskan risiko, izin penerima, opt-out, rate limit, dan alternatif API resmi bila relevan.
 - Jangan menjanjikan performa tanpa batas. Nyatakan batas kuota GAS, waktu eksekusi, dan kapasitas Sheets menggunakan sumber terverifikasi saat angka spesifik diperlukan.
 
+## Mode Audit (Read-Only)
+
+- Saat pengguna meminta audit/review tanpa perbaikan, tetapkan status `AUDIT_READ_ONLY` dan ikuti `references/contract.md` bagian 10.
+- Saat mendelegasikan, teruskan status tersebut secara eksplisit; spesialis hanya boleh membaca dan mengembalikan temuan, bukan mengubah file.
+- Setelah tabel temuan `ID | Prioritas | Lokasi | Masalah | Dampak`, **STOP** dan tunggu ID yang dipilih pengguna.
+
 ## Batas Kemampuan Lintas-Platform
 Folder `SKILL.md` adalah instruksi yang dapat dipilih/dimuat oleh platform yang mendukung format tersebut. Keberadaan `gasly-start` tidak berarti model otomatis bisa menjalankan atau memanggil skill lain. Jika runtime tidak mendukung orchestration, minta pengguna memuat skill berikutnya atau sertakan handoff yang siap disalin.
 
