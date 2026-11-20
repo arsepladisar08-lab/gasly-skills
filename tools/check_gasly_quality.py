@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -36,9 +37,14 @@ SECRETS = [
 
 
 def source_files(root: Path):
-    for path in sorted(root.rglob("*")):
-        if path.is_file() and path.suffix.lower() in EXTENSIONS:
-            if not any(part in SKIP for part in path.relative_to(root).parts):
+    """Walk only relevant source trees; prune generated and dependency directories."""
+    for current, directories, filenames in os.walk(root):
+        directories[:] = sorted(name for name in directories if name not in SKIP)
+        base = Path(current)
+        for filename in sorted(filenames):
+            path = base / filename
+            env_file = filename == ".env" or filename.startswith(".env.") or filename.endswith(".env")
+            if path.suffix.lower() in EXTENSIONS or env_file:
                 yield path
 
 
