@@ -58,13 +58,70 @@ def registry_block(content):
             if depth == 0: return content[start:i + 1]
     return None
 
+def mask_non_code(content, mask_strings=False):
+    """Blank comments (and optionally quoted literals) while preserving offsets/line numbers."""
+    chars = list(content)
+    i = 0
+    quote = None
+    escaped = False
+    line_comment = False
+    block_comment = False
+    while i < len(content):
+        ch = content[i]
+        nxt = content[i + 1] if i + 1 < len(content) else ""
+        if line_comment:
+            if ch == "\n":
+                line_comment = False
+            elif ch != "\r":
+                chars[i] = " "
+            i += 1
+            continue
+        if block_comment:
+            if ch not in "\r\n":
+                chars[i] = " "
+            if ch == "*" and nxt == "/":
+                chars[i + 1] = " "
+                i += 2
+                block_comment = False
+                continue
+            i += 1
+            continue
+        if quote:
+            if mask_strings and ch not in "\r\n":
+                chars[i] = " "
+            if escaped:
+                escaped = False
+            elif ch == "\\\\":
+                escaped = True
+            elif ch == quote:
+                quote = None
+            i += 1
+            continue
+        if ch == "/" and nxt == "/":
+            chars[i] = chars[i + 1] = " "
+            i += 2
+            line_comment = True
+            continue
+        if ch == "/" and nxt == "*":
+            chars[i] = chars[i + 1] = " "
+            i += 2
+            block_comment = True
+            continue
+        if ch in {"'", '"', chr(96)}:
+            quote = ch
+            if mask_strings and ch not in "\r\n":
+                chars[i] = " "
+        i += 1
+    return "".join(chars)
+
+
 def function_body(content, start):
     depth, quote, escaped = 0, None, False
     for i in range(start, len(content)):
         ch = content[i]
         if quote:
             if escaped: escaped = False
-            elif ch == "\\": escaped = True
+            elif ch == "\\\\": escaped = True
             elif ch == quote: quote = None
             continue
         if ch in {"'", '"', chr(96)}: quote = ch
@@ -86,29 +143,31 @@ def scan(root):
     frontends = [p for p in files if p.suffix.lower() != ".gs"]
     for path in frontends:
         text = path.read_text(encoding="utf-8", errors="replace")
+        code = mask_non_code(text)
         if has_registry:
-            for m in ACTION_CALL.finditer(text):
+            for m in ACTION_CALL.finditer(code):
                 action = m.group(2) or m.group(4)
                 if action and action not in registries:
                     findings.append(("GQ-01", "HIGH", path, text.count("\n", 0, m.start()) + 1,
                                      f"Frontend action '{action}' tidak ditemukan pada registry backend."))
-        for m in DIALOG.finditer(text):
+        for m in DIALOG.finditer(code):
             findings.append(("GQ-02", "MEDIUM", path, text.count("\n", 0, m.start()) + 1,
                              f"window.{m.group(1)}() terdeteksi pada frontend."))
         for label, pattern in SECRETS:
-            for m in pattern.finditer(text):
+            for m in pattern.finditer(code):
                 findings.append(("GQ-03", "HIGH", path, text.count("\n", 0, m.start()) + 1,
                                  f"Signature {label} berpotensi tertanam; verifikasi dan rotasi bila nyata."))
     for path in files:
         if path.suffix.lower() != ".gs": continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        for m in DRIVE_PUBLIC.finditer(text):
+        code = mask_non_code(text)
+        for m in DRIVE_PUBLIC.finditer(code):
             findings.append(("GQ-04", "REVIEW", path, text.count("\n", 0, m.start()) + 1,
                              f"DriveApp.Access.{m.group(1)} ditemukan; konfirmasi klasifikasi dan kebutuhan berbagi."))
         for m in SENSITIVE_FUNCTION.finditer(text):
             start = text.find("{", m.start())
             body = function_body(text, start)
-            weak = WEAK_RANDOM.search(body)
+            weak = WEAK_RANDOM.search(mask_non_code(body, mask_strings=True))
             if weak:
                 findings.append(("GQ-05", "HIGH", path, text.count("\n", 0, start + weak.start()) + 1,
                                  f"Math.random() ditemukan dalam fungsi keamanan '{m.group(1)}'."))
