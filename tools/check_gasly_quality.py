@@ -51,7 +51,7 @@ def registry_block(content):
             continue
         if ch == "/" and nxt == "/": line_comment = True; continue
         if ch == "/" and nxt == "*": block_comment = True; continue
-        if ch in {"'", '"'}: quote = ch
+        if ch in {"'", '"', chr(96)}: quote = ch
         elif ch == "{": depth += 1
         elif ch == "}":
             depth -= 1
@@ -67,7 +67,7 @@ def function_body(content, start):
             elif ch == "\\": escaped = True
             elif ch == quote: quote = None
             continue
-        if ch in {"'", '"'}: quote = ch
+        if ch in {"'", '"', chr(96)}: quote = ch
         elif ch == "{": depth += 1
         elif ch == "}":
             depth -= 1
