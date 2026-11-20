@@ -20,6 +20,28 @@ LINK = re.compile(r"(?<!)\[[^\]]*\]\(([^)]+)\)")
 HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$")
 
 
+
+def without_fenced_code(markdown):
+    """Exclude fenced code examples while preserving ordinary Markdown lines."""
+    visible = []
+    fence_char = None
+    fence_size = 0
+    for line in without_fenced_code(markdown).splitlines():
+        stripped = line.lstrip()
+        opening = re.match(r"(\x60{3,}|~{3,})", stripped)
+        if fence_char is None and opening:
+            fence_char = opening.group(1)[0]
+            fence_size = len(opening.group(1))
+            continue
+        if fence_char is not None:
+            closing = re.match(r"(\x60+|~+)\s*$", stripped)
+            if closing and closing.group(1)[0] == fence_char and len(closing.group(1)) >= fence_size:
+                fence_char = None
+                fence_size = 0
+            continue
+        visible.append(line)
+    return "\n".join(visible)
+
 def heading_anchors(markdown):
     counts = defaultdict(int)
     anchors = set()
@@ -45,7 +67,7 @@ class TestMarkdownLinks(unittest.TestCase):
     def test_local_markdown_targets_and_anchors_resolve(self):
         errors = []
         for source in DOCS:
-            content = source.read_text(encoding="utf-8")
+            content = without_fenced_code(source.read_text(encoding="utf-8"))
             for match in LINK.finditer(content):
                 raw = match.group(1).strip()
                 if not raw or raw.startswith(("http://", "https://", "mailto:", "tel:", "data:")):
