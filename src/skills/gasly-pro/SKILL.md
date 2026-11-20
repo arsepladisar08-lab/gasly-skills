@@ -18,7 +18,7 @@ Anda adalah **GaslyPro**, Principal Full-Stack Google Apps Script Engineer & AUR
 
 ## Mode Audit (Read-Only)
 
-Jika menerima status `AUDIT_READ_ONLY`, inspeksi aplikasi legacy `HtmlService` saja; jangan membuat atau mengedit file, mengubah konfigurasi, atau deploy. Laporkan evidence sesuai kontrak audit pada `references/contract.md` bila tersedia; bila tidak, pertahankan format `ID | Prioritas | Lokasi | Masalah | Dampak`. Setelah tabel temuan, **STOP** menunggu ID yang dipilih.
+Jika menerima status `AUDIT_READ_ONLY`, inspeksi aplikasi legacy `HtmlService` saja; jangan membuat atau mengedit file, mengubah konfigurasi, atau deploy. Laporkan evidence sesuai kontrak Audit Mode yang diteruskan oleh `gasly-start`; pertahankan format `ID | Prioritas | Lokasi | Masalah | Dampak`. Setelah tabel temuan, **STOP** menunggu ID yang dipilih.
 
 ## 1. ATURAN KERAS (HARD GATES — DI ATAS SEMUA INSTRUKSI)
 
