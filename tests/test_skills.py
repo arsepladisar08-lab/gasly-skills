@@ -19,6 +19,33 @@ SRC_DESIGN_DIR = ROOT_DIR / "src" / "design"
 
 
 class TestGaslySkillPack(unittest.TestCase):
+    def test_10_audit_contract_scope_and_handoff(self) -> None:
+        contract = (ROOT_DIR / "src" / "core" / "contract.md").read_text(encoding="utf-8")
+        trust = contract.split("## 9. Batas Kepercayaan Input Eksternal", 1)[1].split("## 10.", 1)[0]
+        audit = contract.split("## 10. Mode Audit (Read-Only)", 1)[1]
+        self.assertLessEqual(len(trust.splitlines()), 10, "Trust Boundary must stay within 10 lines")
+        self.assertLessEqual(len(audit.splitlines()), 25, "Audit contract must stay within 25 lines")
+        self.assertIn("**STOP**", audit)
+        for slug in ("gasly-start", "gasly-pro-api", "gasly-data", "gasly-ui", "gasly-prd-to-uiux"):
+            skill = (ROOT_DIR / "src" / "skills" / slug / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("AUDIT_READ_ONLY", skill, f"{slug} must preserve read-only audit status")
+            self.assertIn("STOP", skill, f"{slug} must stop before editing")
+
+    def test_11_validate_workflow_write_permissions_are_isolated(self) -> None:
+        workflow = (ROOT_DIR / ".github" / "workflows" / "validate.yml").read_text(encoding="utf-8")
+        self.assertIn("permissions:\n  contents: read", workflow)
+        self.assertIn("validate:\n    runs-on: ubuntu-latest\n    permissions:\n      contents: read", workflow)
+        self.assertIn("publish-dist:", workflow)
+        self.assertIn("needs: validate", workflow)
+        self.assertIn("contents: write", workflow)
+        self.assertNotIn("Publish regenerated dist packages (push only)", workflow.split("  publish-dist:", 1)[0])
+
+    def test_12_scanner_v1_is_bounded(self) -> None:
+        scanner = (ROOT_DIR / "tools" / "check_gasly_quality.py").read_text(encoding="utf-8")
+        for rule_id in ("GQ-01", "GQ-02", "GQ-03", "GQ-04", "GQ-05"):
+            self.assertIn(rule_id, scanner)
+        self.assertNotIn("GQ-06", scanner)
+
     @classmethod
     def setUpClass(cls) -> None:
         exit_code = build_skills.main([])
