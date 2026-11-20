@@ -41,17 +41,25 @@ Dokumen ini merupakan konsolidasi akhir dari seluruh penanda versi (`<<PIN_VERSI
 
 ---
 
-## 3. Dokumentasi Pemeriksaan CI Anti-Slop Opsional
+## 3. Targeted Scanner v1 untuk Proyek Hasil GASLY
 
-Terinspirasi dari pendekatan audit deterministik pada referensi `impeccable` dan `vercel-labs/agent-skills`, pemilik proyek yang menggunakan skill ini untuk menghasilkan repositori aplikasi frontend dapat mengaktifkan langkah pemeriksaan statis opsional di CI guna menolak pola UI generik/terlarang:
-- Menolak penggunaan `window.confirm(` atau `window.alert(`.
-- Menolak meta viewport yang memuat `user-scalable=no` atau `maximum-scale=1.0`.
-- Menolak klaim fabrikasi yang di-*hardcode* (seperti `"10,000+ UMKM"` atau `"Tanpa Biaya Server Tambahan"`).
-- Menolak URL gambar Drive yang di-*hardcode* (`drive.google.com/uc?export=view`) di luar helper `driveImageUrl()`.
+Scanner opsional untuk memeriksa proyek aplikasi hasil GASLY dari direktori repo skill ini. Jalankan dengan menunjuk ke root proyek aplikasi:
 
-Contoh perintah pemeriksaan tersebut telah didokumentasikan sebagai komentar opsional di dalam `.github/workflows/validate.yml`.
+```bash
+python tools/check_gasly_quality.py ../path/to/generated-app
+```
 
----
+Scanner v1 dibatasi pada lima pemeriksaan deterministik:
+
+1. **Action registry mismatch:** membandingkan action literal pada pemanggilan helper frontend yang dikenali (`callApi`, `callGasAction`, `gasRequest`, `gasPost`, `gasClient.request`, `GASLY_API.request`) dengan key pada `getActionRegistry_()` atau `ACTION_REGISTRY_` di backend.
+2. **Browser blocking dialog:** mendeteksi pemanggilan `window.alert()`, `window.confirm()`, dan `window.prompt()` pada source frontend.
+3. **Secret literal berkeyakinan tinggi:** mendeteksi signature kredensial umum yang jelas (misalnya Google API key, private-key PEM, token GitHub/Slack, dan Stripe secret key); bukan pencarian semua kemungkinan secret.
+4. **Drive public access:** menandai `DriveApp.Access.ANYONE` dan `ANYONE_WITH_LINK` sebagai `REVIEW`. Temuan ini wajib diperiksa terhadap klasifikasi data; bukan bukti otomatis bahwa akses tersebut salah.
+5. **Weak randomness pada fungsi keamanan:** mendeteksi `Math.random()` hanya di fungsi backend `.gs` yang namanya secara eksplisit menunjukkan pembuatan token, session, secret, nonce, credential, atau API key.
+
+Scanner membaca source code (`.gs`, `.js`, `.jsx`, `.ts`, `.tsx`, `.html`) dan melewati direktori dependency/build umum. Cross-check action hanya mencakup pemanggilan literal dan pola registry yang dikenali; action dinamis, registry buatan khusus, atau wrapper yang tidak didukung harus diperiksa manual. Exit code: `0` tidak ada temuan yang dikenali, `1` ada temuan, `2` argumen/path tidak valid.
+
+**Batas penting:** hasil bersih bukan sertifikasi keamanan dan tidak membuktikan tidak ada secret, endpoint, atau kelemahan lain. Scanner tidak memakai parser AST dan sengaja tidak mencoba menafsirkan seluruh semantik aplikasi. `DriveApp.Access.ANYONE` selalu memerlukan konfirmasi manusia atas klasifikasi dan tujuan file.
 
 ## 4. Perintah Verifikasi Lengkap untuk Dijalankan Pemilik (`NOT RUN`)
 
