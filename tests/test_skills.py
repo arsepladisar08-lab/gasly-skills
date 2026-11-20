@@ -26,7 +26,7 @@ class TestGaslySkillPack(unittest.TestCase):
         self.assertLessEqual(len(trust.splitlines()), 10, "Trust Boundary must stay within 10 lines")
         self.assertLessEqual(len(audit.splitlines()), 25, "Audit contract must stay within 25 lines")
         self.assertIn("**STOP**", audit)
-        for slug in ("gasly-start", "gasly-pro-api", "gasly-data", "gasly-ui", "gasly-prd-to-uiux"):
+        for slug in ("gasly-start", "gasly-prd", "gasly-prd-to-uiux", "gasly-pro-api", "gasly-data", "gasly-ui", "gasly-deploy-guide", "gasly-pro"):
             skill = (ROOT_DIR / "src" / "skills" / slug / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("AUDIT_READ_ONLY", skill, f"{slug} must preserve read-only audit status")
             self.assertIn("STOP", skill, f"{slug} must stop before editing")
