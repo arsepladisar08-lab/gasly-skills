@@ -42,10 +42,16 @@
       "accentTextOnSolid": "#FFFFFF",
       "successSolid": "#047857",
       "successTextOnSolid": "#FFFFFF",
+      "successSoftBg": "#DCFCE7",
+      "successSoftText": "#14532D",
       "warningSolid": "#B45309",
       "warningTextOnSolid": "#FFFFFF",
+      "warningSoftBg": "#FEF3C7",
+      "warningSoftText": "#78350F",
       "dangerSolid": "#B91C1C",
-      "dangerTextOnSolid": "#FFFFFF"
+      "dangerTextOnSolid": "#FFFFFF",
+      "dangerSoftBg": "#FFE4E6",
+      "dangerSoftText": "#881337"
     },
     "dark": {
       "bgBase": "#0B0F19",
@@ -61,10 +67,16 @@
       "accentTextOnSolid": "#FFFFFF",
       "successSolid": "#047857",
       "successTextOnSolid": "#FFFFFF",
+      "successSoftBg": "#052E16",
+      "successSoftText": "#86EFAC",
       "warningSolid": "#F59E0B",
       "warningTextOnSolid": "#0B0F19",
+      "warningSoftBg": "#451A03",
+      "warningSoftText": "#FCD34D",
       "dangerSolid": "#DC2626",
-      "dangerTextOnSolid": "#FFFFFF"
+      "dangerTextOnSolid": "#FFFFFF",
+      "dangerSoftBg": "#4C0519",
+      "dangerSoftText": "#FDA4AF"
     }
   },
   "contrastPairs": [
@@ -79,7 +91,10 @@
     { "fg": "textHelper", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Column header & unit label on hover row" },
     { "fg": "accentTextOnSolid", "bg": "accentSolid", "minRatio": 4.5, "usage": "Primary cobalt action button" },
     { "fg": "successTextOnSolid", "bg": "successSolid", "minRatio": 4.5, "usage": "Reconciled/approved status button" },
+    { "fg": "successSoftText", "bg": "successSoftBg", "minRatio": 4.5, "usage": "Approved soft badge" },
     { "fg": "warningTextOnSolid", "bg": "warningSolid", "minRatio": 4.5, "usage": "Pending/audit status button" },
-    { "fg": "dangerTextOnSolid", "bg": "dangerSolid", "minRatio": 4.5, "usage": "Reject/delete action button" }
+    { "fg": "warningSoftText", "bg": "warningSoftBg", "minRatio": 4.5, "usage": "Pending soft badge" },
+    { "fg": "dangerTextOnSolid", "bg": "dangerSolid", "minRatio": 4.5, "usage": "Reject/delete action button" },
+    { "fg": "dangerSoftText", "bg": "dangerSoftBg", "minRatio": 4.5, "usage": "Rejected soft badge" }
   ]
 }

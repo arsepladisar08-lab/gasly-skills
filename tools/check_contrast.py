@@ -27,10 +27,16 @@ REQUIRED_MODE_KEYS = {
     "accentTextOnSolid",
     "successSolid",
     "successTextOnSolid",
+    "successSoftBg",
+    "successSoftText",
     "warningSolid",
     "warningTextOnSolid",
+    "warningSoftBg",
+    "warningSoftText",
     "dangerSolid",
     "dangerTextOnSolid",
+    "dangerSoftBg",
+    "dangerSoftText",
 }
 
 MANDATORY_SURFACE_TEXT_PAIRS = [
@@ -45,8 +51,11 @@ MANDATORY_SURFACE_TEXT_PAIRS = [
     ("textHelper", "bgInteractive", 4.5),
     ("accentTextOnSolid", "accentSolid", 4.5),
     ("successTextOnSolid", "successSolid", 4.5),
+    ("successSoftText", "successSoftBg", 4.5),
     ("warningTextOnSolid", "warningSolid", 4.5),
+    ("warningSoftText", "warningSoftBg", 4.5),
     ("dangerTextOnSolid", "dangerSolid", 4.5),
+    ("dangerSoftText", "dangerSoftBg", 4.5),
 ]
 
 
@@ -94,7 +103,6 @@ def check_preset_file(filepath: Path) -> list[str]:
             errors.append(f"[{preset_id}:{mode_name}] Missing token keys: {sorted(missing_keys)}")
             continue
 
-        # Combine mandatory structural pairs with any custom pairs declared in the preset JSON
         pairs_to_test: dict[tuple[str, str], float] = {}
         for fg_key, bg_key, min_r in MANDATORY_SURFACE_TEXT_PAIRS:
             pairs_to_test[(fg_key, bg_key)] = min_r

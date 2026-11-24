@@ -131,7 +131,7 @@ Gerbang berikut wajib dipatuhi oleh skill `gasly-deploy-guide` saat menghasilkan
 3. **Manipulasi DOM Aman via `textContent` & Validasi Input (`I-03`):**
    - Seluruh pembaruan nilai konfigurasi dan snippet wajib menggunakan `textContent` (dilarang memakai `innerHTML`, `outerHTML`, atau `insertAdjacentHTML`). Validator wajib menolak karakter `<`, `>`, `"`, `'`, dan spasi, serta memvalidasi URL Web App (`https://`, host `script.google.com`, path memuat `/macros/` dan berakhir `/exec`, termasuk URL domain Workspace).
 4. **Deklarasi & Substitusi Placeholder Lengkap (`I-04`):**
-   - Seluruh placeholder di dalam snippet panduan wajib menggunakan token yang dideklarasikan (`{{SPREADSHEET_ID}}`, `{{GAS_EXEC_URL}}`, `{{GOOGLE_CLIENT_ID}}`, `{{PAGES_DOMAIN}}`), dapat diganti secara lengkap oleh `GaslyGuide.fillPlaceholders`, dan tidak boleh menyisakan placeholder tak dikenal atau token compiler (`2.1.0`, `2.4.0`).
+   - Seluruh placeholder di dalam snippet panduan wajib menggunakan token yang dideklarasikan (`{{SPREADSHEET_ID}}`, `{{GAS_EXEC_URL}}`, `{{GOOGLE_CLIENT_ID}}`, `{{PAGES_DOMAIN}}`), dapat diganti secara lengkap oleh `GaslyGuide.fillPlaceholders`, dan tidak boleh menyisakan placeholder tak dikenal atau token compiler (`2.1.0`, `2.5.0`).
 5. **Kelengkapan Metadata & Sumber Verifikasi per Langkah (`I-05`):**
    - Setiap langkah instalasi wajib mencantumkan 5 atribut/elemen: **Tujuan** (`data-step-purpose`), **Aksi** (`data-step-action`), **Hasil yang Diharapkan** (`data-step-expected`), **Sumber** (`data-step-source`), serta status **`last_verified`** (`data-step-verified` berisi tanggal `YYYY-MM-DD` atau `UNVERIFIED`).
 6. **Pembatasan Ketat `localStorage` Khusus Progres Centang (`I-06`):**

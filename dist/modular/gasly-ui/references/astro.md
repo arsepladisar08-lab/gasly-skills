@@ -426,7 +426,7 @@ const initialItems = buildEnv.status === 'success' && buildEnv.data?.items ? bui
 
         try {
           const fd = new FormData(form);
-          const createEnv = await gasPost<{ item: { id: string } }>('items.create', {
+          const createEnv = await gasPost<{ item: { id: string }; uploadNonce?: string }>('items.create', {
             title: String(fd.get('title') || ''),
             category: 'Operasional',
             amount: Number(fd.get('amount') || 0),
@@ -447,7 +447,15 @@ const initialItems = buildEnv.status === 'success' && buildEnv.data?.items ? bui
 
             let ticket: string | null = null;
             if (!getSessionToken()) {
-              const tEnv = await gasPost<{ ticket: string }>('file.ticket', {}, { idempotent: false });
+              const tEnv = await gasPost<{ ticket: string }>(
+                'file.ticket',
+                {
+                  entity: 'ITEMS',
+                  entityId: createEnv.data.item.id,
+                  uploadNonce: createEnv.data.uploadNonce || ''
+                },
+                { idempotent: false }
+              );
               if (tEnv.status !== 'success' || !tEnv.data?.ticket) {
                 stateEl.textContent = `[ERROR] ${tEnv.message}`;
                 return;
@@ -464,7 +472,7 @@ const initialItems = buildEnv.status === 'success' && buildEnv.data?.items ? bui
               ticket
             });
 
-            if (upEnv.status !== 'success') {
+            if (upEnv.status !== 'success' || upEnv.code !== 'OK') {
               stateEl.textContent = `[ERROR] ${upEnv.message}`;
               return;
             }

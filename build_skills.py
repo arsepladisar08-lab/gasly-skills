@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Gasly Universal Skills Compiler (build_skills.py)
-Builds canonical source skills from src/ into modular/flat distributions, generates deprecated aliases, and records a SHA-256 manifest.
+Builds canonical source skills from src/ into modular, flat, Claude ZIP, and Web Bundle distributions,
+generates deprecated aliases, and records a SHA-256 manifest.
 """
 
 import argparse
@@ -10,6 +11,7 @@ import json
 import re
 import shutil
 import sys
+import zipfile
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -26,13 +28,22 @@ SCHEMAS_DIR = ROOT_DIR / "schemas"
 DIST_DIR = ROOT_DIR / "dist"
 STAGING_DIR = ROOT_DIR / ".dist_staging"
 
-SKILL_VERSION = "2.4.0"
+SKILL_VERSION = "2.5.0"
 MAX_SKILL_BODY_LINES = 500
 MAX_DESCRIPTION_CHARS = 1000
 FLAT_WARN_CHARS = 48000
 FLAT_MAX_CHARS = 95000
 
-ALL_SKILLS = ["gasly-start", "gasly-prd", "gasly-prd-to-uiux", "gasly-pro-api", "gasly-data", "gasly-ui", "gasly-deploy-guide", "gasly-pro"]
+ALL_SKILLS = [
+    "gasly-start",
+    "gasly-prd",
+    "gasly-prd-to-uiux",
+    "gasly-pro-api",
+    "gasly-data",
+    "gasly-ui",
+    "gasly-deploy-guide",
+    "gasly-pro",
+]
 LEGACY_FLAT_SKILLS = ["gasly-prd", "gasly-pro"]
 
 KB_ORDER = [
@@ -44,7 +55,13 @@ KB_ORDER = [
     "boilerplates.md",
 ]
 
-CORE_FILES = ["contract.md", "access-profiles.md", "gates.md", "monetization-and-tiers.md"]
+CORE_FILES = [
+    "contract.md",
+    "access-profiles.md",
+    "gates.md",
+    "monetization-and-tiers.md",
+    "voice-and-brevity.md",
+]
 OPTIONAL_CORE_FILES = ["facts.md", "hardening-gates-p0.md"]
 DESIGN_DOCS = ["dials.md", "presets.md"]
 GAS_FILES = [
@@ -353,6 +370,104 @@ def load_markdown_group(
     return loaded
 
 
+def _format_bundle_section(rel_label: str, path: Path) -> str:
+    ext = path.suffix.lstrip(".").lower() or "text"
+    body = path.read_text(encoding="utf-8", errors="replace")
+    if ext == "md":
+        return f"\n---\n<!-- FILE: {rel_label} -->\n{body}\n"
+    return f"\n---\n<!-- FILE: {rel_label} -->\n```{ext}\n{body}\n```\n"
+
+
+def build_platform_packages(
+    staging_dir: Path,
+    skills: list[str],
+    core_contents: dict[str, str],
+    design_doc_contents: dict[str, str],
+    gas_contents: dict[str, str],
+    stack_contents: dict[str, str],
+    install_contents: dict[str, str],
+    kb_version: str,
+) -> None:
+    """
+    Generates ready-to-upload packages for Web/App AI LLM platforms:
+    1. dist/claude-zips/<skill>.zip      -> Claude Web & Claude Desktop (root folder = <skill>/).
+    2. dist/web-bundles/<skill>/         -> Max 2 .md files per skill (Gemini Skills & ChatGPT Plus/Pro).
+    3. dist/web-bundles/gasly-all-in-one -> Exactly 4 .md files (ChatGPT Free 5-file limit & Gemini Skills).
+    """
+    zips_dir = staging_dir / "claude-zips"
+    bundles_dir = staging_dir / "web-bundles"
+    zips_dir.mkdir(parents=True, exist_ok=True)
+    bundles_dir.mkdir(parents=True, exist_ok=True)
+
+    for slug in skills:
+        mod_dir = staging_dir / "modular" / slug
+        if not mod_dir.exists():
+            continue
+
+        # 1. Claude Web / Desktop ZIP (with <slug>/ as root folder inside ZIP)
+        zip_path = zips_dir / f"{slug}.zip"
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            for fpath in sorted(mod_dir.rglob("*")):
+                if fpath.is_file():
+                    arcname = f"{slug}/{fpath.relative_to(mod_dir).as_posix()}"
+                    zf.write(fpath, arcname)
+
+        # 2. Web Bundle per skill (SKILL.md + <slug>-knowledge.md, pure Markdown)
+        b_dir = bundles_dir / slug
+        b_dir.mkdir(parents=True, exist_ok=True)
+        (b_dir / "SKILL.md").write_text((mod_dir / "SKILL.md").read_text(encoding="utf-8"), encoding="utf-8")
+
+        chunks = [f"# GASLY KNOWLEDGE BUNDLE — {slug} (SKILL v{SKILL_VERSION} / KB v{kb_version})\n"]
+        for rpath in sorted(mod_dir.rglob("*")):
+            if rpath.is_file() and rpath.name != "SKILL.md":
+                rel = rpath.relative_to(mod_dir).as_posix()
+                chunks.append(_format_bundle_section(rel, rpath))
+
+        if len(chunks) > 1:
+            (b_dir / f"{slug}-knowledge.md").write_text("\n".join(chunks), encoding="utf-8")
+
+    # 3. 4-File All-in-One Bundle for ChatGPT Free (5-file limit) & Gemini Skills
+    aio_dir = bundles_dir / "gasly-all-in-one"
+    aio_dir.mkdir(parents=True, exist_ok=True)
+
+    def read_mod_skill(s: str) -> str:
+        p = staging_dir / "modular" / s / "SKILL.md"
+        return p.read_text(encoding="utf-8") if p.exists() else ""
+
+    bundle_01 = [
+        f"# 01 — GASLY ROUTER, CORE CONTRACTS & HARD GATES (v{SKILL_VERSION})\n",
+        read_mod_skill("gasly-start"),
+        read_mod_skill("gasly-pro-api"),
+    ] + [f"\n---\n<!-- CORE: {k} -->\n{v}" for k, v in core_contents.items()]
+    (aio_dir / "01-GASLY-ROUTER-AND-CORE.md").write_text("\n".join(bundle_01), encoding="utf-8")
+
+    bundle_02 = [
+        f"# 02 — GASLY PRD, UI/UX & DESIGN SYSTEM (v{SKILL_VERSION})\n",
+        read_mod_skill("gasly-prd"),
+        read_mod_skill("gasly-prd-to-uiux"),
+    ] + [f"\n---\n<!-- DESIGN: {k} -->\n{v}" for k, v in design_doc_contents.items()]
+    for pf in sorted((SRC_DESIGN_DIR / "presets").glob("*.tokens.json")):
+        bundle_02.append(_format_bundle_section(f"presets/{pf.name}", pf))
+    (aio_dir / "02-GASLY-PRD-AND-UIUX.md").write_text("\n".join(bundle_02), encoding="utf-8")
+
+    bundle_03 = [
+        f"# 03 — GASLY HEADLESS BACKEND (APPS SCRIPT / SHEETS / DRIVE) (v{SKILL_VERSION})\n",
+        read_mod_skill("gasly-data"),
+    ] + [f"\n---\n<!-- GAS: {k} -->\n{v}" for k, v in gas_contents.items()]
+    (aio_dir / "03-GASLY-BACKEND-GAS.md").write_text("\n".join(bundle_03), encoding="utf-8")
+
+    bundle_04 = [
+        f"# 04 — GASLY FRONTEND ADAPTERS & DEPLOY GUIDE (v{SKILL_VERSION})\n",
+        read_mod_skill("gasly-ui"),
+        read_mod_skill("gasly-deploy-guide"),
+    ] + [f"\n---\n<!-- STACK: {k} -->\n{v}" for k, v in stack_contents.items()] + [
+        f"\n---\n<!-- INSTALL: {k} -->\n{v}" for k, v in install_contents.items()
+    ]
+    (aio_dir / "04-GASLY-FRONTEND-AND-DEPLOY.md").write_text("\n".join(bundle_04), encoding="utf-8")
+
+    print(f"[OK] Built Claude ZIPs ({len(skills)} files) and Web Bundles (per-skill + 4-file all-in-one)")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Gasly Universal Skills Compiler")
     parser.add_argument(
@@ -384,7 +499,6 @@ def main(argv: list[str] | None = None) -> int:
         kb_version = detected_versions.pop()
         print(f"[OK] Source files verified at KB_VERSION={kb_version}, SKILL_VERSION={SKILL_VERSION}")
 
-        # Replace {{KB_VERSION}} and {{SKILL_VERSION}} across ALL reference groups
         kb_contents = inject_version_tokens(kb_contents, kb_version)
         core_contents = inject_version_tokens(core_contents, kb_version)
         design_doc_contents = inject_version_tokens(design_doc_contents, kb_version)
@@ -396,7 +510,6 @@ def main(argv: list[str] | None = None) -> int:
         verify_headless_registry_handlers(gas_contents)
         audit_gas_security_patterns(gas_contents, strict=args.strict_security)
 
-        # Prepare clean staging directory
         if STAGING_DIR.exists():
             shutil.rmtree(STAGING_DIR)
         STAGING_DIR.mkdir(parents=True, exist_ok=True)
@@ -424,10 +537,17 @@ def main(argv: list[str] | None = None) -> int:
             mod_ref_dir.mkdir(parents=True, exist_ok=True)
             (mod_dir / "SKILL.md").write_text(compiled_skill, encoding="utf-8")
 
-            if contract_schema_path.exists() and skill_slug in {"gasly-start", "gasly-prd", "gasly-prd-to-uiux", "gasly-pro-api", "gasly-data", "gasly-ui", "gasly-deploy-guide"}:
+            if contract_schema_path.exists() and skill_slug in {
+                "gasly-start",
+                "gasly-prd",
+                "gasly-prd-to-uiux",
+                "gasly-pro-api",
+                "gasly-data",
+                "gasly-ui",
+                "gasly-deploy-guide",
+            }:
                 shutil.copy2(contract_schema_path, mod_ref_dir / "gasly-contract.schema.json")
 
-            # Populate modular references per skill routing contract
             if skill_slug == "gasly-prd":
                 for fname, text in core_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
@@ -455,14 +575,15 @@ def main(argv: list[str] | None = None) -> int:
                     shutil.copy2(cf, css_dst / cf.name)
 
             elif skill_slug == "gasly-pro-api":
+                # Lean coordinator bundle: contracts + design direction + stack support (boilerplate owned by specialists)
                 for fname, text in core_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
-                for fname, text in gas_contents.items():
-                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                for fname in ("config.md", "integrations.md"):
+                    (mod_ref_dir / fname).write_text(gas_contents[fname], encoding="utf-8")
                 for fname, text in design_doc_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
-                for fname, text in stack_contents.items():
-                    (mod_ref_dir / fname).write_text(text, encoding="utf-8")
+                for fname in ("INHERIT.md", "PLANNED.md"):
+                    (mod_ref_dir / fname).write_text(stack_contents[fname], encoding="utf-8")
                 shutil.copy2(SRC_DESIGN_DIR / "tokens.schema.json", mod_ref_dir / "tokens.schema.json")
 
             elif skill_slug == "gasly-data":
@@ -509,7 +630,6 @@ def main(argv: list[str] | None = None) -> int:
                 for fname, text in kb_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
 
-            # Copy skill-local references and templates (skill-owned assets).
             for asset_bucket in ("references", "templates"):
                 asset_src = SRC_SKILLS_DIR / skill_slug / asset_bucket
                 if asset_src.exists():
@@ -517,15 +637,21 @@ def main(argv: list[str] | None = None) -> int:
                         if not asset_file.is_file():
                             continue
                         rel_asset = asset_file.relative_to(asset_src)
-                        asset_out = mod_ref_dir / rel_asset if asset_bucket == "references" else mod_dir / asset_bucket / rel_asset
+                        asset_out = (
+                            mod_ref_dir / rel_asset
+                            if asset_bucket == "references"
+                            else mod_dir / asset_bucket / rel_asset
+                        )
                         asset_out.parent.mkdir(parents=True, exist_ok=True)
                         if asset_file.suffix.lower() in {".md", ".html", ".css", ".json", ".js"}:
                             asset_text = asset_file.read_text(encoding="utf-8")
-                            asset_text = asset_text.replace("{{KB_VERSION}}", kb_version).replace("{{SKILL_VERSION}}", SKILL_VERSION)
+                            asset_text = asset_text.replace("{{KB_VERSION}}", kb_version).replace(
+                                "{{SKILL_VERSION}}", SKILL_VERSION
+                            )
                             asset_out.write_text(asset_text, encoding="utf-8")
                         else:
                             shutil.copy2(asset_file, asset_out)
-            # Build legacy flat and flat-lite packages ONLY for gasly-prd and gasly-pro
+
             if skill_slug == "gasly-prd":
                 flat_dir = STAGING_DIR / "flat" / skill_slug
                 flat_dir.mkdir(parents=True, exist_ok=True)
@@ -564,7 +690,18 @@ def main(argv: list[str] | None = None) -> int:
 
             print(f"[OK] Modular {skill_slug}/SKILL.md built ({line_count}/{MAX_SKILL_BODY_LINES} lines)")
 
-        # Backward-compatible aliases for renamed public skill slugs.
+        # Build ready-to-upload packages for Claude Web/Desktop (.zip) and Gemini/ChatGPT (.md bundles)
+        build_platform_packages(
+            STAGING_DIR,
+            ALL_SKILLS,
+            core_contents,
+            design_doc_contents,
+            gas_contents,
+            stack_contents,
+            install_contents,
+            kb_version,
+        )
+
         alias_specs = {
             "gasly-prompt": ("gasly-prd", "Use `gasly-prd` for all new work."),
             "gasly-install": ("gasly-deploy-guide", "Use `gasly-deploy-guide` for all new work."),
@@ -572,20 +709,37 @@ def main(argv: list[str] | None = None) -> int:
         for old_slug, (new_slug, note) in alias_specs.items():
             alias_dir = STAGING_DIR / "modular" / old_slug
             alias_dir.mkdir(parents=True, exist_ok=True)
-            alias_text = "\n".join(["---", "name: " + old_slug, "description: >",
-                "  Deprecated compatibility alias for older GASLY configurations that still reference " + old_slug + ". Use " + new_slug + " for all new work.", "---", "",
-                "# " + old_slug + " — Deprecated Compatibility Alias", "", note,
-                "Paket ini dipertahankan agar konfigurasi lama tidak langsung rusak.",
-                "Seluruh aturan dan pembaruan aktif dikelola pada skill kanonik.", ""])
+            alias_text = "\n".join(
+                [
+                    "---",
+                    "name: " + old_slug,
+                    "description: >",
+                    "  Deprecated compatibility alias for older GASLY configurations that still reference "
+                    + old_slug
+                    + ". Use "
+                    + new_slug
+                    + " for all new work.",
+                    "---",
+                    "",
+                    "# " + old_slug + " — Deprecated Compatibility Alias",
+                    "",
+                    note,
+                    "Paket ini dipertahankan agar konfigurasi lama tidak langsung rusak.",
+                    "Seluruh aturan dan pembaruan aktif dikelola pada skill kanonik.",
+                    "",
+                ]
+            )
             (alias_dir / "SKILL.md").write_text(alias_text, encoding="utf-8")
+
         flat_alias_dir = STAGING_DIR / "flat" / "gasly-prompt"
         flat_alias_dir.mkdir(parents=True, exist_ok=True)
-        (flat_alias_dir / "SKILL.md").write_text("Nama lama `gasly-prompt` diganti menjadi `gasly-prd`. Gunakan paket `dist/flat/gasly-prd/SKILL.md`.\n", encoding="utf-8")
+        (flat_alias_dir / "SKILL.md").write_text(
+            "Nama lama `gasly-prompt` diganti menjadi `gasly-prd`. Gunakan paket `dist/flat/gasly-prd/SKILL.md`.\n",
+            encoding="utf-8",
+        )
 
-        # Final gate: ensure no unreplaced {{KB_VERSION}} or {{SKILL_VERSION}} exists anywhere in staging
         verify_no_unreplaced_tokens(STAGING_DIR)
 
-        # Generate dist/manifest.json with SHA-256 hashes
         files_manifest: dict[str, dict[str, int | str]] = {}
         for fpath in sorted(STAGING_DIR.rglob("*")):
             if fpath.is_file():
@@ -599,14 +753,14 @@ def main(argv: list[str] | None = None) -> int:
             "skillVersion": SKILL_VERSION,
             "kbVersion": kb_version,
             "skills": {
-                "gasly-start": {"mode": "active", "packages": ["modular"]},
-                "gasly-prd": {"mode": "active", "packages": ["modular", "flat"]},
-                "gasly-prd-to-uiux": {"mode": "active", "packages": ["modular"]},
-                "gasly-pro-api": {"mode": "active", "packages": ["modular"]},
-                "gasly-data": {"mode": "active", "packages": ["modular"]},
-                "gasly-ui": {"mode": "active", "packages": ["modular"]},
-                "gasly-deploy-guide": {"mode": "active", "packages": ["modular"]},
-                "gasly-pro": {"mode": "legacy", "packages": ["modular", "flat", "flat-lite"]},
+                "gasly-start": {"mode": "active", "packages": ["modular", "claude-zips", "web-bundles"]},
+                "gasly-prd": {"mode": "active", "packages": ["modular", "flat", "claude-zips", "web-bundles"]},
+                "gasly-prd-to-uiux": {"mode": "active", "packages": ["modular", "claude-zips", "web-bundles"]},
+                "gasly-pro-api": {"mode": "active", "packages": ["modular", "claude-zips", "web-bundles"]},
+                "gasly-data": {"mode": "active", "packages": ["modular", "claude-zips", "web-bundles"]},
+                "gasly-ui": {"mode": "active", "packages": ["modular", "claude-zips", "web-bundles"]},
+                "gasly-deploy-guide": {"mode": "active", "packages": ["modular", "claude-zips", "web-bundles"]},
+                "gasly-pro": {"mode": "legacy", "packages": ["modular", "flat", "flat-lite", "claude-zips", "web-bundles"]},
                 "gasly-prompt": {"mode": "deprecated-alias", "packages": ["modular", "flat"]},
                 "gasly-install": {"mode": "deprecated-alias", "packages": ["modular"]},
             },
@@ -617,7 +771,6 @@ def main(argv: list[str] | None = None) -> int:
             encoding="utf-8",
         )
 
-        # Atomic swap of staging directory into dist/
         if DIST_DIR.exists():
             shutil.rmtree(DIST_DIR)
         STAGING_DIR.rename(DIST_DIR)

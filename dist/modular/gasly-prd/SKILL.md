@@ -70,6 +70,7 @@ Buka file referensi berikut sebelum menyusun spesifikasi:
 
 | File Referensi | Kondisi Muat | Tujuan Penggunaan |
 | :--- | :--- | :--- |
+| `references/voice-and-brevity.md` | **Selalu Dibuka** | Menjaga komunikasi ringkas, to-the-point, tanpa basa-basi klise, tetap mentor profesional. |
 | `references/contract.md` | **Selalu Dibuka** | Memastikan bentuk request `text/plain`, envelope `{ status: "success" | "error", code: "OK" | ... }`, `GASLY_CONTRACT_JSON`, dan Tangga Arsitektur. |
 | `references/access-profiles.md` | **Selalu Dibuka** | Memilih Access Profile (`P1`–`P4`), spesifikasi hash passphrase/token `HMAC-SHA256`, `auth.google`, dan rate-limit. |
 | `references/gates.md` | **Selalu Dibuka** | Memeriksa kelengkapan gerbang `UNIVERSAL` (`U-01`–`U-12`), `GAS-ONLY` (`G-01`–`G-12`), `WEB-ONLY` (`W-01`–`W-09`), dan `LEGACY-HTMLSERVICE` (`L-01`–`L-05`). |
@@ -121,8 +122,8 @@ Sebelum menulis `MASTER INSTRUCTIONAL PROMPT`, lakukan 5 langkah keputusan arsit
 
 Susun hasil dalam empat bagian percakapan, dan lampirkan artifact final yang terpisah. Jangan menganggap percakapan atau MASTER PROMPT sebagai pengganti PRD.
 
-### Bagian 1: Apresiasi, Validasi Pain-to-Glory & Alasan Pemilihan Arsitektur
-Jelaskan masalah nyata yang diselesaikan, perbandingan alur kerja lama vs baru, serta alasan pemilihan **Surface Profile**, **Architecture Tier**, **Access Profile**, **Design Preset + Dials**, dan **Frontend Stack**.
+### Bagian 1: Ringkasan Arsitektur (Singkat & BLUF)
+Mulai langsung dengan 1 tabel keputusan ringkas (`Surface Profile | Tier | Access Profile | Preset & Dials | Frontend Stack`) plus 2–3 kalimat nilai inti (*Pain-to-Glory*). Dilarang bertele-tele atau mengulang brief pengguna.
 
 ### Bagian 2: Klarifikasi Strategis (Maksimal 3)
 Ajukan maksimal **3 pertanyaan klarifikasi** hanya untuk ambiguitas yang berdampak pada fitur, data, hak akses, risiko, atau kriteria keberhasilan. Jika konteks sudah cukup, jangan bertanya; lanjutkan dengan asumsi yang dinyatakan secara transparan.
@@ -155,19 +156,19 @@ Bungkus blok Master Prompt dengan pagar empat backtick dan sertakan ke-9 seksi w
 ### Bagian 4: Dua Rekomendasi "Gasly Idea" & Panduan Handoff
 1. Berikan tepat **2 ide fitur lanjutan ("Gasly Idea #1" dan "Gasly Idea #2")** yang meningkatkan nilai bisnis, otomasi, atau retensi aplikasi pada tahap berikutnya.
 2. Tutup dengan kalimat panduan handoff:
-   > *"👉 **Langkah Berikutnya:** Untuk membangun kode backend API Google Apps Script (`.../exec`), **lanjutkan dengan skill Gasly Data**. Untuk membangun kode aplikasi frontend-nya, **lanjutkan dengan skill Gasly UI** (sertakan jawaban atas pertanyaan klarifikasi di atas serta sebutkan bila ingin menyertakan **Gasly Idea #1 atau #2**)."*
+   > *"👉 **Langkah Berikutnya:** Untuk menyusun prompt visual/wireframe, lanjutkan ke **`gasly-prd-to-uiux`**. Jika ingin langsung membangun aplikasi full-stack, lanjutkan ke **`gasly-pro-api`** (atau langsung **`gasly-data`** untuk backend GAS dan **`gasly-ui`** untuk frontend). Balas **'Lanjut default'** atau sertakan jawaban klarifikasi & pilihan **Gasly Idea #1/#2**."*
 
 ---
 
 ### Artifact PRD untuk Handoff (WAJIB)
-Sebelum mengakhiri tahap, hasilkan `PRD-Final.md` sebagai dokumen produk yang dapat dibaca pemilik bisnis dan desainer. Minimal berisi:
-- Ringkasan, masalah, tujuan, metrik keberhasilan, target pengguna, serta peran.
-- User journey, fitur MVP, fitur di luar scope, halaman/screen inventory, dan acceptance criteria.
-- Data entities/sheet outline, kebutuhan Drive, otomasi, dan permission matrix.
-- Preferensi visual, rekomendasi laporan, arsitektur dan deployment yang disarankan, risiko/batasan, serta modul opsional.
-- Daftar asumsi, keputusan yang disetujui, pertanyaan terbuka, dan versi dokumen.
+Sebelum mengakhiri tahap, hasilkan `PRD-Final.md` (atau `PRD-Draft-v0.1.md` bila input berasal dari notulen rapat/MoM yang masih punya poin TBD kritis) **dengan mengikuti struktur 13 Bab pada `templates/TEMPLATE_PRD.md`** tanpa menyertakan komentar instruksi `<!-- -->`.
 
-`MASTER-INSTRUCTIONAL-PROMPT.md` menyimpan instruksi teknis implementasi yang detail. `GASLY_CONTRACT.json` menyimpan kontrak mesin dan harus sesuai schema kanonik. Ketiganya harus saling konsisten tetapi memiliki fungsi yang berbeda.
+- Pastikan setiap kebutuhan fungsional memiliki ID unik (`PREFIX-N`), prioritas (`Wajib` | `Penting` | `Fase 2`), dan kriteria penerimaan.
+- Pastikan Bab 7.1 memuat *Screen Inventory* (jembatan ke `gasly-prd-to-uiux`) dan Bab 8 mencantumkan klasifikasi privasi + status Drive (`Gate U-10`).
+- Seluruh hal yang belum diputuskan klien wajib masuk ke Bab 12 (Pertanyaan Terbuka / TBD), bukan dikarang.
+
+`PRD-Final.md` adalah dokumen produk untuk klien & desainer; `MASTER-INSTRUCTIONAL-PROMPT.md` menyimpan instruksi implementasi teknis; `GASLY_CONTRACT.json` menyimpan kontrak mesin sesuai schema kanonik. Ketiganya harus 100% konsisten.
+
 ## 5. DEFINITION OF DONE & SELF-AUDIT
 
 Sebelum menyerahkan hasil, pastikan seluruh kriteria berikut terpenuhi:

@@ -25,7 +25,7 @@ nextjs-gasly-app/
     │   └── page.tsx                    # Server Component: mengambil bacaan publik saat build / ISR revalidate
     ├── components/
     │   ├── ImageUploader.tsx           # Client Component: kompresi ~1 MB & 5 state aksesibel
-    │   └── ItemsClientView.tsx         # Client Component: form mutasi, login admin, & konfirmasi hapus
+    │   └── ItemsClientView.tsx         # Client Component: form mutasi, login admin, & konfirmasi hapus (Step-Up PIN)
     └── lib/
         ├── gasClient.ts                # Klien HTTP text/plain POST/GET, retry idempoten, & memori token
         └── driveImage.ts               # Helper tunggal driveImageUrl(fileId, width) + fallback
@@ -40,7 +40,7 @@ nextjs-gasly-app/
 ## 2. Strategi Hybrid: Baca Publik Saat Build/ISR vs Tulis dari Browser
 
 1. **Baca Publik pada Waktu Build / Revalidate (`P1` & `P3`):**
-   - Server Component (`src/app/page.tsx`) memanggil `fetchPublicItemsServer()` menggunakan HTTP `GET` (`?action=items.list&v=1`) dengan `redirect: "follow"` dan `next: { revalidate: 60 }`.
+   - Server Component (`src/app/page.tsx`) memanggil `fetchPublicReadServer()` menggunakan HTTP `GET` (`?action=items.list&v=1`) dengan `redirect: "follow"` dan `next: { revalidate: 60 }`.
    - Jika server Apps Script mengembalikan envelope `status !== "success"` (misalnya saat `LOCK_TIMEOUT`), Server Component tidak boleh melempar error yang merusak proses build statis, melainkan meneruskan state awal kosong + pesan peringatan agar Client Component dapat memuat ulang dari browser.
 2. **Tulis & Aksi Terotentikasi dari Browser (`P3` & `P4`):**
    - Seluruh operasi mutasi (`items.create`, `items.update`, `items.delete`, `file.upload`) dan login (`auth.login`) dieksekusi langsung dari browser menggunakan `gasClient.ts` (`POST` `Content-Type: text/plain;charset=utf-8`).
@@ -316,6 +316,7 @@ export type UploadStatus = 'idle' | 'compressing' | 'uploading' | 'error' | 'don
 interface ImageUploaderProps {
   entity: string;
   entityId: string;
+  uploadNonce?: string;
   onUploaded?: (result: { fileId: string; fileUrl: string }) => void;
 }
 
@@ -378,7 +379,7 @@ async function compressFileToBase64(file: File): Promise<{
   }
 }
 
-export function ImageUploader({ entity, entityId, onUploaded }: ImageUploaderProps) {
+export function ImageUploader({ entity, entityId, uploadNonce = '', onUploaded }: ImageUploaderProps) {
   const [state, setState] = useState<UploadStatus>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('Pilih foto (maks. ~1 MB setelah kompresi).');
 
@@ -396,7 +397,11 @@ export function ImageUploader({ entity, entityId, onUploaded }: ImageUploaderPro
 
       let ticket: string | null = null;
       if (!getSessionToken()) {
-        const ticketEnv = await gasRequest<{ ticket: string }>('file.ticket', {}, { idempotent: false });
+        const ticketEnv = await gasRequest<{ ticket: string }>(
+          'file.ticket',
+          { entity, entityId, uploadNonce },
+          { idempotent: false }
+        );
         if (ticketEnv.status !== 'success' || !ticketEnv.data?.ticket) {
           setState('error');
           setStatusMessage(ticketEnv.message || 'Gagal memperoleh tiket unggah.');
@@ -418,7 +423,7 @@ export function ImageUploader({ entity, entityId, onUploaded }: ImageUploaderPro
         { idempotent: true }
       );
 
-      if (uploadEnv.status !== 'success' || !uploadEnv.data) {
+      if (uploadEnv.status !== 'success' || uploadEnv.code !== 'OK' || !uploadEnv.data) {
         setState('error');
         setStatusMessage(uploadEnv.message || 'Gagal mengunggah foto.');
         return;
@@ -534,6 +539,8 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
   const [persistTab, setPersistTab] = useState<boolean>(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [deleteTarget, setDeleteTarget] = useState<ItemRecord | null>(null);
+  const [deletePin, setDeletePin] = useState<string>('');
+  const [uploadNonces, setUploadNonces] = useState<Record<string, string>>({});
 
   async function refreshItems() {
     setIsLoading(true);
@@ -553,7 +560,7 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
     setIsSaving(true);
     setErrorMsg(null);
 
-    const res = await gasRequest<{ item: ItemRecord }>('items.create', {
+    const res = await gasRequest<{ item: ItemRecord; uploadNonce?: string }>('items.create', {
       title,
       category,
       amount: Number(amount),
@@ -562,6 +569,11 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
 
     setIsSaving(false);
     if (res.status === 'success' && res.data?.item) {
+      if (res.data.uploadNonce) {
+        const createdId = res.data.item.id;
+        const nonce = res.data.uploadNonce;
+        setUploadNonces((prev) => ({ ...prev, [createdId]: nonce }));
+      }
       setTitle('');
       setAmount('');
       await refreshItems();
@@ -573,12 +585,32 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
 
   async function handleConfirmDelete() {
     if (!deleteTarget || isSaving) return;
+    if (!/^\d{6}$/.test(deletePin.trim())) {
+      setErrorMsg('Masukkan PIN step-up 6 digit angka untuk mengarsipkan data.');
+      return;
+    }
+
     setIsSaving(true);
+    setErrorMsg(null);
+    const pinRes = await gasRequest<{ stepUpToken: string }>(
+      'auth.verifyPin',
+      { pin: deletePin.trim(), targetAction: 'items.delete' },
+      { idempotent: false, maxRetries: 0 }
+    );
+
+    if (pinRes.status !== 'success' || !pinRes.data?.stepUpToken) {
+      setIsSaving(false);
+      setErrorMsg(pinRes.message || 'Verifikasi PIN step-up gagal.');
+      return;
+    }
+
     const res = await gasRequest('items.delete', {
       id: deleteTarget.id,
-      updated_at: deleteTarget.updated_at
+      updated_at: deleteTarget.updated_at,
+      stepUpToken: pinRes.data.stepUpToken
     });
     setIsSaving(false);
+    setDeletePin('');
     setDeleteTarget(null);
     if (res.status === 'success') {
       await refreshItems();
@@ -613,7 +645,7 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Data Operasional</h1>
           <p style={{ color: 'var(--text-helper)' }} className="text-xs">
-             pembacaan awal via ISR • penulisan langsung ke Apps Script (/exec)
+            Pembacaan awal via ISR • penulisan langsung ke Apps Script (/exec)
           </p>
         </div>
 
@@ -802,12 +834,20 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
                     )}
                   </td>
                   <td className="py-3 px-2">
-                    <ImageUploader entity="ITEMS" entityId={it.id} onUploaded={() => refreshItems()} />
+                    <ImageUploader
+                      entity="ITEMS"
+                      entityId={it.id}
+                      uploadNonce={uploadNonces[it.id]}
+                      onUploaded={() => refreshItems()}
+                    />
                   </td>
                   <td className="py-3 px-2 text-right">
                     <button
                       type="button"
-                      onClick={() => setDeleteTarget(it)}
+                      onClick={() => {
+                        setDeletePin('');
+                        setDeleteTarget(it);
+                      }}
                       style={{ backgroundColor: 'var(--danger-solid)', color: 'var(--danger-text-on-solid)' }}
                       className="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-semibold"
                     >
@@ -821,7 +861,7 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
         )}
       </section>
 
-      {/* Custom Confirmation Modal (W-01 Gate: never use window.confirm) */}
+      {/* Custom Confirmation Modal + Step-Up PIN (Gate W-01 & auth.verifyPin) */}
       {deleteTarget && (
         <div
           role="dialog"
@@ -837,10 +877,29 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
             <p style={{ color: 'var(--text-secondary)' }} className="text-sm">
               Apakah Anda yakin ingin mengarsipkan transaksi <strong>{deleteTarget.title}</strong> ({deleteTarget.id})?
             </p>
+            <div>
+              <label htmlFor="delete-stepup-pin" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
+                PIN Konfirmasi Admin (6 Digit) *
+              </label>
+              <input
+                id="delete-stepup-pin"
+                type="password"
+                inputMode="numeric"
+                maxLength={6}
+                value={deletePin}
+                onChange={(e) => setDeletePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="6 digit angka"
+                style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
+                className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm font-mono tabular-nums"
+              />
+            </div>
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setDeleteTarget(null)}
+                onClick={() => {
+                  setDeletePin('');
+                  setDeleteTarget(null);
+                }}
                 style={{ backgroundColor: 'var(--bg-interactive)', color: 'var(--text-primary)' }}
                 className="min-h-[42px] px-4 py-2 rounded-lg text-sm"
               >

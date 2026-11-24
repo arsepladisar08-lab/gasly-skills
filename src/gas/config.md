@@ -410,29 +410,6 @@ function setupAdminCredentials() {
     props.deleteProperty('ADMIN_PIN_INIT');
   }
 }
-  /**
-  Sets or rotates the 6-digit step-up PIN for the bootstrap 'admin' account in ScriptProperties.
-  */
-  function configureAdminPin_(newPin) {
-  var cleanPin = String(newPin || '').trim();
-  if (!/^\d{6}$/.test(cleanPin)) {
-  throw new Error('Admin step-up PIN must be exactly 6 digits.');
-  }
-  var props = PropertiesService.getScriptProperties();
-  var pepper = props.getProperty('AUTH_PEPPER');
-  if (!pepper) {
-  pepper = generateRandomSecret_(32);
-  props.setProperty('AUTH_PEPPER', pepper);
-  }
-  var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
-  var pinSalt = generateRandomSecret_(16);
-  var pinHash = computeIteratedHash_(cleanPin, pinSalt, pepper, iterations);
-  props.setProperties({
-    ADMIN_PIN_SALT: pinSalt,
-    ADMIN_PIN_HASH: pinHash
-  });
-  return { status: 'success', message: 'Admin step-up PIN hash stored in ScriptProperties.' };
-}
 ```
 
 ---

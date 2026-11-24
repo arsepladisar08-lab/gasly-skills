@@ -42,10 +42,16 @@
       "accentTextOnSolid": "#FFFFFF",
       "successSolid": "#10B981",
       "successTextOnSolid": "#09090B",
+      "successSoftBg": "#052E16",
+      "successSoftText": "#86EFAC",
       "warningSolid": "#F59E0B",
       "warningTextOnSolid": "#09090B",
+      "warningSoftBg": "#451A03",
+      "warningSoftText": "#FCD34D",
       "dangerSolid": "#E11D48",
-      "dangerTextOnSolid": "#FFFFFF"
+      "dangerTextOnSolid": "#FFFFFF",
+      "dangerSoftBg": "#4C0519",
+      "dangerSoftText": "#FDA4AF"
     },
     "light": {
       "bgBase": "#F8FAFC",
@@ -61,10 +67,16 @@
       "accentTextOnSolid": "#FFFFFF",
       "successSolid": "#047857",
       "successTextOnSolid": "#FFFFFF",
+      "successSoftBg": "#DCFCE7",
+      "successSoftText": "#14532D",
       "warningSolid": "#F59E0B",
       "warningTextOnSolid": "#0F172A",
+      "warningSoftBg": "#FEF3C7",
+      "warningSoftText": "#78350F",
       "dangerSolid": "#E11D48",
-      "dangerTextOnSolid": "#FFFFFF"
+      "dangerTextOnSolid": "#FFFFFF",
+      "dangerSoftBg": "#FFE4E6",
+      "dangerSoftText": "#881337"
     }
   },
   "contrastPairs": [
@@ -78,8 +90,11 @@
     { "fg": "textHelper", "bg": "bgSurface", "minRatio": 4.5, "usage": "Helper/caption text on elevated cards" },
     { "fg": "textHelper", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Helper/caption text on interactive hover surface" },
     { "fg": "accentTextOnSolid", "bg": "accentSolid", "minRatio": 4.5, "usage": "Primary CTA button label" },
-    { "fg": "successTextOnSolid", "bg": "successSolid", "minRatio": 4.5, "usage": "Success badge/button label" },
-    { "fg": "warningTextOnSolid", "bg": "warningSolid", "minRatio": 4.5, "usage": "Warning badge/button label" },
-    { "fg": "dangerTextOnSolid", "bg": "dangerSolid", "minRatio": 4.5, "usage": "Destructive button label" }
+    { "fg": "successTextOnSolid", "bg": "successSolid", "minRatio": 4.5, "usage": "Success solid button label" },
+    { "fg": "successSoftText", "bg": "successSoftBg", "minRatio": 4.5, "usage": "Success soft badge label" },
+    { "fg": "warningTextOnSolid", "bg": "warningSolid", "minRatio": 4.5, "usage": "Warning solid button label" },
+    { "fg": "warningSoftText", "bg": "warningSoftBg", "minRatio": 4.5, "usage": "Warning soft badge label" },
+    { "fg": "dangerTextOnSolid", "bg": "dangerSolid", "minRatio": 4.5, "usage": "Destructive button label" },
+    { "fg": "dangerSoftText", "bg": "dangerSoftBg", "minRatio": 4.5, "usage": "Danger soft badge label" }
   ]
 }

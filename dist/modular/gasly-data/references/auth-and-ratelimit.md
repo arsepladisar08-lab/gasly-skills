@@ -276,7 +276,7 @@ function handleAuthLogin_(req) {
   var pepper = props.getProperty('AUTH_PEPPER') || '';
   var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
 
-if (accountId === 'admin') {
+  if (accountId === 'admin') {
     var storedSalt = props.getProperty('ADMIN_PASSPHRASE_SALT');
     var storedHash = props.getProperty('ADMIN_PASSPHRASE_HASH');
 
@@ -333,7 +333,7 @@ if (accountId === 'admin') {
  * Handler: auth.google (Optional Google Identity Services ID Token verification)
  */
 function handleAuthGoogle_(req) {
-  var idToken = String(req.payload.idToken || '').trim();
+  var idToken = String(req.payload.idToken || req.payload.id_token || '').trim();
   if (!idToken) {
     return createResponse_('error', null, 'Google ID token wajib disertakan.', 'VALIDATION_ERROR');
   }
@@ -403,9 +403,9 @@ function handleAuthGoogle_(req) {
         }
       }
     }
-    }
+  }
 
-    if (!matchedRole && PropertiesService.getScriptProperties().getProperty('P2_LITE_AUTO_PROVISION') === 'TRUE') {
+  if (!matchedRole && PropertiesService.getScriptProperties().getProperty('P2_LITE_AUTO_PROVISION') === 'TRUE') {
     var cache = CacheService.getScriptCache();
     var signupRateKey = 'rl:p2signup:global';
     var signupCount = Number(cache.get(signupRateKey) || 0);
@@ -414,11 +414,11 @@ function handleAuthGoogle_(req) {
     }
     var lock = LockService.getScriptLock();
     if (!lock.tryLock(10000)) {
-     return createResponse_('error', null, 'Server sedang sibuk.', 'LOCK_TIMEOUT');
+      return createResponse_('error', null, 'Server sedang sibuk.', 'LOCK_TIMEOUT');
     }
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
-     var usersSheet = ss.getSheetByName('USERS');
+      var usersSheet = ss.getSheetByName('USERS');
       if (!usersSheet) {
         return createResponse_('error', null, 'Tabel USERS belum diinisialisasi.', 'NOT_FOUND');
       }
@@ -430,7 +430,7 @@ function handleAuthGoogle_(req) {
         email: escapeFormula_(email),
         name: escapeFormula_(String(tokenInfo.name || email.split('@')[0]).trim()),
         role: 'STAFF',
-       status: 'ACTIVE',
+        status: 'ACTIVE',
         password_salt: '',
         password_hash: '',
         pin_salt: '',
@@ -513,13 +513,11 @@ function handleAuthSetCredentials_(req) {
   var pepper = props.getProperty('AUTH_PEPPER') || '';
   var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
 
-  // Jika ADMIN mengubah pengguna lain, wajib stepUpToken milik ADMIN untuk 'auth.setCredentials'
   if (targetEmail !== callerEmail) {
     if (!verifyAndConsumeStepUp_(req, 'auth.setCredentials')) {
       return createResponse_('error', null, 'Verifikasi PIN step-up diperlukan.', 'FORBIDDEN');
     }
   } else if (callerEmail === 'admin') {
-    // Bootstrap 'admin' mengubah kredensial sendiri di ScriptProperties
     var rlAdmin = checkAuthRateLimit_('admin');
     if (!rlAdmin.allowed) {
       return createResponse_('error', null, 'Terlalu banyak percobaan gagal.', 'FORBIDDEN', { retryAfterSeconds: rlAdmin.retryAfterSeconds });
@@ -597,7 +595,6 @@ function handleAuthSetCredentials_(req) {
       }
       var curSalt = passSaltIdx >= 0 ? String(existingRow[passSaltIdx] || '') : '';
       var curHash = passHashIdx >= 0 ? String(existingRow[passHashIdx] || '') : '';
-      // Jika akun sudah punya password_hash (atau bahkan jika P2-lite, currentPassphrase wajib saat punya hash; jika belum punya hash maka wajib menyertakan currentPassphrase minimal 12 karakter atau gagal bila kosong)
       if (!currentPassphrase || (curHash && (!curSalt || !constantTimeEqual_(computeIteratedHash_(currentPassphrase.trim(), curSalt, pepper, iterations), curHash)))) {
         recordAuthFailure_(rlSelf);
         return createResponse_('error', null, 'currentPassphrase wajib disertakan dan valid.', 'FORBIDDEN');
@@ -726,3 +723,4 @@ function verifyAndConsumeStepUp_(req, expectedAction) {
     return false;
   }
 }
+```

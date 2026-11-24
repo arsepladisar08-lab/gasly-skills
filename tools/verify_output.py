@@ -50,7 +50,6 @@ def check_sensitive_drive_privacy(contract: dict, backend_text: str, failures: l
                 )
 
     for sheet_name in sensitive_entities:
-        # Cek apakah di setup.gs / code.gs entitas ini diset defaultVisibility: 'public'
         pattern = rf"{re.escape(sheet_name)}\s*:\s*\{{[^}}]*defaultVisibility\s*:\s*['\"]public['\"]"
         if re.search(pattern, backend_text, re.DOTALL):
             failures.append(
@@ -71,7 +70,6 @@ def check_public_lookup_anti_enum(contract: dict, backend_text: str, failures: l
                     f"GATE-ANTI-ENUM: Action lookup publik '{name}' di kontrak belum mengaktifkan "
                     "rate_limited=true dan requires_high_entropy_token=true."
                 )
-            # Pastikan tidak hanya mengandalkan 4 digit terakhir WA tanpa tracking_token
             if "whatsapp_last4" in backend_text and "tracking_token" not in backend_text:
                 failures.append(
                     f"GATE-ANTI-ENUM: Action '{name}' di backend masih mengandalkan 'whatsapp_last4' "
@@ -89,7 +87,6 @@ def check_upload_result_verification(frontend_text: str, failures: list[str]) ->
         stmt = match.group(0)
         start_pos = match.start()
         preceding = frontend_text[max(0, start_pos - 60) : start_pos + len(stmt)]
-        # Jika dipanggil sebagai `await callGasAction('file.upload', ...)` tanpa disimpan ke variabel
         if not re.search(r"(const|let|var)\s+\w+\s*=\s*await\s+callGasAction", preceding):
             failures.append(
                 "GATE-UPLOAD-INTEGRITY: Panggilan 'file.upload' di frontend tidak disimpan ke variabel "
@@ -138,7 +135,7 @@ def check_seed_and_envelope_consistency(
         failures.append(
             "GATE-ENVELOPE-DRIFT (U-04): Backend menggunakan status 'OK'/'ok' pada createResponse_ "
             "(Standar kontrak mewajibkan status: 'success' | 'error' dan code: 'OK')."
-         )
+        )
 
     combined = backend_text + "\n" + frontend_text
     if re.search(
@@ -150,12 +147,12 @@ def check_seed_and_envelope_consistency(
             "(Standar kontrak mewajibkan status: 'success' | 'error')."
         )
 
-    # Cek apakah seedItems masih menggunakan array literal 2D [['SEED-...', ...]]
     if re.search(r"var\s+seed\w+\s*=\s*\[\s*\[", backend_text):
         failures.append(
             "GATE-SCHEMA-SEED: Fungsi seed di setup.gs masih menggunakan Array Posisi 2D '[[...]]' "
             "yang rawan crash saat jumlah kolom bertambah. Gunakan Array of Objects '[{...}]'."
         )
+
 
 def check_anti_slop_and_web_gates(frontend_text: str, failures: list[str]) -> None:
     """
@@ -208,7 +205,6 @@ def check_install_guide(guide_path_str: str, failures: list[str]) -> None:
     html_text = path_obj.read_text(encoding="utf-8")
     scripts = "\n".join(re.findall(r"<script\b[^>]*>(.*?)</script>", html_text, re.DOTALL | re.IGNORECASE))
 
-    # Gate I-01: Mandiri 100%, tanpa aset eksternal / CDN / pemanggilan jaringan
     if re.search(r"<script\b[^>]*\bsrc\s*=", html_text, re.IGNORECASE):
         failures.append("GATE-I-01 (SELF-CONTAINED-NO-NET): Ditemukan <script src=...>; file wajib mandiri.")
     if re.search(r"<link\b[^>]*\bhref\s*=\s*['\"]https?:", html_text, re.IGNORECASE):
@@ -220,13 +216,11 @@ def check_install_guide(guide_path_str: str, failures: list[str]) -> None:
     if re.search(r"\b(?:fetch\s*\(|XMLHttpRequest\b|navigator\.sendBeacon\b|WebSocket\b)", scripts):
         failures.append("GATE-I-01 (SELF-CONTAINED-NO-NET): Ditemukan panggilan jaringan di dalam <script>.")
 
-    # Gate I-02: Tanpa secret tertanam & wajib memiliki crypto.getRandomValues
     if re.search(r"AIza[0-9A-Za-z_\-]{20,}|sk_live_[0-9A-Za-z]{16,}|ghp_[0-9A-Za-z]{20,}", html_text):
         failures.append("GATE-I-02 (NO-EMBEDDED-SECRETS): Ditemukan string yang menyerupai API key/secret nyata di HTML.")
     if "getRandomValues" not in scripts:
         failures.append("GATE-I-02 (NO-EMBEDDED-SECRETS): Generator secret wajib menggunakan crypto.getRandomValues.")
 
-    # Gate I-03: Manipulasi DOM murni via textContent (tanpa innerHTML) + ekspos GaslyGuide
     if re.search(r"\.(?:innerHTML|outerHTML)\b|insertAdjacentHTML\s*\(|document\.write\s*\(", scripts):
         failures.append("GATE-I-03 (SAFE-DOM-TEXTCONTENT): Dilarang menggunakan innerHTML/outerHTML/insertAdjacentHTML/document.write.")
     if ".textContent" not in scripts:
@@ -235,7 +229,6 @@ def check_install_guide(guide_path_str: str, failures: list[str]) -> None:
         if fn_name not in scripts:
             failures.append(f"GATE-I-03 (SAFE-DOM-TEXTCONTENT): Objek/fungsi wajib '{fn_name}' tidak ditemukan di <script>.")
 
-    # Gate I-04: Deklarasi & substitusi placeholder lengkap
     if "{{KB_VERSION}}" in html_text or "{{SKILL_VERSION}}" in html_text:
         failures.append("GATE-I-04 (DECLARED-PLACEHOLDERS): Ditemukan token {{KB_VERSION}} atau {{SKILL_VERSION}} yang belum terganti.")
     found_tokens = set(re.findall(r"\{\{([A-Z0-9_]+)\}\}", html_text))
@@ -243,7 +236,6 @@ def check_install_guide(guide_path_str: str, failures: list[str]) -> None:
     if undeclared:
         failures.append(f"GATE-I-04 (DECLARED-PLACEHOLDERS): Ditemukan placeholder tidak terdeklarasi: {sorted(undeclared)}.")
 
-    # Gate I-05: Setiap langkah instalasi wajib memiliki purpose, action, expected, source, dan verified
     step_tags = re.findall(
         r"<section\b(?:(?:\"[^\"]*\"|'[^']*'|[^>'\"])*?\bdata-install-step\b(?:\"[^\"]*\"|'[^']*'|[^>'\"])*)>",
         html_text,
@@ -261,7 +253,6 @@ def check_install_guide(guide_path_str: str, failures: list[str]) -> None:
                 if not (re.match(r"^\d{4}-\d{2}-\d{2}$", val) or "UNVERIFIED" in val):
                     failures.append(f"GATE-I-05 (STEP-PROVENANCE): Langkah #{idx} memiliki data-step-verified tidak valid: '{val}'.")
 
-    # Gate I-06: localStorage hanya untuk progres centang berawalan gasly_install_ di dalam try/catch
     ls_calls = re.findall(r"localStorage\.(?:setItem|getItem|removeItem)\s*\(\s*([^,\)]+)", scripts)
     for arg_expr in ls_calls:
         cleaned = arg_expr.strip()
@@ -282,7 +273,7 @@ def main() -> int:
     args = parser.parse_args()
 
     failures: list[str] = []
-    has_full_args = Boolean_full = bool(args.contract and args.backend and args.frontend)
+    has_full_args = bool(args.contract and args.backend and args.frontend)
 
     if not has_full_args and not args.install_guide:
         parser.error("Wajib menyertakan (--contract, --backend, --frontend) dan/atau --install-guide.")

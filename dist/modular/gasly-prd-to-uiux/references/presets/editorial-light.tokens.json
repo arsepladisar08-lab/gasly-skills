@@ -42,10 +42,16 @@
       "accentTextOnSolid": "#FFFFFF",
       "successSolid": "#166534",
       "successTextOnSolid": "#FFFFFF",
+      "successSoftBg": "#DCFCE7",
+      "successSoftText": "#14532D",
       "warningSolid": "#F59E0B",
       "warningTextOnSolid": "#1C1917",
+      "warningSoftBg": "#FEF3C7",
+      "warningSoftText": "#78350F",
       "dangerSolid": "#991B1B",
-      "dangerTextOnSolid": "#FFFFFF"
+      "dangerTextOnSolid": "#FFFFFF",
+      "dangerSoftBg": "#FFE4E6",
+      "dangerSoftText": "#881337"
     },
     "dark": {
       "bgBase": "#12100E",
@@ -61,10 +67,16 @@
       "accentTextOnSolid": "#FFFFFF",
       "successSolid": "#15803D",
       "successTextOnSolid": "#FFFFFF",
+      "successSoftBg": "#052E16",
+      "successSoftText": "#86EFAC",
       "warningSolid": "#F59E0B",
       "warningTextOnSolid": "#12100E",
+      "warningSoftBg": "#451A03",
+      "warningSoftText": "#FCD34D",
       "dangerSolid": "#B91C1C",
-      "dangerTextOnSolid": "#FFFFFF"
+      "dangerTextOnSolid": "#FFFFFF",
+      "dangerSoftBg": "#4C0519",
+      "dangerSoftText": "#FDA4AF"
     }
   },
   "contrastPairs": [
@@ -79,7 +91,10 @@
     { "fg": "textHelper", "bg": "bgInteractive", "minRatio": 4.5, "usage": "Byline/metadata on stone hover surface" },
     { "fg": "accentTextOnSolid", "bg": "accentSolid", "minRatio": 4.5, "usage": "Primary terracotta CTA button" },
     { "fg": "successTextOnSolid", "bg": "successSolid", "minRatio": 4.5, "usage": "Success indicator label" },
+    { "fg": "successSoftText", "bg": "successSoftBg", "minRatio": 4.5, "usage": "Success soft badge" },
     { "fg": "warningTextOnSolid", "bg": "warningSolid", "minRatio": 4.5, "usage": "Warning indicator label" },
-    { "fg": "dangerTextOnSolid", "bg": "dangerSolid", "minRatio": 4.5, "usage": "Danger indicator label" }
+    { "fg": "warningSoftText", "bg": "warningSoftBg", "minRatio": 4.5, "usage": "Warning soft badge" },
+    { "fg": "dangerTextOnSolid", "bg": "dangerSolid", "minRatio": 4.5, "usage": "Danger indicator label" },
+    { "fg": "dangerSoftText", "bg": "dangerSoftBg", "minRatio": 4.5, "usage": "Danger soft badge" }
   ]
 }

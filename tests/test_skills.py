@@ -19,6 +19,18 @@ SRC_DESIGN_DIR = ROOT_DIR / "src" / "design"
 
 
 class TestGaslySkillPack(unittest.TestCase):
+    def test_13_prd_template_is_packaged_and_valid(self) -> None:
+        tpl = DIST_DIR / "modular" / "gasly-prd" / "templates" / "TEMPLATE_PRD.md"
+        self.assertTrue(tpl.is_file(), "TEMPLATE_PRD.md must be included in dist/modular/gasly-prd/templates/")
+        content = tpl.read_text(encoding="utf-8")
+        for heading in (
+            "# 1. Ringkasan Produk (Overview)",
+            "# 6. Kebutuhan Fungsional (Functional Requirements)",
+            "# 8. Model Data & Klasifikasi Privasi (High-Level)",
+            "# 12. Pertanyaan Terbuka / TBD",
+            "# 13. Glosarium",
+        ):
+            self.assertIn(heading, content)
     def test_10_audit_contract_scope_and_handoff(self) -> None:
         contract = (ROOT_DIR / "src" / "core" / "contract.md").read_text(encoding="utf-8")
         trust = contract.split("## 9. Batas Kepercayaan Input Eksternal", 1)[1].split("## 10.", 1)[0]

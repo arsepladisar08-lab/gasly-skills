@@ -123,10 +123,16 @@
         "accentTextOnSolid",
         "successSolid",
         "successTextOnSolid",
+        "successSoftBg",
+        "successSoftText",
         "warningSolid",
         "warningTextOnSolid",
+        "warningSoftBg",
+        "warningSoftText",
         "dangerSolid",
-        "dangerTextOnSolid"
+        "dangerTextOnSolid",
+        "dangerSoftBg",
+        "dangerSoftText"
       ],
       "additionalProperties": false,
       "properties": {
@@ -143,10 +149,16 @@
         "accentTextOnSolid": { "$ref": "#/$defs/hexColor" },
         "successSolid": { "$ref": "#/$defs/hexColor" },
         "successTextOnSolid": { "$ref": "#/$defs/hexColor" },
+        "successSoftBg": { "$ref": "#/$defs/hexColor" },
+        "successSoftText": { "$ref": "#/$defs/hexColor" },
         "warningSolid": { "$ref": "#/$defs/hexColor" },
         "warningTextOnSolid": { "$ref": "#/$defs/hexColor" },
+        "warningSoftBg": { "$ref": "#/$defs/hexColor" },
+        "warningSoftText": { "$ref": "#/$defs/hexColor" },
         "dangerSolid": { "$ref": "#/$defs/hexColor" },
-        "dangerTextOnSolid": { "$ref": "#/$defs/hexColor" }
+        "dangerTextOnSolid": { "$ref": "#/$defs/hexColor" },
+        "dangerSoftBg": { "$ref": "#/$defs/hexColor" },
+        "dangerSoftText": { "$ref": "#/$defs/hexColor" }
       }
     }
   }

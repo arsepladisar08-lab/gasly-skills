@@ -1,6 +1,6 @@
 # GASLY SKILLS EVALUATION SUITE (`evals/README.md`)
 **Target Versi KB:** `2.1.0`  
-**Target Versi Skill:** `2.3.0`  
+**Target Versi Skill:** `2.5.0`  
 **Status Hasil Evaluasi Saat Ini:** `NOT RUN` (Belum ada hasil rekaman eksekusi model; jalankan di Gemini, Claude, dan ChatGPT menggunakan rubrik di bawah).
 
 ---

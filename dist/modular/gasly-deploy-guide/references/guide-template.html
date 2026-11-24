@@ -21,244 +21,172 @@
       --accent-text-on-solid: #FFFFFF;
       --success-solid: #047857;
       --success-text-on-solid: #FFFFFF;
+      --success-soft-bg: #DCFCE7;
+      --success-soft-text: #14532D;
       --warning-solid: #B45309;
       --warning-text-on-solid: #FFFFFF;
+      --warning-soft-bg: #FEF3C7;
+      --warning-soft-text: #78350F;
       --danger-solid: #B91C1C;
       --danger-text-on-solid: #FFFFFF;
+      --danger-soft-bg: #FFE4E6;
+      --danger-soft-text: #881337;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
       --radius-sm: 4px;
       --radius-md: 6px;
-      --radius-lg: 8px;
-      --radius-xl: 10px;
-      --grid-base: 4px;
+      --radius-lg: 10px;
+    }
+
+    [data-theme="dark"] {
+      --bg-base: #0B0F19;
+      --bg-surface: #111827;
+      --bg-interactive: #1E293B;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-helper: #94A3B8;
+      --text-disabled: #64748B;
+      --border-subtle: #1E293B;
+      --border-focus: #3B82F6;
+      --accent-solid: #2563EB;
+      --accent-text-on-solid: #FFFFFF;
+      --success-solid: #047857;
+      --success-text-on-solid: #FFFFFF;
+      --success-soft-bg: #052E16;
+      --success-soft-text: #86EFAC;
+      --warning-solid: #F59E0B;
+      --warning-text-on-solid: #0B0F19;
+      --warning-soft-bg: #451A03;
+      --warning-soft-text: #FCD34D;
+      --danger-solid: #DC2626;
+      --danger-text-on-solid: #FFFFFF;
+      --danger-soft-bg: #4C0519;
+      --danger-soft-text: #FDA4AF;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
     }
 
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme="light"]) {
         --bg-base: #0B0F19;
         --bg-surface: #111827;
         --bg-interactive: #1E293B;
         --text-primary: #F8FAFC;
         --text-secondary: #CBD5E1;
         --text-helper: #94A3B8;
-        --text-disabled: #64748B;
         --border-subtle: #1E293B;
         --border-focus: #3B82F6;
         --accent-solid: #2563EB;
-        --accent-text-on-solid: #FFFFFF;
-        --success-solid: #047857;
-        --success-text-on-solid: #FFFFFF;
-        --warning-solid: #F59E0B;
-        --warning-text-on-solid: #0B0F19;
-        --danger-solid: #DC2626;
-        --danger-text-on-solid: #FFFFFF;
+        --success-soft-bg: #052E16;
+        --success-soft-text: #86EFAC;
+        --warning-soft-bg: #451A03;
+        --warning-soft-text: #FCD34D;
+        --danger-soft-bg: #4C0519;
+        --danger-soft-text: #FDA4AF;
       }
     }
 
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background-color: var(--bg-base);
-      color: var(--text-primary);
-      font-family: var(--font-sans);
-      font-size: 14px;
-      line-height: 1.6;
+    body { margin: 0; background-color: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; line-height: 1.6; }
+    .sticky-top {
+      position: sticky; top: 0; z-index: 20;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
     }
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 24px 16px 64px;
-    }
+    .sticky-inner { max-width: 960px; margin: 0 auto; padding: 12px 16px; }
+    .container { max-width: 960px; margin: 0 auto; padding: 20px 16px 64px; }
     .card {
       background-color: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
       padding: 20px;
       margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
     }
-    .header-bar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    h1, h2, h3 {
-      margin: 0 0 8px 0;
-      font-family: var(--font-display);
-      color: var(--text-primary);
-    }
-    h1 { font-size: 24px; font-weight: 700; }
-    h2 { font-size: 18px; font-weight: 600; }
+    .header-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    h1, h2, h3 { margin: 0 0 6px 0; font-family: var(--font-display); color: var(--text-primary); }
+    h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    h2 { font-size: 17px; font-weight: 600; }
     h3 { font-size: 15px; font-weight: 600; }
     p { margin: 0 0 8px 0; color: var(--text-secondary); }
     .helper { font-size: 12px; color: var(--text-helper); }
+    .field-msg { font-size: 11px; min-height: 16px; margin-top: 4px; color: var(--text-helper); }
+    .field-msg.err { color: var(--danger-soft-text); font-weight: 600; }
+    .field-msg.ok { color: var(--success-soft-text); font-weight: 600; }
     .tabular-nums { font-variant-numeric: tabular-nums; }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      font-size: 11px;
-      font-weight: 600;
-      border-radius: var(--radius-sm);
-      background-color: var(--bg-interactive);
-      color: var(--text-primary);
-    }
-    .badge-warn {
-      background-color: var(--warning-solid);
-      color: var(--warning-text-on-solid);
-    }
-    .badge-ok {
-      background-color: var(--success-solid);
-      color: var(--success-text-on-solid);
-    }
-    .grid-form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-    }
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-    }
+    .badge { display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: var(--radius-sm); background-color: var(--bg-interactive); color: var(--text-primary); }
+    .badge-warn { background-color: var(--warning-soft-bg); color: var(--warning-soft-text); }
+    .badge-ok { background-color: var(--success-soft-bg); color: var(--success-soft-text); }
+    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
     input[type="text"], input[type="url"] {
-      width: 100%;
-      min-height: 40px;
-      padding: 8px 10px;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      background-color: var(--bg-base);
-      color: var(--text-primary);
-      font-family: var(--font-mono);
-      font-size: 12px;
+      width: 100%; min-height: 40px; padding: 8px 10px;
+      border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+      background-color: var(--bg-base); color: var(--text-primary);
+      font-family: var(--font-mono); font-size: 12px;
     }
     button {
-      min-height: 40px;
-      min-width: 40px;
-      padding: 8px 14px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-subtle);
-      background-color: var(--bg-interactive);
-      color: var(--text-primary);
-      font-weight: 600;
-      font-size: 12px;
-      cursor: pointer;
+      min-height: 40px; min-width: 40px; padding: 8px 14px;
+      border-radius: var(--radius-md); border: 1px solid var(--border-subtle);
+      background-color: var(--bg-interactive); color: var(--text-primary);
+      font-weight: 600; font-size: 12px; cursor: pointer;
     }
-    button.btn-primary {
-      background-color: var(--accent-solid);
-      color: var(--accent-text-on-solid);
-      border-color: var(--accent-solid);
-    }
-    .progress-track {
-      width: 100%;
-      height: 10px;
-      background-color: var(--bg-interactive);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      margin: 8px 0;
-    }
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background-color: var(--success-solid);
-      transition: width 160ms ease;
-    }
-    .code-wrap {
-      position: relative;
-      margin-top: 8px;
-    }
+    button.btn-primary { background-color: var(--accent-solid); color: var(--accent-text-on-solid); border-color: var(--accent-solid); }
+    .os-tabs { display: inline-flex; gap: 6px; margin-bottom: 8px; }
+    .os-tabs button[aria-selected="true"] { background-color: var(--accent-solid); color: var(--accent-text-on-solid); border-color: var(--accent-solid); }
+    .progress-track { width: 100%; height: 8px; background-color: var(--bg-interactive); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; width: 0%; background-color: var(--success-solid); transition: width 160ms ease; }
+    .code-wrap { margin-top: 8px; }
+    .code-head { display: flex; justify-content: flex-end; margin-bottom: 6px; }
     pre {
-      margin: 0;
-      padding: 12px;
-      border-radius: var(--radius-md);
-      background-color: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
+      margin: 0; padding: 12px; border-radius: var(--radius-md);
+      background-color: var(--bg-base); border: 1px solid var(--border-subtle);
+      color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;
+      overflow-x: auto; white-space: pre-wrap; word-break: break-all;
     }
-    .step-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-    .step-check-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 40px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    .step-check-label input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-    }
-    .meta-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 4px;
-      font-size: 12px;
-      padding: 8px 12px;
-      border-radius: var(--radius-md);
-      background-color: var(--bg-base);
-      margin-bottom: 8px;
-    }
-    details {
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 10px 12px;
-      margin-bottom: 8px;
-      background-color: var(--bg-base);
-    }
-    summary {
-      cursor: pointer;
-      font-weight: 600;
-      min-height: 40px;
-      display: flex;
-      align-items: center;
-    }
-    *:focus-visible {
-      outline: 2px solid var(--border-focus);
-      outline-offset: 2px;
-    }
+    .step-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .step-check-label { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .step-check-label input[type="checkbox"] { width: 20px; height: 20px; }
+    .meta-grid { display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12px; padding: 10px 12px; border-radius: var(--radius-md); background-color: var(--bg-base); margin-bottom: 8px; }
+    .hidden { display: none; }
+    details { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 8px; background-color: var(--bg-base); }
+    summary { cursor: pointer; font-weight: 600; min-height: 40px; display: flex; align-items: center; }
+    *:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+    @media print {
+      .sticky-top .toolbar, button { display: none !important; }
+      body { background: #FFFFFF; color: #000000; }
+      .card { box-shadow: none; break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <main class="container">
-    <header class="card">
+  <header class="sticky-top">
+    <div class="sticky-inner">
       <div class="header-bar">
         <div>
           <h1>Panduan Instalasi &amp; Deployment Gasly</h1>
-          <p class="helper">Mandiri 100% (Offline-Capable) • Tanpa Panggilan Jaringan • Kontrak KB v2.1.0</p>
+          <p class="helper" style="margin:0;">Mandiri 100% (Offline) • Tanpa Panggilan Jaringan • KB v2.1.0</p>
         </div>
-        <div class="tabular-nums">
+        <div class="toolbar tabular-nums">
           <span class="badge" id="progress-badge">0 / 7 Langkah Selesai (0%)</span>
+          <button type="button" id="btn-theme-toggle" aria-label="Ganti mode warna">Mode Gelap</button>
+          <button type="button" id="btn-reset-progress">Reset Progres</button>
+          <button type="button" id="btn-print-guide">Cetak / PDF</button>
         </div>
       </div>
       <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-Wrap">
         <div class="progress-fill" id="progress-bar-fill"></div>
       </div>
-    </header>
+    </div>
+  </header>
 
+  <main class="container">
     <!-- Panel Konfigurasi Live Placeholder Replacement -->
     <section class="card" aria-labelledby="cfg-heading">
       <h2 id="cfg-heading">1. Parameter Konfigurasi Proyek (Live Snippet Filler)</h2>
@@ -267,18 +195,22 @@
         <div>
           <label for="cfg-spreadsheet-id">Spreadsheet ID (<code>{{SPREADSHEET_ID}}</code>)</label>
           <input id="cfg-spreadsheet-id" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+          <div id="msg-spreadsheet-id" class="field-msg" aria-live="polite"></div>
         </div>
         <div>
           <label for="cfg-gas-url">URL Web App /exec (<code>{{GAS_EXEC_URL}}</code>)</label>
           <input id="cfg-gas-url" type="url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+          <div id="msg-gas-url" class="field-msg" aria-live="polite"></div>
         </div>
         <div>
           <label for="cfg-google-client-id">Google Client ID (<code>{{GOOGLE_CLIENT_ID}}</code>)</label>
           <input id="cfg-google-client-id" type="text" placeholder="1234567890-abc.apps.googleusercontent.com">
+          <div id="msg-google-client-id" class="field-msg" aria-live="polite"></div>
         </div>
         <div>
           <label for="cfg-pages-domain">Domain Frontend (<code>{{PAGES_DOMAIN}}</code>)</label>
           <input id="cfg-pages-domain" type="text" placeholder="https://app.contoh.id">
+          <div id="msg-pages-domain" class="field-msg" aria-live="polite"></div>
         </div>
       </div>
       <p id="cfg-validation-msg" class="helper" role="status" aria-live="polite" style="margin-top:8px;">Masukkan nilai konfigurasi untuk memperbarui seluruh snippet di bawah secara otomatis.</p>
@@ -287,13 +219,15 @@
     <!-- Panel Generator Secret Lokal -->
     <section class="card" aria-labelledby="sec-heading">
       <h2 id="sec-heading">2. Pembuat Secret Acak Lokal (Khusus Properti Manual)</h2>
-      <p class="helper">Catatan Penting: <code>AUTH_HMAC_SECRET</code> dan <code>AUTH_PEPPER</code> dibuat otomatis oleh <code>initialSetupDatabase()</code>. Gunakan generator CSPRNG (<code>crypto.getRandomValues</code>) ini HANYA untuk properti manual seperti <code>WEBHOOK_SHARED_SECRET</code> atau nilai awal <code>ADMIN_PASSPHRASE_INIT</code>.</p>
+      <p class="helper">Catatan: <code>AUTH_HMAC_SECRET</code> dan <code>AUTH_PEPPER</code> dibuat otomatis oleh <code>initialSetupDatabase()</code>. Gunakan generator CSPRNG (<code>crypto.getRandomValues</code>) ini HANYA untuk properti manual seperti <code>WEBHOOK_SHARED_SECRET</code> atau nilai awal <code>ADMIN_PASSPHRASE_INIT</code>.</p>
       <div class="header-bar" style="margin-top:8px;">
-        <button type="button" class="btn-primary" id="btn-gen-secret">Buat Secret Acak 32-Karakter</button>
-        <button type="button" id="btn-copy-secret" data-copy-target="generated-secret-output">Salin Secret</button>
+        <div class="toolbar">
+          <button type="button" class="btn-primary" id="btn-gen-secret">Buat Secret Acak 32-Karakter</button>
+          <button type="button" id="btn-copy-secret" data-copy-target="generated-secret-output">Salin Secret</button>
+        </div>
       </div>
-      <pre id="generated-secret-output">[Klik "Buat Secret Acak 32-Karakter" — nilai hanya tampil di memori halaman]</pre>
-      <p class="helper"><span class="badge badge-warn">PERINGATAN</span> Salin sekarang ke Script Properties — nilai ini tidak disimpan dan akan hilang saat halaman dimuat ulang.</p>
+      <pre id="generated-secret-output" style="margin-top:8px;">[Klik "Buat Secret Acak 32-Karakter" — nilai hanya tampil di memori halaman]</pre>
+      <p class="helper" style="margin-top:6px;"><span class="badge badge-warn">PERINGATAN</span> Salin sekarang ke Script Properties — nilai ini tidak disimpan dan akan hilang saat halaman dimuat ulang.</p>
     </section>
 
     <!-- Daftar Langkah Instalasi -->
@@ -317,7 +251,7 @@
           <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/bound" target="_blank" rel="noopener noreferrer">Google Apps Script Bound Scripts</a> (<span class="badge badge-warn">UNVERIFIED</span> — dicatat di <code>VERIFY.md</code> A-12)</div>
         </div>
         <div class="code-wrap">
-          <button type="button" data-copy-target="snippet-step-1">Salin URL</button>
+          <div class="code-head"><button type="button" data-copy-target="snippet-step-1">Salin URL</button></div>
           <pre id="snippet-step-1" data-template="https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit">https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit</pre>
         </div>
       </section>
@@ -361,7 +295,7 @@
           <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/properties" target="_blank" rel="noopener noreferrer">Apps Script Properties Service</a> (<span class="badge badge-warn">UNVERIFIED</span>)</div>
         </div>
         <div class="code-wrap">
-          <button type="button" data-copy-target="snippet-step-3">Salin Daftar Kunci</button>
+          <div class="code-head"><button type="button" data-copy-target="snippet-step-3">Salin Daftar Kunci</button></div>
           <pre id="snippet-step-3" data-template="ACCESS_PROFILE=P4&#10;GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}&#10;ADMIN_PASSPHRASE_INIT=&lt;isi_passphrase_minimal_12_karakter_lalu_jalankan_setupAdminCredentials&gt;&#10;ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;">ACCESS_PROFILE=P4
 GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}
 ADMIN_PASSPHRASE_INIT=&lt;isi_passphrase_minimal_12_karakter_lalu_jalankan_setupAdminCredentials&gt;
@@ -428,7 +362,7 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
           <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/facts.md</code> (<span class="badge badge-ok">2026-11-16</span>)</div>
         </div>
         <div class="code-wrap">
-          <button type="button" data-copy-target="snippet-step-6">Salin Konfigurasi</button>
+          <div class="code-head"><button type="button" data-copy-target="snippet-step-6">Salin Konfigurasi</button></div>
           <pre id="snippet-step-6" data-template="window.GASLY_CONFIG = {&#10;  EXEC_URL: '{{GAS_EXEC_URL}}',&#10;  GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}',&#10;  PUBLIC_ORIGIN: '{{PAGES_DOMAIN}}',&#10;  REQUEST_TIMEOUT_MS: 20000,&#10;  ALLOW_SESSION_STORAGE: false&#10;};">window.GASLY_CONFIG = {
   EXEC_URL: '{{GAS_EXEC_URL}}',
   GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}',
@@ -440,28 +374,36 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
       </section>
 
       <section class="card install-step" data-install-step="step-7"
-        data-step-purpose="Menguji endpoint /exec dengan perintah curl atau Browser Console tanpa memicu CORS preflight."
-        data-step-action="Salin perintah curl di bawah dan jalankan di terminal lokal Anda."
+        data-step-purpose="Menguji endpoint /exec dengan perintah curl atau PowerShell tanpa memicu CORS preflight."
+        data-step-action="Pilih tab OS Anda, salin perintah di bawah, lalu jalankan di terminal lokal."
         data-step-expected="Server mengembalikan JSON Response Envelope kanonik ({ status: 'success' | 'error', code: ... })."
         data-step-source="src/core/contract.md (Seksi 2 &amp; 4)"
         data-step-verified="2026-11-16">
         <div class="step-header">
-          <h3>Langkah 7 — Snippet Uji Koneksi (Salin &amp; Jalankan di Terminal / Console)</h3>
+          <h3>Langkah 7 — Snippet Uji Koneksi (Salin &amp; Jalankan di Terminal)</h3>
           <label class="step-check-label">
             <input type="checkbox" data-step-checkbox="step-7"> Tandai Selesai
           </label>
         </div>
         <div class="meta-grid">
           <div><strong>Tujuan:</strong> Memverifikasi bahwa endpoint <code>{{GAS_EXEC_URL}}</code> merespons dengan JSON Envelope Kanonik setelah mengikuti pengalihan <code>HTTP 302</code>.</div>
-          <div><strong>Aksi:</strong> Salin perintah <code>curl</code> di bawah ini ke terminal Anda (halaman ini tidak melakukan panggilan jaringan).</div>
+          <div><strong>Aksi:</strong> Salin perintah sesuai OS Anda ke terminal lokal (halaman ini tidak melakukan panggilan jaringan).</div>
           <div><strong>Hasil yang Diharapkan:</strong> Menerima JSON dengan kunci <code>status</code> (<code>"success"</code> atau <code>"error"</code>) dan <code>meta.schemaVersion</code>.</div>
           <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/contract.md</code> (<span class="badge badge-ok">2026-11-16</span>)</div>
         </div>
-        <div class="code-wrap">
-          <button type="button" data-copy-target="snippet-step-7">Salin Perintah curl</button>
-          <pre id="snippet-step-7" data-template="curl -sL -X POST '{{GAS_EXEC_URL}}' \&#10;  -H 'Content-Type: text/plain;charset=utf-8' \&#10;  -d '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">curl -sL -X POST '{{GAS_EXEC_URL}}' \
+        <div class="os-tabs" role="tablist" aria-label="Pilih OS terminal">
+          <button type="button" role="tab" aria-selected="true" data-os-tab="unix">macOS / Linux (curl)</button>
+          <button type="button" role="tab" aria-selected="false" data-os-tab="win">Windows (PowerShell)</button>
+        </div>
+        <div class="code-wrap" data-os-panel="unix">
+          <div class="code-head"><button type="button" data-copy-target="snippet-step-7-unix">Salin Perintah curl</button></div>
+          <pre id="snippet-step-7-unix" data-template="curl -sL -X POST '{{GAS_EXEC_URL}}' \&#10;  -H 'Content-Type: text/plain;charset=utf-8' \&#10;  -d '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">curl -sL -X POST '{{GAS_EXEC_URL}}' \
   -H 'Content-Type: text/plain;charset=utf-8' \
   -d '{"action":"items.list","v":1,"auth":null,"idem":null,"payload":{}}'</pre>
+        </div>
+        <div class="code-wrap hidden" data-os-panel="win">
+          <div class="code-head"><button type="button" data-copy-target="snippet-step-7-win">Salin Perintah PowerShell</button></div>
+          <pre id="snippet-step-7-win" data-template="Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;charset=utf-8' -Body '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;charset=utf-8' -Body '{"action":"items.list","v":1,"auth":null,"idem":null,"payload":{}}'</pre>
         </div>
       </section>
     </section>
@@ -500,10 +442,6 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
       var FORBIDDEN_CHARS_RE = /[<>"'\s]/;
       var SECRET_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
-      /**
-       * Validates user configuration inputs without allowing dangerous characters.
-       * Accepts both standard /macros/s/<id>/exec and Workspace /macros/a/<domain>/s/<id>/exec URLs.
-       */
       function validateConfig(configObj) {
         var cfg = configObj && typeof configObj === 'object' ? configObj : {};
         var errors = {};
@@ -562,10 +500,6 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         };
       }
 
-      /**
-       * Pure placeholder substitution function.
-       * Rejects any replacement value containing < > " ' or whitespace.
-       */
       function fillPlaceholders(templateStr, valuesObj) {
         var tpl = String(templateStr === undefined || templateStr === null ? '' : templateStr);
         var vals = valuesObj && typeof valuesObj === 'object' ? valuesObj : {};
@@ -596,9 +530,6 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         });
       }
 
-      /**
-       * Generates a local CSPRNG secret string using crypto.getRandomValues.
-       */
       function generateSecret(length) {
         var len = length === undefined ? 32 : Number(length);
         if (!Number.isInteger(len) || len < 16 || len > 128) {
@@ -617,13 +548,11 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         return out;
       }
 
-      var GaslyGuide = {
+      globalScope.GaslyGuide = {
         fillPlaceholders: fillPlaceholders,
         validateConfig: validateConfig,
         generateSecret: generateSecret
       };
-
-      globalScope.GaslyGuide = GaslyGuide;
 
       function loadChecklistState_() {
         try {
@@ -651,14 +580,10 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         function markCopied() {
           if (!buttonEl) return;
           buttonEl.textContent = 'Tersalin!';
-          setTimeout(function() {
-            buttonEl.textContent = origLabel;
-          }, 1500);
+          setTimeout(function() { buttonEl.textContent = origLabel; }, 1500);
         }
         if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-          navigator.clipboard.writeText(text).then(markCopied).catch(function() {
-            markCopied();
-          });
+          navigator.clipboard.writeText(text).then(markCopied).catch(markCopied);
           return;
         }
         markCopied();
@@ -674,6 +599,13 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         var inputDomain = doc.getElementById('cfg-pages-domain');
         var msgEl = doc.getElementById('cfg-validation-msg');
 
+        var fieldMsgs = {
+          SPREADSHEET_ID: doc.getElementById('msg-spreadsheet-id'),
+          GAS_EXEC_URL: doc.getElementById('msg-gas-url'),
+          GOOGLE_CLIENT_ID: doc.getElementById('msg-google-client-id'),
+          PAGES_DOMAIN: doc.getElementById('msg-pages-domain')
+        };
+
         function refreshSnippets() {
           var currentValues = {
             SPREADSHEET_ID: inputSheet ? inputSheet.value.trim() : '',
@@ -683,23 +615,32 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
           };
 
           var validation = validateConfig(currentValues);
+          Object.keys(fieldMsgs).forEach(function(key) {
+            var el = fieldMsgs[key];
+            if (!el) return;
+            if (validation.errors[key]) {
+              el.className = 'field-msg err';
+              el.textContent = validation.errors[key];
+            } else if (currentValues[key]) {
+              el.className = 'field-msg ok';
+              el.textContent = 'Valid';
+            } else {
+              el.className = 'field-msg';
+              el.textContent = '';
+            }
+          });
+
           if (!validation.valid) {
             var errKeys = Object.keys(validation.errors);
-            if (msgEl) {
-              msgEl.textContent = 'Input ditolak: ' + validation.errors[errKeys[0]];
-            }
+            if (msgEl) msgEl.textContent = 'Input ditolak: ' + validation.errors[errKeys[0]];
             return;
           }
 
-          if (msgEl) {
-            msgEl.textContent = 'Konfigurasi valid. Seluruh snippet telah diperbarui via textContent.';
-          }
-
+          if (msgEl) msgEl.textContent = 'Konfigurasi valid. Seluruh snippet diperbarui aman via textContent.';
           var snippetNodes = doc.querySelectorAll('[data-template]');
           for (var i = 0; i < snippetNodes.length; i++) {
             var node = snippetNodes[i];
-            var tpl = node.getAttribute('data-template') || '';
-            node.textContent = fillPlaceholders(tpl, currentValues);
+            node.textContent = fillPlaceholders(node.getAttribute('data-template') || '', currentValues);
           }
         }
 
@@ -710,22 +651,49 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         var btnGen = doc.getElementById('btn-gen-secret');
         var secretOut = doc.getElementById('generated-secret-output');
         if (btnGen && secretOut) {
-          btnGen.addEventListener('click', function() {
-            secretOut.textContent = generateSecret(32);
-          });
+          btnGen.addEventListener('click', function() { secretOut.textContent = generateSecret(32); });
         }
 
         var copyButtons = doc.querySelectorAll('[data-copy-target]');
         for (var c = 0; c < copyButtons.length; c++) {
           (function(btn) {
             btn.addEventListener('click', function() {
-              var targetId = btn.getAttribute('data-copy-target');
-              var targetEl = doc.getElementById(targetId);
-              if (targetEl) {
-                copyTextSafe_(targetEl.textContent || '', btn);
-              }
+              var targetEl = doc.getElementById(btn.getAttribute('data-copy-target'));
+              if (targetEl) copyTextSafe_(targetEl.textContent || '', btn);
             });
           })(copyButtons[c]);
+        }
+
+        var osTabs = doc.querySelectorAll('[data-os-tab]');
+        var osPanels = doc.querySelectorAll('[data-os-panel]');
+        for (var t = 0; t < osTabs.length; t++) {
+          (function(tab) {
+            tab.addEventListener('click', function() {
+              var selectedOs = tab.getAttribute('data-os-tab');
+              for (var j = 0; j < osTabs.length; j++) {
+                osTabs[j].setAttribute('aria-selected', osTabs[j] === tab ? 'true' : 'false');
+              }
+              for (var p = 0; p < osPanels.length; p++) {
+                var match = osPanels[p].getAttribute('data-os-panel') === selectedOs;
+                osPanels[p].className = match ? 'code-wrap' : 'code-wrap hidden';
+              }
+            });
+          })(osTabs[t]);
+        }
+
+        var btnTheme = doc.getElementById('btn-theme-toggle');
+        if (btnTheme) {
+          btnTheme.addEventListener('click', function() {
+            var rootEl = doc.documentElement;
+            var next = rootEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            rootEl.setAttribute('data-theme', next);
+            btnTheme.textContent = next === 'dark' ? 'Mode Terang' : 'Mode Gelap';
+          });
+        }
+
+        var btnPrint = doc.getElementById('btn-print-guide');
+        if (btnPrint && typeof globalScope.print === 'function') {
+          btnPrint.addEventListener('click', function() { globalScope.print(); });
         }
 
         var checkboxes = doc.querySelectorAll('[data-step-checkbox]');
@@ -744,6 +712,16 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
           if (badge) badge.textContent = done + ' / ' + total + ' Langkah Selesai (' + pct + '%)';
           if (fill) fill.style.width = pct + '%';
           if (wrap) wrap.setAttribute('aria-valuenow', String(pct));
+        }
+
+        var btnReset = doc.getElementById('btn-reset-progress');
+        if (btnReset) {
+          btnReset.addEventListener('click', function() {
+            checkState = {};
+            saveChecklistState_(checkState);
+            for (var r = 0; r < checkboxes.length; r++) checkboxes[r].checked = false;
+            updateProgressUi();
+          });
         }
 
         for (var k = 0; k < checkboxes.length; k++) {

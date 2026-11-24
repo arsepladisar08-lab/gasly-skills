@@ -367,11 +367,13 @@ window.GASLY_CONFIG = {
 
   /**
    * Orchestrates the 5 accessible upload states: idle -> compressing -> uploading -> done | error.
+   * For public uploads (P3), passes { entity, entityId, uploadNonce } to file.ticket.
    */
   async function uploadPhoto(options) {
     var file = options.file;
     var entity = options.entity || 'ITEMS';
     var entityId = options.entityId;
+    var uploadNonce = options.uploadNonce || '';
     var onStateChange = typeof options.onStateChange === 'function' ? options.onStateChange : function() {};
 
     if (!file) {
@@ -386,7 +388,11 @@ window.GASLY_CONFIG = {
       onStateChange('uploading', 'Mengunggah foto ke Google Drive...');
       var ticket = null;
       if (!global.GaslyClient.getSessionToken()) {
-        var ticketRes = await global.GaslyClient.request('file.ticket', {}, { idempotent: false });
+        var ticketRes = await global.GaslyClient.request(
+          'file.ticket',
+          { entity: entity, entityId: entityId, uploadNonce: uploadNonce },
+          { idempotent: false }
+        );
         if (ticketRes.status !== 'success' || !ticketRes.data || !ticketRes.data.ticket) {
           onStateChange('error', ticketRes.message || 'Gagal memperoleh tiket unggah.');
           return ticketRes;
@@ -407,7 +413,7 @@ window.GASLY_CONFIG = {
         { idempotent: true }
       );
 
-      if (uploadRes.status !== 'success') {
+      if (uploadRes.status !== 'success' || uploadRes.code !== 'OK') {
         onStateChange('error', uploadRes.message || 'Gagal mengunggah foto.');
         return uploadRes;
       }
@@ -442,10 +448,11 @@ window.GASLY_CONFIG = {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gasly Operations Portal</title>
-  <!-- Produksi: gunakan <link rel="stylesheet" href="./dist/styles.css"> -->
-  <!-- Prototipe / Sandbox Preview saja: -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./src/preset-tokens.css">
+  <!-- Produksi wajib pakai CSS terkompilasi (jalankan npm run build:css): -->
+  <link rel="stylesheet" href="./dist/styles.css">
+  <!-- Hanya buka komentar di bawah saat prototipe cepat tanpa build step: -->
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+  <!-- <link rel="stylesheet" href="./src/preset-tokens.css"> -->
 </head>
 <body style="background-color: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans);" class="min-h-screen antialiased">
 
@@ -677,12 +684,15 @@ window.GASLY_CONFIG = {
               file: photoFile,
               entity: 'ITEMS',
               entityId: createdItem.id,
+              uploadNonce: createRes.data && createRes.data.uploadNonce,
               onStateChange: function(st, msg) {
                 statusEl.textContent = 'Status foto: ' + msg + ' (' + st + ')';
               }
             });
-            if (!upRes || upRes.status !== 'success') {
+            if (!upRes || upRes.status !== 'success' || upRes.code !== 'OK') {
               window.appShowToast('Data tersimpan, namun unggah foto gagal: ' + ((upRes && upRes.message) || ''), 'error');
+              await window.appLoadItems();
+              return;
             }
           }
 
