@@ -63,7 +63,7 @@ CORE_FILES = [
     "voice-and-brevity.md",
 ]
 OPTIONAL_CORE_FILES = ["facts.md", "hardening-gates-p0.md"]
-DESIGN_DOCS = ["dials.md", "presets.md"]
+DESIGN_DOCS = ["dials.md", "presets.md", "saas-craft.md"]
 GAS_FILES = [
     "config.md",
     "router-and-envelope.md",
@@ -75,15 +75,21 @@ GAS_FILES = [
 ]
 STACK_FILES = [
     "html-tailwind.md",
-    "nextjs-shadcn.md",
-    "astro.md",
-    "INHERIT.md",
-    "PLANNED.md",
+    "react-vite.md",
 ]
 INSTALL_FILES = ["install-steps.md"]
 INSTALL_TEMPLATE_FILES = ["guide-template.html"]
 
-LIFECYCLE_FUNCTIONS = {"doGet", "include", "initialSetupDatabase", "setupAdminCredentials", "runDiagnostics"}
+LIFECYCLE_FUNCTIONS = {
+    "doGet",
+    "include",
+    "onOpen",
+    "setupAppEnvironment",
+    "initialSetupDatabase",
+    "setupAdminCredentials",
+    "setupAdminCredentialsFromUi",
+    "runDiagnostics",
+}
 
 VERSION_PATTERN = re.compile(r"<!--\s*KB_VERSION:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*-->")
 DIGEST_PATTERN = re.compile(
@@ -575,15 +581,10 @@ def main(argv: list[str] | None = None) -> int:
                     shutil.copy2(cf, css_dst / cf.name)
 
             elif skill_slug == "gasly-pro-api":
-                # Lean coordinator bundle: contracts + design direction + stack support (boilerplate owned by specialists)
                 for fname, text in core_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
-                for fname in ("config.md", "integrations.md"):
-                    (mod_ref_dir / fname).write_text(gas_contents[fname], encoding="utf-8")
                 for fname, text in design_doc_contents.items():
                     (mod_ref_dir / fname).write_text(text, encoding="utf-8")
-                for fname in ("INHERIT.md", "PLANNED.md"):
-                    (mod_ref_dir / fname).write_text(stack_contents[fname], encoding="utf-8")
                 shutil.copy2(SRC_DESIGN_DIR / "tokens.schema.json", mod_ref_dir / "tokens.schema.json")
 
             elif skill_slug == "gasly-data":

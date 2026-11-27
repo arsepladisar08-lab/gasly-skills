@@ -61,11 +61,20 @@
         },
         "frontend_stack": {
           "type": "string",
-          "enum": ["html-tailwind", "nextjs+shadcn", "astro", "react-vite", "flutter", "inherit"]
+          "enum": ["html-tailwind", "react", "gas-htmlservice"]
         },
         "hosting_target": {
           "type": "string",
-          "enum": ["gas_htmlservice", "cloudflare_pages", "vercel_pro", "vercel_hobby_noncommercial", "github_pages_demo"]
+          "enum": [
+            "cloudflare_pages",
+            "netlify",
+            "firebase_hosting",
+            "sevalla",
+            "vercel_pro",
+            "vercel_hobby_noncommercial",
+            "github_pages_demo",
+            "gas_htmlservice"
+          ]
         },
         "auth_primary": {
           "type": "string",

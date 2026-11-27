@@ -67,11 +67,12 @@ Buka dan gunakan file referensi berikut saat menyusun panduan instalasi proyek:
 ## 3. ATURAN PENYUSUNAN LANGKAH KONDISIONAL DARI `GASLY_CONTRACT_JSON`
 
 Baca `GASLY_CONTRACT_JSON` (serta daftar file keluaran) dan aktifkan langkah secara spesifik:
-1. **Selalu Aktif (Langkah Inti Backend GAS):**
+1. **Selalu Aktif (Langkah Inti Backend GAS & Interaktivitas Offline):**
+   - Pertahankan struktur interaktif 2-kolom dari `references/guide-template.html` (Sticky Sidebar Stepper + Filter Belum Selesai + Reset Progres, Live Snippet Filler 4 placeholder, `ScriptProperties` Matrix, Stack Switcher `html-tailwind`/`react`, Hosting Switcher 6 platform, serta Multi-OS Test Switcher `cURL`/`PowerShell`/`Browser Console` yang diletakkan pada atribut `data-template` di luar `<script>`).
    - Pembuatan Google Spreadsheet & penyalinan file `.gs` (`setup.gs`, `code.gs`, dll.).
-   - Eksekusi `initialSetupDatabase()` (otomatis membuat sheet, 16 baris seed objek, `AUTH_HMAC_SECRET`, `AUTH_PEPPER`, dan folder Drive).
-   - Pengaturan `ADMIN_PASSPHRASE_INIT` & `ADMIN_PIN_INIT` di `ScriptProperties` $\rightarrow$ eksekusi `setupAdminCredentials()`.
-   - Deployment Web App (`Execute as: Me`, `Who has access: Anyone`) & prosedur update versi baru tanpa mengubah URL `/exec`.
+   - Eksekusi 1-klik **`setupAppEnvironment()`** di toolbar Apps Script (atau menu **Gasly Setup** di Spreadsheet) yang otomatis menjalankan `initialSetupDatabase()`, membuat `AUTH_HMAC_SECRET`/`AUTH_PEPPER`/Drive folder, dan mengecek status kesiapan.
+   - Pengaturan kredensial admin via dialog aman **Gasly Setup > 2. Atur Passphrase & PIN Admin** atau properti sementara `ADMIN_PASSPHRASE_INIT` & `ADMIN_PIN_INIT` $\rightarrow$ `setupAppEnvironment()`.
+   - Deployment Web App (`Execute as: Me`, `Who has access: Anyone`) & kartu peringatan Zero-Downtime Update (**Manage deployments > Edit > New version > Deploy**).
 2. **Kondisional Berdasarkan `architecture.auth_google_enabled` & `access_profile`:**
    - Jika `auth_google_enabled === true`: sertakan langkah pembuatan Google Cloud OAuth 2.0 Web Client ID, pengisian `GOOGLE_CLIENT_ID` di `ScriptProperties`, dan bila menggunakan `P2-lite` sertakan opsi `P2_LITE_AUTO_PROVISION`.
 3. **Kondisional Berdasarkan Integrasi & Entitas:**
@@ -79,7 +80,7 @@ Baca `GASLY_CONTRACT_JSON` (serta daftar file keluaran) dan aktifkan langkah sec
 4. **Kondisional Berdasarkan `surface_profile` / Monetisasi:**
    - Jika `surface_profile` adalah `SAAS_PLATFORM` atau `MARKETPLACE`, atau `auth_google_enabled === true`: wajibkan langkah publikasi halaman `/privacy` (dan `/terms` untuk layanan berbayar) sesuai `references/monetization-and-tiers.md`.
 5. **Kondisional Berdasarkan `architecture.tier` & `hosting_target`:**
-   - Sesuaikan perintah build & variabel environment (`PUBLIC_GAS_EXEC_URL` / `NEXT_PUBLIC_GAS_EXEC_URL` / `window.GASLY_CONFIG.EXEC_URL`) dengan `frontend_stack` dan `hosting_target`.
+   - Sesuaikan perintah build & variabel environment (`VITE_GAS_EXEC_URL` untuk `react` atau `window.GASLY_CONFIG.EXEC_URL` untuk `html-tailwind`) dengan `frontend_stack` dan `hosting_target` (`cloudflare_pages`, `sevalla`, `netlify`, `firebase_hosting`, `vercel_pro`, `vercel_hobby_noncommercial`, atau `github_pages_demo`).
    - **Langkah Edge Relay / Webhook Proxy HANYA ditampilkan jika `architecture.tier` adalah `TIER_2_EDGE_GATEWAY` atau `TIER_3_HYBRID_SAAS`.**
 
 ---

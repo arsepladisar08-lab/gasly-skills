@@ -56,16 +56,18 @@ Workflow yang disarankan: `gasly-start` → `gasly-prd` → `gasly-prd-to-uiux` 
 
 ---
 
-## Dukungan Frontend Stack (`gasly-ui`)
+## Dukungan Full-Stack Minimalis & Target Hosting
 
-- **Adapter Penuh (Tahap 1):**
-  1. `html-tailwind` (pemisahan prototipe Play CDN vs kompilasi CSS CLI produksi)
-  2. `nextjs` + `shadcn` (pembacaan publik saat build/ISR revalidation, penulisan & step-up PIN dari browser)
-  3. `astro` (pembacaan publik saat build-time, penulisan dari *client islands*)
-- **Direncanakan (Tahap Berikutnya — `src/stacks/PLANNED.md`):**
-  - `react` (Vite) + `shadcn`, `nuxtjs` + `nuxt-ui`, serta profil akses `P2` skala penuh (`public-with-accounts` via Supabase Auth; untuk skala ringan pada GAS murni tersedia `P2-lite` melalui `P2_LITE_AUTO_PROVISION` + tabel `USERS`).
-- **Mode Pewarisan Token & Gates (`STACK_MODE: INHERIT` — `src/stacks/INHERIT.md`):**
-  - `angular`, `avalonia`, `flutter`, `javafx`, `jetpack-compose`, `laravel`, `react-native`, `svelte`, `swiftui`, `threejs`, `uno`, `uwp`, `vue`, `winui`, `wpf`.
+Untuk menjaga kualitas kode yang 100% teruji dan bebas dari *maintenance drift*, Gasly kini berfokus pada **3 jalur full-stack kanonik**:
+
+1. **`html-tailwind` (`gasly-ui` + `gasly-data`):** Frontend decoupled ringan (prototipe Play CDN & kompilasi CSS CLI produksi), ideal untuk landing page, form layanan publik, dan pratinjau cepat.
+2. **`react` (`gasly-ui` + `gasly-data`):** SPA React + Vite + TypeScript + Tailwind dengan output statis (`dist/`), ideal untuk SaaS, dashboard interaktif, dan portal internal.
+3. **Monolitik Legacy (`gasly-pro`):** Aplikasi 3-file (`setup.gs`, `code.gs`, `index.html`) berbasis `HtmlService` + `google.script.run` bagi pengguna yang menginginkan 0 hosting eksternal.
+
+- **Target Hosting Frontend Didukung (`src/core/facts.md`):**
+  - **Produksi Komersial:** **Cloudflare Pages** (default gratis), **Sevalla Static Sites**, **Netlify**, **Firebase Hosting**, dan **Vercel Pro**.
+  - **Demo / Personal Non-Komersial:** **GitHub Pages** dan **Vercel Hobby**.
+- **Media Placeholder Eksternal (`Gate W-10`):** Mendukung foto & video dummy dari Unsplash, Pexels, Pixabay, dan Coverr/Mixkit dengan fallback SVG lokal serta kepatuhan `prefers-reduced-motion` (dikecualikan pada `gasly-deploy-guide` yang tetap 100% offline).
 
 ---
 

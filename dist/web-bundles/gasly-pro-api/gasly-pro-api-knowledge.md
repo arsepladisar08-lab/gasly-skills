@@ -2,120 +2,6 @@
 
 
 ---
-<!-- FILE: references/INHERIT.md -->
-<!-- KB_VERSION: 2.1.0 -->
-# TOKEN & GATE INHERITANCE FOR 15 ADDITIONAL STACKS (`stacks/INHERIT.md`)
-**KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-prd` dan `gasly-ui` ketika pengguna meminta salah satu dari 15 stack pewaris (*inheriting stacks*).
-
-## Daftar Isi
-1. [Daftar 15 Stack Pewaris Resmi](#1-daftar-15-stack-pewaris-resmi)
-2. [Kontrak yang Diwarisi oleh Seluruh 15 Stack](#2-kontrak-yang-diwarisi-oleh-seluruh-15-stack)
-3. [Matriks Adaptasi Teknis per Kelompok Stack](#3-matriks-adaptasi-teknis-per-kelompok-stack)
-
----
-
-## 1. Daftar 15 Stack Pewaris Resmi
-
-Kelima belas stack berikut tidak memiliki file boilerplate adapter khusus pada tahap ini, tetapi **didukung melalui mode pewarisan (`STACK_MODE: INHERIT`)** dengan mewarisi kontrak protokol `/exec`, token desain JSON/CSS, karakter 3 dials, serta gerbang kualitas:
-
-1. `angular`
-2. `avalonia`
-3. `flutter`
-4. `javafx`
-5. `jetpack-compose`
-6. `laravel`
-7. `react-native`
-8. `svelte`
-9. `swiftui`
-10. `threejs`
-11. `uno`
-12. `uwp`
-13. `vue`
-14. `winui`
-15. `wpf`
-
----
-
-## 2. Kontrak yang Diwarisi oleh Seluruh 15 Stack
-
-Ketika membangun pada salah satu dari 15 stack di atas, agen wajib menerapkan 4 kontrak inti berikut tanpa pengecualian:
-
-1. **Kontrak Komunikasi (`references/contract.md`):**
-   - Hanya menggunakan satu konfigurasi URL Web App publik (`.../exec`).
-   - Mengirim permintaan `POST` dengan `Content-Type: text/plain;charset=utf-8`, mengikuti pengalihan `HTTP 302` (`followRedirects = true`), membungkus payload `{ action, v: 1, auth, idem, payload }`, dan hanya melakukan retry pada aksi yang memiliki kunci `idem` atau aksi baca.
-2. **Kontrak Gambar Drive (`driveImageUrl`):**
-   - Mengambil gambar menggunakan `https://drive.google.com/thumbnail?id=<fileId>&sz=w<width>` dengan fallback otomatis ke `https://lh3.googleusercontent.com/d/<fileId>=w<width>`.
-   - Mengompres foto di sisi client ke sekitar `<= 1 MB` sebelum mengirim base64 ke `file.upload` dengan 5 state (`idle`, `compressing`, `uploading`, `error`, `done`).
-3. **Kontrak Token Desain & Preset (`references/presets/<preset>.tokens.json`):**
-   - Mengambil nilai hex dari `modes.light` dan `modes.dark` pada file JSON preset yang dipilih (`aura`, `editorial-light`, `dense-dashboard`, `warm-friendly`) sehingga seluruh pasangan teks dan latar tetap lulus kontras **WCAG AA (>= 4,5:1)**.
-4. **Kontrak Gerbang Kualitas (`references/gates.md`):**
-   - Seluruh 15 stack wajib mematuhi seluruh gerbang **`UNIVERSAL` (`U-01` s/d `U-09`)**.
-   - Stack berbasis web (`angular`, `laravel`, `svelte`, `threejs`, `vue`) wajib mematuhi seluruh gerbang **`WEB-ONLY` (`W-01` s/d `W-08`)**.
-
----
-
-## 3. Matriks Adaptasi Teknis per Kelompok Stack
-
-| Kelompok Stack | Anggota Stack | Cara Konsumsi Token Desain | Aturan HTTP Client ke `/exec` & Penyimpanan Token |
-| :--- | :--- | :--- | :--- |
-| **Web Frameworks & 3D Web** | `angular`, `laravel`, `svelte`, `threejs`, `vue` | Impor langsung `references/css/<preset>.css` (`var(--bg-base)`, dll.). Untuk `threejs`, gunakan UI overlay HTML/CSS di atas `<canvas>` untuk form/tabel dan ambil warna scene dari JSON token. | Gunakan `fetch` dengan `Content-Type: text/plain;charset=utf-8` dan `redirect: "follow"`.(Pada `laravel`, pemanggilan dari PHP `Http::withOptions(['allow_redirects' => true])` juga didukung untuk bacaan server). Simpan token di memori state aplikasi. |
-| **Mobile & Cross-Platform Native** | `flutter`, `react-native`, `jetpack-compose`, `swiftui` | Petakan `modes.light` dan `modes.dark` dari `<preset>.tokens.json` ke objek tema native (`ThemeData`, `StyleSheet`, `MaterialTheme`, `Color`). | Pastikan HTTP client (`http`/`dio`, `OkHttp`, `URLSession`) mengikuti redirect `302` pada request `POST` (atau tangani redirect manual bila library mengubah `POST` menjadi `GET` saat `302`). Simpan session token di memori (atau Keychain/EncryptedSharedPreferences bila sesi perlu dipertahankan). |
-| **Desktop .NET & JVM** | `avalonia`, `uno`, `uwp`, `winui`, `wpf`, `javafx` | Petakan nilai hex dari `<preset>.tokens.json` ke `ResourceDictionary` XAML (`SolidColorBrush`) atau stylesheet CSS JavaFX. | Pada `.NET HttpClient` / Java `HttpClient`, aktifkan pengikutan redirect dan kirim body JSON sebagai `StringContent(json, Encoding.UTF8, "text/plain")`. Simpan session token di variabel memori proses aplikasi. |
-
-
----
-<!-- FILE: references/PLANNED.md -->
-<!-- KB_VERSION: 2.1.0 -->
-# PLANNED FEATURES & NEXT-STAGE ROADMAP (`stacks/PLANNED.md`)
-**KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-prd`, `gasly-data`, dan `gasly-ui` ketika pengguna menanyakan fitur atau adapter yang dijadwalkan untuk tahap pengembangan berikutnya.
-
-## Daftar Isi
-1. [Status Item `PLANNED` (Dokumentasi Saja — Jangan Diimplementasikan Sebagai Fitur Matang)](#1-status-item-planned-dokumentasi-saja--jangan-diimplementasikan-sebagai-fitur-matang)
-2. [Access Profile `P2` (`public-with-accounts` via Supabase Auth)](#2-access-profile-p2-public-with-accounts-via-supabase-auth)
-3. [Adapter Penuh Tahap Berikutnya (`react-vite+shadcn` & `nuxtjs+nuxt-ui`)](#3-adapter-penuh-tahap-berikutnya-react-viteshadcn--nuxtjsnuxt-ui)
-4. [Ekspor Token Otomatis untuk Stack Native & Desktop](#4-ekspor-token-otomatis-untuk-stack-native--desktop)
-
----
-
-## 1. Status Item `PLANNED` (Dokumentasi Saja — Jangan Diimplementasikan Sebagai Fitur Matang)
-
-Item yang tercantum di dalam dokumen ini berstatus **`PLANNED` (Direncanakan untuk Tahap Berikutnya)**.
-- Agen tidak boleh mengklaim bahwa fitur-fitur di bawah ini sudah tersedia sebagai boilerplate siap pakai di repositori saat ini.
-- Apabila pengguna meminta salah satu item di bawah ini, jelaskan statusnya secara transparan dan tawarkan jalur alternatif yang sudah didukung penuh pada tahap ini.
-
----
-
-## 2. Access Profile `P2` (`public-with-accounts` via Supabase Auth)
-
-- **Tujuan:** Mengizinkan ribuan pengguna publik mendaftar mandiri, melakukan reset kata sandi, dan hanya membaca/mengubah baris data milik mereka sendiri (*row-level ownership*).
-- **Mengapa Ditunda ke Tahap Berikutnya:** Google Apps Script dan Google Sheets tidak dirancang sebagai penyedia identitas publik berskala besar (kuota pengiriman email harian terbatas dan latensi Sheet meningkat pada tabel pengguna besar). Rencana tahap berikutnya adalah mengintegrasikan **Supabase Auth** sebagai penyedia identitas eksternal sementara data bisnis tetap disimpan di Google Sheets/Drive.
-- **Alternatif Saat Ini (Sudah Didukung di v2.3.0):**
-  - Gunakan **`P2-lite`** pada `gasly-data` (`P2_LITE_AUTO_PROVISION = 'TRUE'` di `ScriptProperties` bersama `auth.google` dan tabel `USERS` berklasifikasi `SENSITIVE_PII`) untuk pendaftaran mandiri ber-rate-limit (maks. 10/10 menit) tanpa menguras kuota `MailApp`, dilengkapi pengaturan passphrase/PIN via `auth.setCredentials` dan step-up PIN 6 digit via `auth.verifyPin`.
-  - Gunakan **`P3` (`public-plus-admin`)** jika pengunjung publik hanya perlu mengirim formulir/unggah bukti (dengan tiket sekali pakai `file.ticket`) dan melacak status menggunakan `tracking_token`, sementara persetujuan dilakukan oleh Admin.
-  - Gunakan **`P4` (`internal-only`)** dengan login multi-user `USERS` (`auth.login`) atau Google ID Token (`auth.google` + sheet `USERS`/`ALLOWLIST`) jika seluruh pengguna adalah anggota tim atau mitra terdaftar.
-
----
-
-## 3. Adapter Penuh Tahap Berikutnya (`react-vite+shadcn` & `nuxtjs+nuxt-ui`)
-
-1. **`react` (Vite) + `shadcn/ui` (`PLANNED`):**
-   - Direncanakan sebagai adapter penuh SPA murni untuk dashboard internal tanpa kebutuhan SSR/ISR.
-   - *Solusi Saat Ini:* Gunakan adapter penuh **`nextjs` + `shadcn`** (dapat dijalankan dalam mode statis/CSR maupun SSR) atau **`html-tailwind`**. Jika pengguna tetap memilih Vite + React, gunakan aturan pewarisan di `references/INHERIT.md` bersama modul `gasClient.ts` dan `ImageUploader.tsx` dari `references/nextjs-shadcn.md`.
-2. **`nuxtjs` + `nuxt-ui` (`PLANNED`):**
-   - Direncanakan sebagai adapter penuh ekosistem Vue/Nuxt dengan dukungan pembacaan publik saat build/SSR.
-   - *Solusi Saat Ini:* Gunakan adapter penuh **`astro`** atau **`nextjs` + `shadcn`**, atau bangun di atas Vue/Nuxt menggunakan mode pewarisan `STACK_MODE: INHERIT` (`references/INHERIT.md`).
-
----
-
-## 4. Ekspor Token Otomatis untuk Stack Native & Desktop
-
-- **Rencana Tahap Berikutnya:** Menambahkan skrip generator yang mengonversi `src/design/presets/*.tokens.json` secara otomatis menjadi file kode tema siap impor untuk SwiftUI (`Color+Gasly.swift`), Jetpack Compose (`Color.kt`), Flutter (`gasly_theme.dart`), dan .NET XAML (`GaslyColors.xaml`).
-- **Solusi Saat Ini:** Agen yang membangun pada stack native/desktop dalam mode `INHERIT` membaca langsung nilai hex terverifikasi WCAG AA dari file `src/design/presets/<preset>.tokens.json`.
-
-
----
 <!-- FILE: references/access-profiles.md -->
 <!-- KB_VERSION: 2.1.0 -->
 # ACCESS PROFILES & AUTHENTICATION ARCHITECTURE (`core/access-profiles.md`)
@@ -217,439 +103,6 @@ Dalam arsitektur *decoupled frontend* yang memanggil `script.google.com/.../exec
 
 
 ---
-<!-- FILE: references/config.md -->
-<!-- KB_VERSION: 2.1.0 -->
-# APPS SCRIPT CONFIGURATION, SCHEMA & DEPLOYMENT (`gas/config.md`)
-**KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Selalu dimuat oleh `gasly-data`.
-
-## Daftar Isi
-1. [Konstanta Arsitektur & Penyimpanan `ScriptProperties`](#1-konstanta-arsitektur--penyimpanan-scriptproperties)
-2. [Boilerplate `setup.gs` (Idempoten, Timezone, Passphrase Hash & Seed)](#2-boilerplate-setupgs-idempoten-timezone-passphrase-hash--seed)
-3. [Prosedur Pembaruan Deployment Tanpa Mengubah URL `/exec`](#3-prosedur-pembaruan-deployment-tanpa-mengubah-url-exec)
-
----
-
-## 1. Konstanta Arsitektur & Penyimpanan `ScriptProperties`
-
-Seluruh rahasia dan parameter konfigurasi lingkungan disimpan di dalam `PropertiesService.getScriptProperties()`, tidak pernah di dalam kode frontend maupun di dalam sel Google Sheets:
-
-| Kunci `ScriptProperties` | Tujuan | Contoh Nilai / Default |
-| :--- | :--- | :--- |
-| `SCHEMA_VERSION` | Melacak versi struktur kolom Sheet untuk migrasi non-destruktif. | `"1.0.0"` |
-| `ACCESS_PROFILE` | Profil akses aplikasi (`P1`, `P3`, atau `P4`). | `"P3"` |
-| `AUTH_HMAC_SECRET` | Kunci rahasia 32-byte (base64url) untuk menandatangani session token HMAC-SHA256. | Dibuat otomatis saat `initialSetupDatabase()` |
-| `AUTH_PEPPER` | Rahasia tambahan di server untuk *salted iterated passphrase hashing*. | Dibuat otomatis saat `initialSetupDatabase()` |
-| `ADMIN_PASSPHRASE_SALT` | Salt acak 16-byte (base64url) untuk passphrase admin. | Dibuat oleh `configureAdminPassphrase_()` |
-| `ADMIN_PASSPHRASE_HASH` | Hash hasil iterasi SHA-256 dari passphrase admin (minimal 12 karakter). | Dibuat oleh `configureAdminPassphrase_()` |
-| `ADMIN_PASSPHRASE_ITER` | Jumlah iterasi SHA-256 (default `2000`). | `"2000"` |
-| `SESSION_TTL_SECONDS` | Masa berlaku session token dalam detik (default 2 jam). | `"7200"` |
-| `LOCKOUT_THRESHOLD` | Jumlah maksimum gagal login berturut-turut per akun sebelum dikunci. | `"5"` |
-| `LOCKOUT_DURATION_SEC` | Durasi penguncian akun setelah melewati batas gagal login (15 menit). | `"900"` |
-| `GOOGLE_CLIENT_ID` | OAuth 2.0 Web Client ID jika fitur login Google (`auth.google`) diaktifkan. | `"<opsional>.apps.googleusercontent.com"` |
-| `DRIVE_ROOT_FOLDER_ID` | ID folder Google Drive induk tempat file unggahan (`ROOT/<entity>/<yyyy-mm>`) disimpan. | Dibuat/diisi saat setup |
-| `MAX_UPLOAD_BYTES` | Batas ukuran byte file hasil decode pada `file.upload` (default 5 MB). | `"5242880"` |
-| `WEBHOOK_SHARED_SECRET` | Rahasia bersama untuk memverifikasi payload dari proxy webhook pembayaran. | `"<opsional>"` |
-| `P2_LITE_AUTO_PROVISION` | Mengizinkan pembuatan baris `STAFF` otomatis pada sheet `USERS` saat login `auth.google` (`P2-lite`). | `"FALSE"` |
-| `ADMIN_PASSPHRASE_INIT` | Passphrase admin awal minimal 12 karakter (sementara, dihapus otomatis oleh `setupAdminCredentials()`). | `"<sementara, dihapus otomatis>"` |
-| `ADMIN_PIN_INIT` | PIN step-up admin 6 digit angka (sementara, dihapus otomatis oleh `setupAdminCredentials()`). | `"<sementara, dihapus otomatis>"` |
-
----
-
-## 2. Boilerplate `setup.gs` (Idempoten, Timezone, Passphrase Hash & Seed)
-
-```javascript
-// FILE: setup.gs
-// Runtime: Google Apps Script V8
-
-var SCHEMA_VERSION = '1.1.0';
-var DEFAULT_TZ = 'Asia/Jakarta';
-var ACCESS_PROFILE = 'P3'; // 'P1' | 'P3' | 'P4'
-
-var DB_SCHEMAS = {
-  ITEMS: [
-    'id',
-    'created_at',
-    'updated_at',
-    'title',
-    'category',
-    'amount',
-    'status',
-    'file_id',
-    'file_url',
-    'upload_nonce',
-    'is_seed'
-  ],
-  ALLOWLIST: [
-    'email',
-    'role',
-    'status',
-    'created_at'
-  ],
-  USERS: [
-    'id',
-    'email',
-    'name',
-    'role',
-    'status',
-    'password_salt',
-    'password_hash',
-    'pin_salt',
-    'pin_hash',
-    'created_at',
-    'updated_at'
-  ],
-  PLANS: [
-    'id',
-    'plan_code',
-    'name',
-    'price_amount',
-    'billing_period',
-    'max_quota',
-    'features_json',
-    'status',
-    'updated_at',
-    'is_seed'
-  ],
-  SUBSCRIPTIONS: [
-    'id',
-    'user_email',
-    'plan_code',
-    'status',
-    'period_start',
-    'period_end',
-    'external_invoice_id',
-    'provider_event_id',
-    'created_at',
-    'updated_at',
-    'is_seed'
-  ]
-};
-
-var DB_CLASSIFICATIONS = {
-  ITEMS: 'CONFIDENTIAL',
-  ALLOWLIST: 'INTERNAL',
-  USERS: 'SENSITIVE_PII',
-  PLANS: 'PUBLIC',
-  SUBSCRIPTIONS: 'CONFIDENTIAL'
-};
-
-/**
- * Generates cryptographic web-safe base64 string for secrets and salts
- * using multiple CSPRNG UUIDv4 rounds (Zero Math.random()).
- */
-function generateRandomSecret_(byteLength) {
-  var targetLen = byteLength || 32;
-  var entropyPool = [];
-  var rounds = Math.ceil(targetLen / 16) + 2;
-  for (var i = 0; i < rounds; i++) {
-    entropyPool.push(Utilities.getUuid());
-  }
-  var raw = Utilities.computeDigest(
-    Utilities.DigestAlgorithm.SHA_256,
-    entropyPool.join(':')
-  );
-  var encoded = Utilities.base64EncodeWebSafe(raw).replace(/=+$/, '');
-  while (encoded.length < targetLen) {
-    var extra = Utilities.computeDigest(
-      Utilities.DigestAlgorithm.SHA_256,
-      encoded + ':' + Utilities.getUuid()
-    );
-    encoded += Utilities.base64EncodeWebSafe(extra).replace(/=+$/, '');
-  }
-  return encoded.slice(0, targetLen);
-}
-
-/**
- * Maps a record object to an ordered row array matching expectedHeaders (Gate G-12).
- * Prevents setValues() column count mismatch during non-destructive schema migrations.
- */
-function buildRowFromObject_(expectedHeaders, recordObj) {
-  return expectedHeaders.map(function(col) {
-    var val = recordObj[col];
-    return val === undefined || val === null ? '' : val;
-  });
-}
-
-/**
- * Idempotent database and ScriptProperties initializer.
- * Kept public (no trailing underscore) so the owner can run it from the GAS IDE toolbar.
- */
-function initialSetupDatabase() {
-  var lock = LockService.getScriptLock();
-  if (!lock.tryLock(10000)) {
-    throw new Error('Setup is currently locked by another process. Please retry.');
-  }
-
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var props = PropertiesService.getScriptProperties();
-    var tz = Session.getScriptTimeZone() || DEFAULT_TZ;
-
-    // 1. Align Spreadsheet timezone with Script timezone
-    if (ss.getSpreadsheetTimeZone() !== tz) {
-      ss.setSpreadsheetTimeZone(tz);
-    }
-
-    // 2. Initialize cryptographic secrets and default config in ScriptProperties if unset
-    if (!props.getProperty('AUTH_HMAC_SECRET')) {
-      props.setProperty('AUTH_HMAC_SECRET', generateRandomSecret_(32));
-    }
-    if (!props.getProperty('AUTH_PEPPER')) {
-      props.setProperty('AUTH_PEPPER', generateRandomSecret_(32));
-    }
-    if (!props.getProperty('ACCESS_PROFILE')) {
-      props.setProperty('ACCESS_PROFILE', ACCESS_PROFILE);
-    }
-    if (!props.getProperty('SESSION_TTL_SECONDS')) {
-      props.setProperty('SESSION_TTL_SECONDS', '7200');
-    }
-    if (!props.getProperty('LOCKOUT_THRESHOLD')) {
-      props.setProperty('LOCKOUT_THRESHOLD', '5');
-    }
-    if (!props.getProperty('LOCKOUT_DURATION_SEC')) {
-      props.setProperty('LOCKOUT_DURATION_SEC', '900');
-    }
-    if (!props.getProperty('MAX_UPLOAD_BYTES')) {
-      props.setProperty('MAX_UPLOAD_BYTES', '5242880');
-    }
-
-    // 3. Create or migrate sheets non-destructively
-    Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
-      var expectedHeaders = DB_SCHEMAS[sheetName];
-      var sheet = ss.getSheetByName(sheetName);
-      if (!sheet) {
-        sheet = ss.insertSheet(sheetName);
-      }
-
-      if (sheet.getLastRow() === 0) {
-        sheet.getRange(1, 1, 1, expectedHeaders.length)
-          .setValues([expectedHeaders])
-          .setFontWeight('bold')
-          .setBackground('#F1F5F9');
-        sheet.setFrozenRows(1);
-      } else {
-        var lastCol = sheet.getLastColumn();
-        var currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) {
-          return String(h || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
-        });
-        expectedHeaders.forEach(function(reqHeader) {
-          if (currentHeaders.indexOf(reqHeader) === -1) {
-            lastCol += 1;
-            sheet.getRange(1, lastCol).setValue(reqHeader).setFontWeight('bold').setBackground('#F1F5F9');
-          }
-        });
-      }
-    });
-
-    // 4. Seed 16 historical rows using Schema-Driven Object Mapping (Gate G-12)
-    var itemsSheet = ss.getSheetByName('ITEMS');
-    if (itemsSheet.getLastRow() <= 1 && props.getProperty('SEED_INITIALIZED') !== 'TRUE') {
-      var now = new Date();
-      var dayOffsets = [0, 0, 1, 1, 2, 3, 4, 6, 7, 9, 12, 15, 18, 21, 25, 29];
-      var categories = ['Operasional', 'Pemasaran', 'Infrastruktur', 'Lisensi'];
-      var statuses = ['ACTIVE', 'ACTIVE', 'COMPLETED', 'PENDING'];
-      var seqByDay = {};
-      var seedObjects = [];
-
-      for (var i = 0; i < dayOffsets.length; i++) {
-        var d = new Date(now.getTime() - dayOffsets[i] * 86400000);
-        var ymd = Utilities.formatDate(d, tz, 'yyyyMMdd');
-        var isoOffset = Utilities.formatDate(d, tz, "yyyy-MM-dd'T'HH:mm:ssXXX");
-        seqByDay[ymd] = (seqByDay[ymd] || 0) + 1;
-        var seqStr = ('0000' + seqByDay[ymd]).slice(-4);
-
-        seedObjects.push({
-          id: 'SEED-' + ymd + '-' + seqStr,
-          created_at: isoOffset,
-          updated_at: isoOffset,
-          title: 'Contoh Transaksi #' + (i + 1),
-          category: categories[i % categories.length],
-          amount: (i + 1) * 125000,
-          status: statuses[i % statuses.length],
-          file_id: '',
-          file_url: '',
-          upload_nonce: '',
-          is_seed: 'TRUE'
-        });
-      }
-
-      var activeHeaders = itemsSheet.getRange(1, 1, 1, itemsSheet.getLastColumn()).getValues()[0];
-      var seedRows = seedObjects.map(function(obj) {
-        return buildRowFromObject_(activeHeaders, obj);
-      });
-      itemsSheet.getRange(2, 1, seedRows.length, activeHeaders.length).setValues(seedRows);
-      props.setProperty('SEED_INITIALIZED', 'TRUE');
-    }
-
-    var plansSheet = ss.getSheetByName('PLANS');
-    if (plansSheet && plansSheet.getLastRow() <= 1) {
-      var nowPlanIso = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd'T'HH:mm:ssXXX");
-      var planYmd = Utilities.formatDate(new Date(), tz, 'yyyyMMdd');
-      var planHeaders = plansSheet.getRange(1, 1, 1, plansSheet.getLastColumn()).getValues()[0];
-      var planSeedObjects = [
-        {
-          id: 'SEED-' + planYmd + '-0001',
-          plan_code: 'STARTER',
-          name: 'Starter Plan',
-          price_amount: 149000,
-          billing_period: 'MONTHLY',
-          max_quota: 50,
-          features_json: '["50 Transaksi/Bulan","Dukungan Email"]',
-          status: 'ACTIVE',
-          updated_at: nowPlanIso,
-          is_seed: 'TRUE'
-        },
-        {
-          id: 'SEED-' + planYmd + '-0002',
-          plan_code: 'PRO',
-          name: 'Pro SaaS Plan',
-          price_amount: 490000,
-          billing_period: 'MONTHLY',
-          max_quota: 1000,
-          features_json: '["1.000 Transaksi/Bulan","Upload Drive & AI"]',
-          status: 'ACTIVE',
-          updated_at: nowPlanIso,
-          is_seed: 'TRUE'
-        }
-      ];
-      var planRows = planSeedObjects.map(function(obj) {
-        return buildRowFromObject_(planHeaders, obj);
-      });
-      plansSheet.getRange(2, 1, planRows.length, planHeaders.length).setValues(planRows);
-    }
-
-    // 5. Ensure a root Drive folder exists for uploads if not yet configured
-    if (!props.getProperty('DRIVE_ROOT_FOLDER_ID')) {
-      var folder = DriveApp.createFolder('Gasly_App_Uploads_' + ss.getId().slice(0, 6));
-      props.setProperty('DRIVE_ROOT_FOLDER_ID', folder.getId());
-    }
-
-    props.setProperty('SCHEMA_VERSION', SCHEMA_VERSION);
-    SpreadsheetApp.flush();
-    return { status: 'success', schemaVersion: SCHEMA_VERSION };
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-/**
- * Sets or rotates the admin passphrase from the GAS Editor.
- * Edit the test passphrase inside a one-time helper or pass via manual call in the IDE,
- * then clear any temporary caller function so plaintext never remains in code.
- */
-function configureAdminPassphrase_(newPassphrase) {
-  if (typeof newPassphrase !== 'string' || newPassphrase.trim().length < 12) {
-    throw new Error('Admin passphrase must be at least 12 characters long.');
-  }
-  var props = PropertiesService.getScriptProperties();
-  var pepper = props.getProperty('AUTH_PEPPER');
-  if (!pepper) {
-    pepper = generateRandomSecret_(32);
-    props.setProperty('AUTH_PEPPER', pepper);
-  }
-  var salt = generateRandomSecret_(16);
-  var iterations = 2000;
-  var hash = computeIteratedHash_(newPassphrase.trim(), salt, pepper, iterations);
-
-  props.setProperties({
-    ADMIN_PASSPHRASE_SALT: salt,
-    ADMIN_PASSPHRASE_HASH: hash,
-    ADMIN_PASSPHRASE_ITER: String(iterations)
-  });
-  return { status: 'success', message: 'Admin passphrase hash stored in ScriptProperties.' };
-}
-
-/**
- * Sets or rotates the 6-digit step-up PIN for the bootstrap 'admin' account in ScriptProperties.
- */
-function configureAdminPin_(newPin) {
-  var cleanPin = String(newPin || '').trim();
-  if (!/^\d{6}$/.test(cleanPin)) {
-    throw new Error('Admin step-up PIN must be exactly 6 digits.');
-  }
-  var props = PropertiesService.getScriptProperties();
-  var pepper = props.getProperty('AUTH_PEPPER');
-  if (!pepper) {
-    pepper = generateRandomSecret_(32);
-    props.setProperty('AUTH_PEPPER', pepper);
-  }
-  var iterations = Number(props.getProperty('ADMIN_PASSPHRASE_ITER') || 2000);
-  var pinSalt = generateRandomSecret_(16);
-  var pinHash = computeIteratedHash_(cleanPin, pinSalt, pepper, iterations);
-  props.setProperties({
-    ADMIN_PIN_SALT: pinSalt,
-    ADMIN_PIN_HASH: pinHash
-  });
-  return { status: 'success', message: 'Admin step-up PIN hash stored in ScriptProperties.' };
-}
-
-/**
- * Public zero-argument initializer for bootstrap admin credentials from the GAS IDE toolbar.
- * Reads temporary ScriptProperties ADMIN_PASSPHRASE_INIT and ADMIN_PIN_INIT,
- * delegates to configureAdminPassphrase_ / configureAdminPin_, and ALWAYS deletes
- * both temporary properties (including when validation fails). Never logs or returns secret values.
- */
-function setupAdminCredentials() {
-  var props = PropertiesService.getScriptProperties();
-  var rawPassphrase = props.getProperty('ADMIN_PASSPHRASE_INIT');
-  var rawPin = props.getProperty('ADMIN_PIN_INIT');
-
-  try {
-    if (
-      (rawPassphrase === null || rawPassphrase === undefined || rawPassphrase === '') &&
-      (rawPin === null || rawPin === undefined || rawPin === '')
-    ) {
-      throw new Error('Set ADMIN_PASSPHRASE_INIT and/or ADMIN_PIN_INIT in ScriptProperties before running setupAdminCredentials().');
-    }
-
-    var passphraseConfigured = false;
-    var pinConfigured = false;
-
-    if (rawPassphrase !== null && rawPassphrase !== undefined && rawPassphrase !== '') {
-      configureAdminPassphrase_(rawPassphrase);
-      passphraseConfigured = true;
-    }
-
-    if (rawPin !== null && rawPin !== undefined && rawPin !== '') {
-      configureAdminPin_(rawPin);
-      pinConfigured = true;
-    }
-
-    return {
-      status: 'success',
-      code: 'OK',
-      data: {
-        passphraseConfigured: passphraseConfigured,
-        pinConfigured: pinConfigured
-      },
-      message: 'Admin credentials configured and temporary init properties deleted.'
-    };
-  } finally {
-    props.deleteProperty('ADMIN_PASSPHRASE_INIT');
-    props.deleteProperty('ADMIN_PIN_INIT');
-  }
-}
-```
-
----
-
-## 3. Prosedur Pembaruan Deployment Tanpa Mengubah URL `/exec`
-
-1. **Deployment Pertama Kali:**
-   - Di editor Google Apps Script, klik **Deploy > New deployment**.
-   - Pilih jenis **Web app**.
-   - Setel **Execute as: Me** (pemilik skrip).
-   - Setel **Who has access: Anyone** (agar request `POST` `text/plain` lintas domain dari aplikasi frontend tidak diblokir halaman login HTML Google).
-   - Salin URL `https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec` ke konfigurasi frontend.
-2. **Pembaruan Kode Berikutnya (URL Tetap):**
-   - Klik **Deploy > Manage deployments**.
-   - Pilih deployment aktif, lalu klik ikon **Edit (pensil)**.
-   - Pada dropdown **Version**, pilih **New version**, lalu klik **Deploy**.
-   - Dengan cara ini, `<DEPLOYMENT_ID>` dan URL `/exec` tidak berubah sehingga aplikasi frontend yang sudah ter-deploy tidak perlu dibangun ulang.
-
-
----
 <!-- FILE: references/contract.md -->
 <!-- KB_VERSION: 2.1.0 -->
 # GASLY HEADLESS ARCHITECTURE & WIRE CONTRACT (`core/contract.md`)
@@ -725,7 +178,7 @@ Body HTTP `POST` adalah string JSON yang valid dengan struktur berikut:
 ```
 
 ### B. Format Query Parameter `GET` (Khusus Operasi Baca)
-Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya saat *build-time* atau *ISR revalidation* di Next.js/Astro) dengan parameter query:
+Operasi baca publik/idempoten (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` dengan parameter query:
 `?action=domain.verb&v=1&auth=<opsional>&payload=<encodeURIComponent(JSON.stringify(payload))>`
 
 ### C. Konvensi Penamaan `action` dan Allowlist Registry
@@ -734,16 +187,18 @@ Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya sa
   - Otentikasi: `auth.login`, `auth.google`, `auth.logout`, `auth.setCredentials`, `auth.verifyPin`
   - Entitas Data: `<entity>.list`, `<entity>.get`, `<entity>.create`, `<entity>.update`, `<entity>.delete`
   - Unggahan File Drive: `file.ticket`, `file.upload`, `file.replace`, `file.delete`
-  - **Kontrak Step-Up PIN (`stepUpToken`):** Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
+  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
+  - Integrasi Eksternal & Monetisasi: `webhook.receive`, `mail.send`, `notify.whatsapp`, `ai.generate`, `plans.list`, `subscription.get`, `payment.createCheckout`
+- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
+
+**Kontrak Step-Up PIN (`stepUpToken`):**
+- Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
 
 **Kontrak Upload Publik:**
 - Respons `items.create` memberikan `data.uploadNonce` sekali kepada pemanggil. Nilai ini disimpan di kolom internal `upload_nonce` dan wajib disembunyikan dari `items.list`/`items.get`.
 - `file.ticket` harus menerima `payload: { entity, entityId, uploadNonce }`. Server hanya menerbitkan tiket untuk record baru (maksimal 15 menit) yang nonce-nya cocok, belum diarsipkan, dan belum memiliki `file_id/file_url`.
 - Tiket berlaku 5 menit dan terikat pada `entity`, `entityId`, serta nonce. `file.upload` memverifikasi scope dan mengonsumsi tiket sekali pakai di dalam lock.
 - Upload publik ditolak bila attachment sudah ada. Hanya sesi bertanda tangan ber-role `ADMIN` atau `STAFF` yang boleh mengganti attachment.
-  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
-  - Integrasi Eksternal: `webhook.receive`
-- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
 
 ---
 
@@ -817,11 +272,12 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
    - `INTERNAL_APP`: Langsung menuju layar login & workspace operasional padat data (tanpa landing page pemasaran).
    - `PUBLIC_SERVICE`: Papan informasi/antrean/formulir layanan publik + panel petugas terproteksi.
    - `MARKETPLACE` / `SAAS_PLATFORM`: *Dual-Surface* terpisah (Landing Page akuisisi publik pada rute utama `/` dan Dashboard terotentikasi pada rute/view `/app`).
-2. **Pemilihan Tangga Arsitektur & Lisensi Hosting:**
-   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS untuk alat sederhana satu pintu.
-   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis/SSR di **Cloudflare Pages** (diizinkan untuk komersial gratis) + Backend GAS `/exec`. *(Catatan: GitHub Pages dan Vercel Hobby hanya boleh direkomendasikan untuk prototipe/demo non-komersial).*
-   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy Cloudflare Worker / Vercel Function (`/api/gas`) dengan tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* untuk Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
-   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dan **Vercel Pro**, sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
+2. **Pemilihan Tangga Arsitektur, Stack Minimalis & Lisensi Hosting (`facts.md`):**
+   - **Tiga Stack Kanonik:** `html-tailwind` (decoupled ringan), `react` (React + Vite SPA), dan `gas-htmlservice` (legacy monolitik `gasly-pro`).
+   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS tanpa hosting eksternal untuk alat sederhana satu pintu.
+   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis (`html-tailwind` atau `react` Vite) di **Cloudflare Pages** (default komersial gratis), atau alternatif komersial **Sevalla**, **Netlify**, **Firebase Hosting**, maupun **Vercel Pro** + Backend GAS `/exec`. *(Catatan: **GitHub Pages** dan **Vercel Hobby** hanya boleh direkomendasikan untuk demo/portofolio/personal non-komersial).*
+   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy serverless tipis (Cloudflare Worker / Netlify Function / Vercel Function sesuai paket) untuk tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
+   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dengan hosting komersial (**Cloudflare Pages** / **Sevalla** / **Vercel Pro**), sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
 
 ## 9. Batas Kepercayaan Input Eksternal (Trust Boundary)
 
@@ -900,7 +356,7 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
 <!-- FILE: references/facts.md -->
 # Gasly Verified Technical & Commercial Facts (`facts.md`)
 
-- **Last Verified Date:** `2026-11-16`
+- **Last Verified Date:** `2026-11-25`
 - **Rule:** Seluruh angka kuota, batas waktu runtime, dan ketentuan lisensi komersial pada rekomendasi arsitektur wajib mengacu pada dokumen ini.
 
 ## 1. Kuota & Batas Runtime Google Apps Script (GAS)
@@ -916,11 +372,15 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
 - **Perilaku HTTP `/exec`:** Selalu membalas `POST` dengan **HTTP 302 Redirect** ke `script.googleusercontent.com` dan tidak mendukung preflight `OPTIONS` maupun pembacaan alamat IP klien.
 
 ## 2. Ketentuan Lisensi Komersial Hosting Frontend
-| Layanan Hosting | Status Lisensi Komersial (Tier Gratis) | Posisi Resmi di Tangga Arsitektur Gasly |
-| :--- | :--- | :--- |
-| **Cloudflare Pages** | **Diizinkan** untuk penggunaan komersial (batas 500 build/bulan pada Free plan) | **Default Tier 1 & Tier 2** untuk produksi komersial hemat biaya |
-| **Vercel (Hobby Plan)** | **Dilarang untuk komersial** (*Personal / Non-Commercial Only*). Penggunaan komersial wajib **Vercel Pro ($20/bulan)** | Gunakan Hobby hanya untuk Dev/Preview; gunakan **Vercel Pro** untuk SaaS komersial berbasis Next.js SSR |
-| **GitHub Pages** | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (sesuai GitHub Terms of Service) | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial** |
+| Layanan Hosting | Status Lisensi Komersial (Tier Gratis) | Batas Kuota Gratis & Catatan Penting | Posisi Resmi di Tangga Arsitektur Gasly |
+| :--- | :--- | :--- | :--- |
+| **Cloudflare Pages** (`cloudflare_pages`) | **Diizinkan** untuk penggunaan komersial | Batas 500 build/bulan pada Free plan, bandwidth statis tidak dibatasi (tunduk pada Fair Use). | **Default utama Tier 1 & Tier 2** untuk `html-tailwind` & `react` (Vite) komersial hemat biaya. |
+| **Sevalla Static Sites** (`sevalla`) | **Diizinkan** untuk penggunaan komersial (tunduk pada Fair Use Policy) | Gratis biaya bulanan dengan alokasi gratis 100 GB bandwidth/bulan & 600 menit build/bulan pada 260+ edge locations (kelebihan ditagih sesuai pemakaian). | **Alternatif produksi Tier 1 & Tier 2** untuk static site `html-tailwind` / `react` (Vite) dan mudah diperluas ke Docker/DB bila naik tier. |
+| **Netlify** (`netlify`) | **Diizinkan** untuk proyek komersial (dilarang *resell* hosting) | Free plan menggunakan batas keras (*hard cap*) 300 kredit/bulan (dipakai bersama oleh deploy & bandwidth); situs dijeda bila kredit habis hingga siklus berikutnya atau upgrade ke Pro ($20/bulan). | **Alternatif produksi Tier 1** untuk aplikasi statis trafik ringan–menengah; pantau pemakaian kredit bila trafik komersial aktif. |
+| **Firebase Hosting** (`firebase_hosting`) | **Diizinkan** untuk bisnis & komersial (Spark Plan) | Kuota gratis Spark Plan meliputi penyimpanan & transfer terbatas (berhenti melayani bila kuota terlampaui sampai upgrade ke Blaze *pay-as-you-go*). | **Alternatif produksi Tier 1** terutama untuk tim yang sudah berada di ekosistem Google Cloud / Workspace. |
+| **Vercel** (`vercel_hobby_noncommercial` / `vercel_pro`) | **Hobby Plan DILARANG untuk komersial** (*Personal / Non-Commercial Only*). Komersial wajib **Vercel Pro ($20/bulan)** | Hobby memberi 100 GB transfer/bulan hanya untuk proyek personal/non-komersial. | Gunakan Hobby **hanya** untuk Dev/Preview/Personal; gunakan **Vercel Pro** untuk deployment komersial di Vercel. |
+| **GitHub Pages** (`github_pages_demo`) | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (GitHub ToS) | Ukuran publikasi maks. 1 GB, soft limit 100 GB bandwidth/bulan. | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial**. |
+| **Google Apps Script (`HtmlService`)** (`gas_htmlservice`) | Tunduk pada kuota akun Google / Google Workspace | Berjalan di dalam iframe Google tanpa hosting eksternal. | **Khusus Mode Legacy (`gasly-pro`)** bila pengguna meminta 100% di dalam GAS. |
 
 ## 3. Referensi Dokumentasi & Status Verifikasi Langkah Antarmuka Pihak Ketiga (`gasly-deploy-guide`)
 - **Aturan Provenance (`Gate I-05`):** Setiap langkah antarmuka pihak ketiga di dalam `gasly-deploy-guide` wajib mencantumkan URL dokumentasi resmi dan status verifikasi. Karena antarmuka web pihak ketiga dapat berubah tanpa pemberitahuan di luar repositori statis, langkah klik menu spesifik ditandai `UNVERIFIED` dan dicatat pada `VERIFY.md` (`A-12`).
@@ -933,10 +393,13 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
 - **Google Cloud Console — OAuth 2.0 Client ID (`auth.google`):**
   - Dokumentasi Resmi: `https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
   - Syarat wajib: konfigurasi OAuth Consent Screen (mewajibkan URL kebijakan privasi `/privacy` publik sesuai `src/core/monetization-and-tiers.md`) dan pembuatan Web Application Client ID dengan *Authorized JavaScript origins* berisi domain frontend.
-- **Hosting Frontend (Cloudflare Pages / Vercel / GitHub Pages):**
-  - Dokumentasi Resmi Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
-  - Dokumentasi Resmi Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
-  - Dokumentasi Resmi GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+- **Hosting Frontend yang Didukung:**
+  - Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Sevalla Static Site Hosting: `https://docs.sevalla.com/static-site-hosting/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Netlify: `https://docs.netlify.com/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Firebase Hosting: `https://firebase.google.com/docs/hosting` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
 
 
 ---
@@ -1005,11 +468,20 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
         },
         "frontend_stack": {
           "type": "string",
-          "enum": ["html-tailwind", "nextjs+shadcn", "astro", "react-vite", "flutter", "inherit"]
+          "enum": ["html-tailwind", "react", "gas-htmlservice"]
         },
         "hosting_target": {
           "type": "string",
-          "enum": ["gas_htmlservice", "cloudflare_pages", "vercel_pro", "vercel_hobby_noncommercial", "github_pages_demo"]
+          "enum": [
+            "cloudflare_pages",
+            "netlify",
+            "firebase_hosting",
+            "sevalla",
+            "vercel_pro",
+            "vercel_hobby_noncommercial",
+            "github_pages_demo",
+            "gas_htmlservice"
+          ]
         },
         "auth_primary": {
           "type": "string",
@@ -1150,7 +622,7 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
 ## 1. Hierarki Otoritas & Aturan Penegakan
 
 Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instruksi pengguna biasa. Tidak ada satu pun gerbang dari versi sebelumnya yang dihapus; setiap gerbang diklasifikasikan ke dalam 4 kelas sesuai ruang lingkup arsitekturnya:
-- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (termasuk ke-15 stack pewaris), `gasly-deploy-guide`, dan `gasly-pro`.
+- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (`html-tailwind` dan `react`), `gasly-deploy-guide`, dan `gasly-pro`.
 - **`GAS-ONLY`**: Wajib dipatuhi oleh `gasly-data` dan bagian backend `gasly-pro`.
 - **`WEB-ONLY`**: Wajib dipatuhi oleh `gasly-ui` (pada seluruh stack web) dan bagian frontend `gasly-pro`.
 - **`LEGACY-HTMLSERVICE`**: Wajib dipatuhi oleh `gasly-pro` saat membangun aplikasi monolitik berbasis `HtmlService` + `google.script.run`.
@@ -1165,6 +637,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
    - Setiap pemeriksaan hak akses dan peran wajib dieksekusi di dalam Google Apps Script sebelum menyentuh Google Sheets atau Google Drive. Penyembunyian tombol di UI hanyalah bantuan navigasi, bukan pengaman.
 3. **Anti-Fabrikasi Klaim Bisnis (`U-03`):**
    - Dilarang mengarang jumlah pengguna/pelanggan, logo klien, testimoni palsu, badge *verified*, persentase peningkatan ROI/efisiensi, jaminan mutlak bebas biaya server, kebijakan *refund/free trial*, maupun angka harga paket yang tidak diberikan oleh pengguna. Gunakan data asli dari pengguna, slot `{{...}}`, atau *Role-Based Use Cases* dan kapabilitas nyata dari kode.
+   - **Batas Foto/Video Dummy:** Penggunaan foto/video stock dari penyedia publik (Unsplash, Pexels, Pixabay, Coverr/Mixkit) untuk kebutuhan visual suasana, hero, atau katalog contoh **diizinkan** sesuai `Gate W-10`, selama tidak pernah disamarkan sebagai testimoni pelanggan asli, foto tim nyata, atau logo klien fiktif.
 4. **Canonical Response Envelope & Sanitized Errors (`U-04`):**
    - Seluruh komunikasi server-ke-client wajib memakai `{ status: 'success' | 'error', data, message, code, meta }` dengan kode `OK`, `VALIDATION_ERROR`, `NOT_FOUND`, `FORBIDDEN`, `CONFLICT`, `LOCK_TIMEOUT`, `INTERNAL_ERROR`. Dilarang membocorkan `err.stack` atau `err.toString()` mentah ke client.
 5. **Kontras Warna WCAG AA (`U-05`):**
@@ -1205,7 +678,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 7. **Pencegahan Formula Injection Khusus Teks Bebas (`G-07`):**
    - Terapkan `escapeFormula_()` (menambahkan apostrof `'` jika string diawali `=`, `+`, `-`, `@`) **hanya** pada kolom teks bebas menurut skema. Jangan terapkan pada kolom numerik agar angka negatif tetap tersimpan sebagai `Number`.
 8. **Akhiran Underscore (`_`) pada Fungsi Internal (`G-08`):**
-   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `initialSetupDatabase`, `setupAdminCredentials`, `runDiagnostics`) yang ditulis tanpa akhiran `_`.
+   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `setupAppEnvironment`, `initialSetupDatabase`, `setupAdminCredentials`, `setupAdminCredentialsFromUi`, `onOpen`, `runDiagnostics`) yang ditulis tanpa akhiran `_`, dan seluruh fungsi utilitas toolbar wajib memiliki guard `if (fromClient !== undefined)` bila tidak dipanggil oleh `doPost`/`doGet`.
 9. **Keamanan Unggahan Drive & Penulisan Sheet Atomik (`G-09`):**
    - Aksi `file.upload` wajib memvalidasi profil akses / tiket sekali pakai (`file.ticket`), membatasi ukuran byte hasil decode (default `<= 5 MB`), memeriksa daftar putih MIME (`image/jpeg`, `image/png`, `image/webp`) **sekaligus** *magic bytes* header biner, menyanitasi nama file, menyimpan ke `ROOT/<entity>/<yyyy-mm>`, mengatur izin berbagi sesuai klasifikasi (`private` sebagai default mutlak untuk data sensitif), dan menulis `file_id` serta `file_url` ke baris Sheet di dalam satu operasi ber-lock (serta menghapus file Drive bila update Sheet gagal).
 10. **Anti-Enumerasi Endpoint Pelacakan Publik (`G-10`):**
@@ -1241,6 +714,15 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 9. **Verifikasi Hasil Upload & Isolasi Mode Demo Produksi (`W-09`):**
    - Pada alur unggah file (`file.ticket` -> `file.upload`), kode frontend wajib menyimpan respons `file.upload` ke variabel dan memastikan `uploadRes.status === 'success' && uploadRes.code === 'OK'` sebelum menampilkan banner sukses; jika gagal, tampilkan state `RECOVERY` untuk unggah ulang tanpa membuat duplikasi tiket.
    - Tombol pengisi kredensial demo (`Isi Demo`) dan bar pengubah URL `/exec` runtime hanya boleh dirender saat `isSimulationMode() === true` (ketika variabel environment produksi kosong), dan wajib disembunyikan/dinonaktifkan sepenuhnya pada konfigurasi produksi.
+10. **Media Placeholder Eksternal (Foto & Video Dummy) & Fallback Aman (`W-10`):**
+    - Aplikasi frontend (`gasly-ui`, `gasly-pro`, dan `gasly-prd-to-uiux`) **diizinkan** menggunakan foto dan video dummy sebagai placeholder visual dari sumber stock publik tepercaya:
+      - **Foto:** **Unsplash** (`images.unsplash.com`), **Pexels** (`images.pexels.com`), **Pixabay** (`cdn.pixabay.com`).
+      - **Video:** **Pexels Videos** (`videos.pexels.com`), **Pixabay Videos** (`cdn.pixabay.com`), **Coverr**, atau **Mixkit**.
+      - **Aset AI / Upscaler (seperti Magnific AI):** Dilarang melakukan *hotlink* ke URL unduhan sementara (*signed URL*) yang dapat kedaluwarsa; simpan aset hasil AI di folder statis proyek (`public/assets/`) atau unggah ke Google Drive berklasifikasi `PUBLIC`.
+    - **Larangan Endpoint Mati:** Dilarang keras memakai `https://source.unsplash.com/...` karena layanan tersebut sudah dihentikan. Gunakan URL aset langsung dengan parameter optimasi ukuran (mis. `?auto=format&fit=crop&w=1200&q=80`).
+    - **Sentralisasi & Label Placeholder:** Pisahkan seluruh URL media dummy ke satu registry terpusat (`MEDIA_PLACEHOLDERS`) dengan flag `isPlaceholder: true` dan komentar sumber agar pemilik proyek mudah menggantinya saat produksi.
+    - **Wajib Fallback & Aksesibilitas:** Setiap `<img>` placeholder wajib menyertakan `loading="lazy"`, `decoding="async"`, `alt` deskriptif, serta fallback `onerror` ke *inline SVG data URI* atau permukaan warna token preset (cegah ikon gambar pecah saat offline/terblokir). Setiap `<video>` dummy wajib menggunakan `muted loop playsinline preload="metadata"`, menyertakan atribut `poster`, dan menonaktifkan autoplay saat `prefers-reduced-motion: reduce` aktif.
+    - **Pengecualian Mutlak (`Gate I-01`):** Media placeholder eksternal **dilarang keras** dipakai pada file `install-guide.html` keluaran `gasly-deploy-guide` (wajib 100% offline/tanpa panggilan jaringan).
 
 ---
 
@@ -1304,448 +786,6 @@ Seluruh output spesifikasi (`gasly-prd`), desain (`gasly-prd-to-uiux`), koordina
 
 7. **GATE P0-07 — Slot Regulasi & Disclaimer (`REGULATORY-SLOT`):**
    - Setiap kalkulator atau fitur yang menampilkan perhitungan pajak, medis, atau hukum wajib menampilkan dasar peraturan resmi, tanggal verifikasi aturan terakhir, dan *disclaimer* eksplisit bahwa hasil bersifat estimasi indikatif.
-
-
----
-<!-- FILE: references/integrations.md -->
-<!-- KB_VERSION: 2.1.0 -->
-# OUTBOUND INTEGRATIONS, MAIL QUOTA GUARD & OUTBOX QUEUE (`gas/integrations.md`)
-**KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat secara kondisional oleh `gasly-data` ketika aplikasi membutuhkan pengiriman email (`MailApp`), WhatsApp Gateway (Fonnte), AI (Gemini), atau antrean tugas latar belakang (`JOBS_OUTBOX`).
-
-## Daftar Isi
-1. [Batas Runtime `UrlFetchApp`, Circuit Breaker & `JOBS_OUTBOX`](#1-batas-runtime-urlfetchapp-circuit-breaker--jobs_outbox)
-2. [Aturan Kuota `MailApp` & Guard Pengiriman Email](#2-aturan-kuota-mailapp--guard-pengiriman-email)
-3. [Boilerplate `integrations.gs` (Breaker, MailApp, Fonnte, Gemini & Outbox)](#3-boilerplate-integrationsgs-breaker-mailapp-fonnte-gemini--outbox)
-
----
-
-## 1. Batas Runtime `UrlFetchApp`, Circuit Breaker & `JOBS_OUTBOX`
-
-1. **Tidak Ada Opsi `timeout` pada `UrlFetchApp.fetch(url, params)`:**
-   - Runtime Google Apps Script V8 tidak menyediakan parameter `timeout` yang dapat dikonfigurasi pada `UrlFetchApp.fetch()`. Batas waktu tunggu dikendalikan oleh infrastruktur Google (sekitar ~60 detik per permintaan HTTP, di dalam batas total eksekusi skrip **6 menit** sesuai `facts.md`).
-   - Selalu sertakan `muteHttpExceptions: true` agar respons HTTP `4xx`/`5xx` tidak melempar *uncaught exception*.
-2. **Circuit Breaker di `CacheService` & Retry Backoff:**
-   - Karena Web App berbagi batas **30 eksekusi simultan** (`facts.md`), kegagalan beruntun pada API pihak ketiga tidak boleh terus menahan eksekusi.
-   - Jika layanan eksternal gagal `5xx` atau jaringan sebanyak 3 kali berturut-turut, buka sirkuit di `CacheService` (`cb:open:<serviceName>`, TTL `120` detik) dan segera tolak panggilan berikutnya atau alihkan ke `JOBS_OUTBOX`.
-3. **Antrean Latar Belakang (`JOBS_OUTBOX`):**
-   - Untuk pengiriman notifikasi yang tidak perlu ditunggu secara sinkron oleh browser, catat tugas ke sheet `JOBS_OUTBOX` (`id`, `created_at`, `updated_at`, `job_type`, `payload_json`, `status`, `attempts`, `last_error`, `is_seed`) menggunakan `buildRowFromObject_` dan proses melalui *time-driven trigger* (`processJobsOutboxQueue_`).
-
----
-
-## 2. Aturan Kuota `MailApp` & Guard Pengiriman Email
-
-Sesuai `facts.md`, kuota `MailApp` adalah **100 penerima/hari** (akun `@gmail.com` konsumen) dan **1.500 penerima/hari** (akun Google Workspace):
-- Dilarang menjadikan email OTP sebagai jalur login utama publik.
-- Sebelum memanggil `MailApp.sendEmail()`, wajib memeriksa `MailApp.getRemainingDailyQuota()`. Sisakan cadangan minimal `5` kuota harian agar skrip tidak gagal di tengah transaksi.
-
----
-
-## 3. Boilerplate `integrations.gs` (Breaker, MailApp, Fonnte, Gemini & Outbox)
-
-```javascript
-// FILE: integrations.gs
-// Runtime: Google Apps Script V8
-
-var TRANSIENT_HTTP_CODES_ = [429, 502, 503, 504];
-
-/**
- * Wrapper UrlFetchApp dengan Circuit Breaker CacheService dan Retry Backoff.
- * Catatan Runtime: UrlFetchApp tidak memiliki parameter timeout kustom (~60 detik batas platform).
- */
-function fetchExternalWithBreaker_(serviceName, url, fetchOptions, maxRetries) {
-  var cache = CacheService.getScriptCache();
-  var openKey = 'cb:open:' + serviceName;
-  var failKey = 'cb:fail:' + serviceName;
-
-  if (cache.get(openKey)) {
-    return {
-      ok: false,
-      status: 503,
-      bodyText: '',
-      errorMessage: 'Layanan eksternal (' + serviceName + ') sedang jeda pemulihan (circuit open).'
-    };
-  }
-
-  var retries = maxRetries !== undefined && maxRetries !== null && !isNaN(Number(maxRetries)) ? Math.min(2, Math.max(0, Number(maxRetries))) : 1;
-  var opts = fetchOptions || {};
-  opts.muteHttpExceptions = true;
-
-  for (var attempt = 0; attempt <= retries; attempt++) {
-    try {
-      var res = UrlFetchApp.fetch(url, opts);
-      var code = res.getResponseCode();
-      var text = res.getContentText();
-
-      if (code >= 200 && code < 300) {
-        cache.remove(failKey);
-        return { ok: true, status: code, bodyText: text, errorMessage: null };
-      }
-
-      if (TRANSIENT_HTTP_CODES_.indexOf(code) !== -1 && attempt < retries) {
-        Utilities.sleep(400 * Math.pow(2, attempt));
-        continue;
-      }
-
-      if (code >= 500) {
-        var fails = Number(cache.get(failKey) || 0) + 1;
-        cache.put(failKey, String(fails), 300);
-        if (fails >= 3) {
-          cache.put(openKey, '1', 120);
-        }
-      }
-
-      return {
-        ok: false,
-        status: code,
-        bodyText: text,
-        errorMessage: 'Panggilan ' + serviceName + ' gagal dengan kode HTTP ' + code + '.'
-      };
-    } catch (err) {
-      var netFails = Number(cache.get(failKey) || 0) + 1;
-      cache.put(failKey, String(netFails), 300);
-      if (netFails >= 3) {
-        cache.put(openKey, '1', 120);
-      }
-      if (attempt < retries) {
-        Utilities.sleep(400 * Math.pow(2, attempt));
-        continue;
-      }
-      return {
-        ok: false,
-        status: 0,
-        bodyText: '',
-        errorMessage: 'Gagal menghubungi layanan eksternal ' + serviceName + '.'
-      };
-    }
-  }
-}
-
-/**
- * Helper internal & Handler: mail.send (Dengan Quota Guard sesuai facts.md)
- */
-function sendEmailWithQuotaGuard_(recipient, subject, htmlBody) {
-  var cleanRecipient = String(recipient || '').trim();
-  if (!cleanRecipient || cleanRecipient.indexOf('@') === -1) {
-    return { sent: false, code: 'VALIDATION_ERROR', remainingQuota: 0, message: 'Alamat email tujuan tidak valid.' };
-  }
-  var remaining = MailApp.getRemainingDailyQuota();
-  if (remaining <= 5) {
-    return {
-      sent: false,
-      code: 'RATE_LIMITED',
-      remainingQuota: remaining,
-      message: 'Kuota email harian mendekati batas aman (' + remaining + ' tersisa). Pengiriman ditahan.'
-    };
-  }
-  MailApp.sendEmail({
-    to: cleanRecipient,
-    subject: String(subject || 'Notifikasi Aplikasi').slice(0, 180),
-    htmlBody: String(htmlBody || '')
-  });
-  return { sent: true, code: 'OK', remainingQuota: remaining - 1, message: 'Email berhasil dikirim.' };
-}
-
-function handleMailSend_(req) {
-  var p = req.payload || {};
-  var result = sendEmailWithQuotaGuard_(p.to, p.subject, p.htmlBody);
-  if (!result.sent) {
-    return createResponse_('error', { remainingQuota: result.remainingQuota }, result.message, result.code);
-  }
-  return createResponse_('success', { sent: true, remainingQuota: result.remainingQuota }, result.message, 'OK');
-}
-
-/**
- * Handler: notify.whatsapp (Fonnte Gateway via ScriptProperties + Fallback wa.me)
- */
-function handleNotifyWhatsapp_(req) {
-  var p = req.payload || {};
-  var targetPhone = String(p.target || p.phone || '').replace(/[^0-9]/g, '');
-  var messageText = String(p.message || '').trim();
-
-  if (targetPhone.length < 9 || targetPhone.length > 16 || !messageText) {
-    return createResponse_('error', null, 'Nomor tujuan dan isi pesan WhatsApp wajib diisi.', 'VALIDATION_ERROR');
-  }
-
-  var normalizedPhone = targetPhone.indexOf('0') === 0 ? '62' + targetPhone.slice(1) : targetPhone;
-  var fallbackWaUrl = 'https://wa.me/' + normalizedPhone + '?text=' + encodeURIComponent(messageText);
-  var fonnteToken = PropertiesService.getScriptProperties().getProperty('FONNTE_TOKEN') || '';
-
-  if (!fonnteToken) {
-    return createResponse_(
-      'success',
-      { deliveredVia: 'WA_ME_FALLBACK', waUrl: fallbackWaUrl },
-      'FONNTE_TOKEN belum disetel; gunakan tautan langsung WhatsApp.',
-      'OK'
-    );
-  }
-
-  var res = fetchExternalWithBreaker_(
-    'fonnte',
-    'https://api.fonnte.com/send',
-    {
-      method: 'post',
-      headers: { Authorization: fonnteToken },
-      payload: { target: normalizedPhone, message: messageText }
-    },
-    1
-  );
-
-  if (!res.ok) {
-    return createResponse_(
-      'error',
-      { fallbackWaUrl: fallbackWaUrl },
-      res.errorMessage,
-      'INTERNAL_ERROR'
-    );
-  }
-  return createResponse_('success', { deliveredVia: 'FONNTE_API', target: normalizedPhone }, 'Notifikasi WhatsApp terkirim.', 'OK');
-}
-
-/**
- * Handler: ai.generate (Gemini Structured JSON Output dengan kuota harian per pengguna di CacheService)
- */
-function handleAiGenerate_(req) {
-  if (!req.session || !req.session.sub) {
-    return createResponse_('error', null, 'Sesi login diperlukan untuk menggunakan fitur AI.', 'FORBIDDEN');
-  }
-
-  var props = PropertiesService.getScriptProperties();
-  var apiKey = props.getProperty('GEMINI_API_KEY') || '';
-  if (!apiKey) {
-    return createResponse_('error', null, 'GEMINI_API_KEY belum dikonfigurasi di ScriptProperties.', 'FORBIDDEN');
-  }
-
-  var p = req.payload || {};
-  var promptText = String(p.prompt || '').trim();
-  if (promptText.length < 3 || promptText.length > 4000) {
-    return createResponse_('error', null, 'Prompt wajib diisi antara 3 hingga 4000 karakter.', 'VALIDATION_ERROR');
-  }
-
-  var tz = Session.getScriptTimeZone() || DEFAULT_TZ;
-  var ymd = Utilities.formatDate(new Date(), tz, 'yyyyMMdd');
-  var userSub = String(req.session.sub).toLowerCase().slice(0, 80);
-  var dailyLimit = Number(props.getProperty('AI_DAILY_LIMIT_PER_USER') || 20);
-  var cache = CacheService.getScriptCache();
-  var quotaKey = 'rl:ai:' + ymd + ':' + userSub;
-  var usedCount = Number(cache.get(quotaKey) || 0);
-
-  if (usedCount >= dailyLimit) {
-    return createResponse_(
-      'error',
-      { dailyLimit: dailyLimit, usedCount: usedCount },
-      'Kuota harian penggunaan AI Anda telah habis.',
-      'RATE_LIMITED'
-    );
-  }
-
-  var modelId = String(props.getProperty('GEMINI_MODEL_ID') || 'gemini-2.5-flash');
-  var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(modelId) + ':generateContent?key=' + encodeURIComponent(apiKey);
-  var bodyObj = {
-    contents: [{ parts: [{ text: promptText }] }],
-    generationConfig: { responseMimeType: 'application/json' }
-  };
-
-  var res = fetchExternalWithBreaker_(
-    'gemini',
-    endpoint,
-    {
-      method: 'post',
-      contentType: 'application/json',
-      payload: JSON.stringify(bodyObj)
-    },
-    1
-  );
-
-  if (!res.ok) {
-    return createResponse_('error', null, res.errorMessage, 'INTERNAL_ERROR');
-  }
-
-  cache.put(quotaKey, String(usedCount + 1), 21600);
-  var parsedBody = JSON.parse(res.bodyText);
-  var textOut = parsedBody &&
-    parsedBody.candidates &&
-    parsedBody.candidates[0] &&
-    parsedBody.candidates[0].content &&
-    parsedBody.candidates[0].content.parts &&
-    parsedBody.candidates[0].content.parts[0]
-    ? parsedBody.candidates[0].content.parts[0].text
-    : '{}';
-
-  return createResponse_(
-    'success',
-    { resultJson: textOut, remainingDailyQuota: Math.max(0, dailyLimit - (usedCount + 1)) },
-    'Respons AI berhasil dibuat.',
-    'OK'
-  );
-}
-
-/**
- * Mencatat tugas eksternal ke sheet JOBS_OUTBOX di dalam LockService.
- */
-function enqueueOutboxJob_(jobType, payloadObj) {
-  var lock = LockService.getScriptLock();
-  if (!lock.tryLock(10000)) return { ok: false, code: 'LOCK_TIMEOUT' };
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('JOBS_OUTBOX');
-    if (!sheet) return { ok: false, code: 'NOT_FOUND' };
-    var lastCol = sheet.getLastColumn();
-    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
-    var nowIso = formatIsoOffset_(new Date());
-    var jobRecord = {
-      id: generateNextId_(sheet, 'JOB'),
-      created_at: nowIso,
-      updated_at: nowIso,
-      job_type: escapeFormula_(String(jobType || 'GENERIC')),
-      payload_json: JSON.stringify(payloadObj || {}),
-      status: 'PENDING',
-      attempts: 0,
-      last_error: '',
-      is_seed: 'FALSE'
-    };
-    var rowValues = buildRowFromObject_(headers, jobRecord);
-    sheet.getRange(sheet.getLastRow() + 1, 1, 1, lastCol).setValues([rowValues]);
-    SpreadsheetApp.flush();
-    return { ok: true, jobId: jobRecord.id };
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-/**
- * Handler: payment.createCheckout
- * Looks up price_amount strictly from the server PLANS sheet (ignores any client-supplied price)
- * and creates a PENDING subscription invoice in SUBSCRIPTIONS.
- * TODO-VERIFY: Sesuaikan endpoint dan field payload gateway pembayaran (Midtrans / Xendit / Duitku) saat diuji di runtime GAS.
- */
-function handlePaymentCreateCheckout_(req) {
-  if (!req.session || !req.session.sub) {
-    return createResponse_('error', null, 'Sesi login diperlukan untuk membuat checkout.', 'FORBIDDEN');
-  }
-
-  var p = req.payload || {};
-  var planCode = String(p.planCode || p.plan_code || '').trim().toUpperCase();
-  if (!planCode) {
-    return createResponse_('error', null, 'planCode wajib disertakan.', 'VALIDATION_ERROR');
-  }
-
-  var plansRes = readSheetObjects_('PLANS');
-  if (!plansRes.ok) return plansRes.errorResponse;
-
-  var matchedPlan = null;
-  for (var i = 0; i < plansRes.records.length; i++) {
-    var pl = plansRes.records[i];
-    if (
-      String(pl.plan_code || '').trim().toUpperCase() === planCode &&
-      String(pl.status || '').toUpperCase() === 'ACTIVE'
-    ) {
-      matchedPlan = pl;
-      break;
-    }
-  }
-
-  if (!matchedPlan) {
-    return createResponse_('error', null, 'Paket langganan tidak ditemukan atau tidak aktif.', 'NOT_FOUND');
-  }
-
-  var serverPrice = Number(matchedPlan.price_amount);
-  if (!isFinite(serverPrice) || serverPrice <= 0) {
-    return createResponse_('error', null, 'Harga paket pada server belum valid.', 'INTERNAL_ERROR');
-  }
-
-  var lock = LockService.getScriptLock();
-  if (!lock.tryLock(10000)) {
-    return createResponse_('error', null, 'Server sedang sibuk.', 'LOCK_TIMEOUT');
-  }
-
-  var newSubRecord = null;
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var subsSheet = ss.getSheetByName('SUBSCRIPTIONS');
-    if (!subsSheet) {
-      return createResponse_('error', null, 'Tabel SUBSCRIPTIONS belum diinisialisasi.', 'NOT_FOUND');
-    }
-
-    var lastCol = subsSheet.getLastColumn();
-    var headers = subsSheet.getRange(1, 1, 1, lastCol).getValues()[0].map(normalizeHeader_);
-    var tz = Session.getScriptTimeZone() || DEFAULT_TZ;
-    var now = new Date();
-    var nowIso = formatIsoOffset_(now);
-    var ymd = Utilities.formatDate(now, tz, 'yyyyMMdd');
-    var subId = generateNextId_(subsSheet, 'SUB');
-    var extInvoiceId = 'INV-' + ymd + '-' + Utilities.getUuid().slice(0, 8).toUpperCase();
-    var userEmail = String(req.session.sub).trim().toLowerCase();
-
-    newSubRecord = {
-      id: subId,
-      user_email: escapeFormula_(userEmail),
-      plan_code: escapeFormula_(planCode),
-      status: 'PENDING',
-      period_start: '',
-      period_end: '',
-      external_invoice_id: extInvoiceId,
-      provider_event_id: '',
-      created_at: nowIso,
-      updated_at: nowIso,
-      is_seed: 'FALSE'
-    };
-
-    var rowVals = buildRowFromObject_(headers, newSubRecord);
-    subsSheet.getRange(subsSheet.getLastRow() + 1, 1, 1, lastCol).setValues([rowVals]);
-    SpreadsheetApp.flush();
-  } finally {
-    lock.releaseLock();
-  }
-
-  // TODO-VERIFY: Konfigurasi PAYMENT_GATEWAY_URL dan PAYMENT_GATEWAY_SECRET di ScriptProperties sesuai dokumentasi resmi gateway pilihan.
-  var props = PropertiesService.getScriptProperties();
-  var gatewayUrl = props.getProperty('PAYMENT_GATEWAY_URL') || '';
-  var gatewaySecret = props.getProperty('PAYMENT_GATEWAY_SECRET') || '';
-  var paymentUrl = '';
-
-  if (gatewayUrl && gatewaySecret) {
-    var gwRes = fetchExternalWithBreaker_(
-      'payment_gateway',
-      gatewayUrl,
-      {
-        method: 'post',
-        contentType: 'application/json',
-        headers: { Authorization: gatewaySecret },
-        payload: JSON.stringify({
-          external_id: newSubRecord.external_invoice_id,
-          subscription_id: newSubRecord.id,
-          plan_code: planCode,
-          amount: serverPrice,
-          payer_email: newSubRecord.user_email
-        })
-      },
-      1
-    );
-    if (!gwRes.ok) {
-      return createResponse_('error', { subscriptionId: newSubRecord.id, externalInvoiceId: newSubRecord.external_invoice_id }, gwRes.errorMessage, 'INTERNAL_ERROR');
-    }
-    try {
-      var parsedGw = JSON.parse(gwRes.bodyText || '{}');
-      paymentUrl = String(parsedGw.payment_url || parsedGw.invoice_url || parsedGw.redirect_url || '');
-    } catch (e) {}
-  }
-
-  return createResponse_(
-    'success',
-    {
-      subscriptionId: newSubRecord.id,
-      externalInvoiceId: newSubRecord.external_invoice_id,
-      planCode: planCode,
-      amount: serverPrice,
-      billingPeriod: String(matchedPlan.billing_period || 'MONTHLY'),
-      status: 'PENDING',
-      paymentUrl: paymentUrl
-    },
-    'Invoice langganan berhasil dibuat dengan harga resmi server.',
-    'OK'
-  );
-}
 
 
 ---
@@ -1876,6 +916,115 @@ Rekomendasikan kenaikan tier arsitektur secara deterministik ketika salah satu b
    - Gunakan variabel semantik (`var(--bg-base)`, `var(--bg-surface)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--text-helper)`, `var(--accent-solid)`, `var(--accent-text-on-solid)`) agar pergantian tema (`data-theme="light"` vs `data-theme="dark"`) selalu mempertahankan rasio kontras WCAG AA.
 2. **Pada Stack Native / Desktop Pewaris (`flutter`, `react-native`, `swiftui`, `jetpack-compose`, `wpf`, dll.):**
    - Baca nilai hex langsung dari `src/design/presets/<preset>.tokens.json` pada objek `modes.light` dan `modes.dark`, serta patuhi daftar `contrastPairs`.
+
+
+---
+<!-- FILE: references/saas-craft.md -->
+<!-- KB_VERSION: 2.1.0 -->
+# SAAS VISUAL CRAFT & $49/MONTH PRODUCT POLISH (`design/saas-craft.md`)
+**KB_VERSION:** `2.1.0`  
+**Kondisi Muat:** Selalu dimuat oleh `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, dan `gasly-ui`.
+
+## Daftar Isi
+1. [Prinsip Visual Kelas SaaS Komersial](#1-prinsip-visual-kelas-saas-komersial)
+2. [Pola Tata Letak per `SURFACE_PROFILE` (Larangan Form Menumpuk)](#2-pola-tata-letak-per-surface_profile-larangan-form-menumpuk)
+3. [Bento KPI Summary Strip Berbasis Data Nyata](#3-bento-kpi-summary-strip-berbasis-data-nyata)
+4. [Ikonografi Inline SVG Presisi (Nol Emoji di UI Chrome)](#4-ikonografi-inline-svg-presisi-nol-emoji-di-ui-chrome)
+5. [Data Table Toolbar, Refined Status Pills & Mobile Card View](#5-data-table-toolbar-refined-status-pills--mobile-card-view)
+6. [Micro-Surface, Skeleton Realistis, Empty State & Sonner Toast](#6-micro-surface-skeleton-realistis-empty-state--sonner-toast)
+7. [Checklist Self-Audit Estetika $49/Bulan](#7-checklist-self-audit-estetika-49bulan)
+
+---
+
+## 1. Prinsip Visual Kelas SaaS Komersial
+
+Lulus kontras WCAG AA (`4,5:1`) adalah **syarat minimum**, bukan standar akhir. Untuk menghasilkan antarmuka yang terasa setara dengan aplikasi SaaS modern ($49/bulan seperti Linear, Stripe Dashboard, Cal.com, atau Notion):
+1. **Keheningan Visual (*Visual Restraint*):** Gunakan warna aksen utama (`var(--accent-solid)`) hanya pada 1 CTA primer per layar, indikator tab aktif, dan *focus ring*. Hindari mewarnai setiap kartu dengan warna pelangi atau gradien mencolok.
+2. **Hierarki Tipografi & Spasi 8px:** Pisahkan dengan tegas antara `Display/H1` (`font-weight: 700–800`, `tracking-tight`), judul kartu (`15px–16px`, `font-weight: 600`), body (`14px`, `var(--text-secondary)`), dan label metadata (`12px`, `var(--text-helper)`). Seluruh angka wajib memakai `.tabular-nums`.
+3. **Kedalaman Halus (*Subtle Elevation*):**
+   - Di **Light Mode:** Permukaan kartu `var(--bg-surface)` di atas kanvas `var(--bg-base)` memakai hairline border `1px solid var(--border-subtle)` + bayangan tipis `box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.03)`.
+   - Di **Dark Mode:** Hindari shadow gelap tebal; gunakan pembedaan luminansi permukaan (`--bg-base` $\rightarrow$ `--bg-surface` $\rightarrow$ `--bg-interactive`) dan hairline border `1px solid var(--border-subtle)`.
+
+---
+
+## 2. Pola Tata Letak per `SURFACE_PROFILE` (Larangan Form Menumpuk)
+
+### A. `INTERNAL_APP` & `SAAS_PLATFORM` (`/app` Workspace)
+- **App Shell 2-Bagian:**
+  - **Sidebar Kiri (`240px` di layar `>=1024px`, tersembunyi ke Off-Canvas Drawer di `<1024px`):** Berisi identitas brand minimal di atas, menu navigasi modul nyata di tengah, serta footer informatif (status koneksi `/exec` atau `Preview Mode`, versi skema, dan tombol Keluar Sesi).
+  - **Sticky Topbar (`height: 56px`):** Judul tampilan aktif di kiri; tombol *Refresh*, *Theme Toggle* (Light/Dark), dan tombol CTA Primer (`+ Tambah ...`) di kanan.
+- **Aturan Anti-CRUD Polos (Slide-Over Drawer / Modal Form):**
+  - **Jangan menumpuk form input panjang terbuka di atas tabel utama.** Letakkan form tambah/edit data di dalam **Slide-Over Drawer sisi kanan (`max-w-md` / `max-w-lg`)** atau **Centered Modal** yang dipicu oleh tombol `+ Tambah ...`. Dengan begitu, begitu pengguna masuk, mereka langsung melihat **KPI Summary Strip + Toolbar Filter + Data Table** di paruh atas layar (*above the fold*).
+
+### B. `PUBLIC_SERVICE` & `MARKETPLACE` (Halaman Publik)
+- **Floating / Sticky Navbar:** Tinggi `64px`, `backdrop-filter: blur(10px)` (hanya di navbar & modal sesuai `Gate W-04`), identitas brand, tautan section fungsional, tombol **Cek Status**, dan tombol **Login Admin** yang tidak mendominasi CTA pembeli.
+- **Split Hero atau Bento Showcase (`Gate W-10`):**
+  - Gunakan layout 2 kolom di desktop (kiri: badge konteks + headline transformatif + sub-headline + 2 CTA + capability strip nyata; kanan: kartu visual rasio terkunci `aspect-[16/10] rounded-2xl overflow-hidden` berisi foto/video placeholder dari `MEDIA_PLACEHOLDERS` lengkap dengan fallback SVG `onerror`).
+  - Jika menaruh teks di atas gambar/video, wajib pasang *gradient scrim* gelap (`linear-gradient(to top, rgba(9,9,11,0.82), rgba(9,9,11,0.18))`) agar kontras teks tetap `>= 4,5:1`.
+
+---
+
+## 3. Bento KPI Summary Strip Berbasis Data Nyata
+
+Tampilkan **3–4 kartu KPI** di bagian atas workspace dalam grid `grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4`:
+- Setiap angka **wajib dihitung langsung (*computed live*) dari array state data** (dilarang keras menaruh angka persentase pertumbuhan fiktif seperti `"+24.5% bulan ini"` bila tidak ada perhitungan historis nyata sesuai `Gate U-03`).
+- Anatomi 1 Kartu KPI:
+  1. Baris atas: Label singkat (`12px`, `font-semibold`, `var(--text-helper)`) + wadah ikon SVG `32×32px` berlatar `var(--bg-interactive)` (`rounded-lg`).
+  2. Baris tengah: Angka utama besar (`text-2xl font-bold tracking-tight tabular-nums`).
+  3. Baris bawah: Konteks nyata dari data (mis. `"4 dari 16 berstatus PENDING"` atau micro progress bar lebar `pct%` yang dihitung dari data aktif).
+
+---
+
+## 4. Ikonografi Presisi (Nol Emoji di UI Chrome — `lucide-react` & Iconify)
+
+- **Larangan Keras:** Jangan gunakan emoji Unicode (`📦`, `💰`, `🗑️`, `🔍`, `✅`, `⚠️`) sebagai ikon navigasi sidebar, tombol aksi, kartu KPI, atau notifikasi toast.
+- **Aturan Pemilihan per Stack:**
+  1. **Stack `react` (Vite):** Gunakan paket **`lucide-react`** (ter-bundle lokal saat build, 0 request jaringan runtime).
+  2. **Stack `html-tailwind` (dan opsional `gasly-pro`):** Diizinkan menggunakan **Iconify Web Component** (`<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>`) dengan tag `<iconify-icon icon="lucide:<nama>" width="18" height="18" aria-hidden="true"></iconify-icon>` agar mewarisi `currentColor` di Light/Dark mode dan menghemat token.
+     - **Dilarang** memakai `<img src="https://api.iconify.design/...">` untuk ikon UI interaktif karena tidak mewarisi `currentColor` saat *Theme Toggle*.
+     - **Kunci 1 Keluarga Ikon:** Gunakan konsisten 1 set per proyek (default: **`lucide:*`**; alternatif: `tabler:*` atau `solar:*-linear`). Jangan mencampur gaya tipis & tebal di layar yang sama.
+     - **Kunci Dimensi (Zero CLS):** Selalu sertakan `width` & `height` eksplisit (mis. `16`, `18`, `20`) serta `aria-hidden="true"` bila mendampingi label teks.
+     - **Gunakan Nama Ikon Terverifikasi:** Prioritaskan nama ikon `lucide` standar (`plus`, `search`, `refresh-cw`, `trash-2`, `pencil`, `check-circle-2`, `alert-circle`, `shield-check`, `upload`, `download`, `x`, `menu`, `sun`, `moon`, `log-out`, `package`, `users`, `calendar`, `clock`, `file-text`, `external-link`, `utensils`, `truck`, `wallet`, `filter`, `chevron-down`).
+     - **Kontrol Kritikal:** Tombol tutup modal (`&times;` / inline SVG) tetap harus terlihat meskipun jaringan ke `api.iconify.design` terputus.
+  3. **Pengecualian Mutlak (`Gate I-01`):** `api.iconify.design` / `code.iconify.design` **dilarang keras** digunakan di dalam `install-guide.html` (`gasly-deploy-guide` wajib 100% offline).
+
+---
+
+## 5. Data Table Toolbar, Refined Status Pills & Mobile Card View
+
+1. **Unified Table Toolbar:**
+   Letakkan dalam satu kontainer kartu bersama tabelnya (`border-b` tipis):
+   - Kiri: Input pencarian real-time berikon kaca pembesar + deretan **Filter Pill** (mis. `Semua`, `PENDING`, `ACTIVE`, `COMPLETED`) dengan hitungan jumlah baris per status.
+   - Kanan: Dropdown urutkan (*Terbaru / Nominal Tertinggi*) + penghitung hasil (`"Menampilkan 12 dari 16 data"`).
+2. **Refined Status Pill (Bukan Kotak Warna Solid Kasar):**
+   - Bentuk: `inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border`.
+   - Gunakan dot indikator `6px` + latar lembut ber-border halus yang menjaga kontras teks `>= 4,5:1` di Light maupun Dark Mode.
+3. **Dual Responsive Rendering (`Desktop Table` + `Mobile Card View`):**
+   - **Layar `>= 768px` (`hidden md:block`):** Tabel dengan header lengket (*sticky*), teks rata kiri, kode ID `font-mono text-xs`, nominal rata kanan `.tabular-nums font-semibold`, dan tombol aksi rapi di kolom kanan.
+   - **Layar `< 768px` (`md:hidden space-y-3`):** Render setiap baris sebagai kartu ringkas bertumpuk (*stacked card*): Baris 1 (Judul + Status Pill), Baris 2 (ID monospace + Kategori + Tanggal), Baris 3 (Nominal besar `.tabular-nums` + tombol aksi minimum `40×40px`).
+
+---
+
+## 6. Micro-Surface, Skeleton Realistis, Empty State & Sonner Toast
+
+- **Realistic Skeleton Loader:** Saat `LOADING`, render 4 kartu skeleton KPI dan 5 baris skeleton tabel dengan tinggi yang sama persis dengan konten asli (`animate-pulse`, mematuhi `prefers-reduced-motion`).
+- **Illustrated Empty State:** Ketika data kosong atau pencarian menghasilkan `0` baris, tampilkan kontainer terpusat (`py-12`) berisi lingkaran ikon SVG `48×48px`, judul tegas, penjelasan 1 baris, dan 1 tombol aksi langsung (`"+ Buat Data Pertama"` atau `"Reset Filter"`).
+- **Sonner-Style Stacked Toast:**
+  - Tempatkan di kanan-atas (atau kanan-bawah desktop) dengan lebar `max-w-sm`, kartu ber-border halus (`var(--bg-surface)` + strip aksen kiri `4px` sesuai varian `success`/`error`/`warning`/`info` + ikon SVG status + tombol tutup `×`), sehingga tidak menabrak badge `Preview Mode` di kiri-bawah.
+
+---
+
+## 7. Checklist Self-Audit Estetika $49/Bulan
+
+Sebelum menyelesaikan kode frontend (`gasly-ui` / `gasly-pro`), pastikan seluruh 8 poin berikut terpenuhi:
+- [ ] Nol emoji mentah dipakai sebagai ikon navigasi, tombol, KPI, atau toast (seluruhnya inline SVG konsisten).
+- [ ] Pada `INTERNAL_APP` / Dashboard, form tambah/edit berada di Slide-Over Drawer atau Modal—bukan menumpuk terbuka di atas tabel.
+- [ ] Tersedia 3–4 kartu Bento KPI di atas tabel yang dihitung *live* dari state data dengan `.tabular-nums`.
+- [ ] Tabel dilengkapi Search + Filter Pills + Status Pills lembut + Mobile Stacked Card View (`< 768px`).
+- [ ] Skeleton loader meniru bentuk kartu KPI & tabel asli, dan Empty State memiliki ikon SVG + tombol CTA.
+- [ ] Toast bergaya Sonner terstruktur dengan ikon SVG dan tombol tutup.
+- [ ] Seluruh foto/video dummy pada halaman publik memakai `MEDIA_PLACEHOLDERS` (`Gate W-10`) dengan rasio aspek terkunci dan fallback SVG.
+- [ ] Seluruh interaksi memiliki state `:hover`, `:active`, dan `:focus-visible` yang kontras serta halus (`150ms–200ms`).
 
 
 ---

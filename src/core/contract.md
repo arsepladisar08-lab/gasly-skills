@@ -72,7 +72,7 @@ Body HTTP `POST` adalah string JSON yang valid dengan struktur berikut:
 ```
 
 ### B. Format Query Parameter `GET` (Khusus Operasi Baca)
-Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya saat *build-time* atau *ISR revalidation* di Next.js/Astro) dengan parameter query:
+Operasi baca publik/idempoten (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` dengan parameter query:
 `?action=domain.verb&v=1&auth=<opsional>&payload=<encodeURIComponent(JSON.stringify(payload))>`
 
 ### C. Konvensi Penamaan `action` dan Allowlist Registry
@@ -81,16 +81,18 @@ Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya sa
   - Otentikasi: `auth.login`, `auth.google`, `auth.logout`, `auth.setCredentials`, `auth.verifyPin`
   - Entitas Data: `<entity>.list`, `<entity>.get`, `<entity>.create`, `<entity>.update`, `<entity>.delete`
   - Unggahan File Drive: `file.ticket`, `file.upload`, `file.replace`, `file.delete`
-  - **Kontrak Step-Up PIN (`stepUpToken`):** Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
+  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
+  - Integrasi Eksternal & Monetisasi: `webhook.receive`, `mail.send`, `notify.whatsapp`, `ai.generate`, `plans.list`, `subscription.get`, `payment.createCheckout`
+- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
+
+**Kontrak Step-Up PIN (`stepUpToken`):**
+- Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
 
 **Kontrak Upload Publik:**
 - Respons `items.create` memberikan `data.uploadNonce` sekali kepada pemanggil. Nilai ini disimpan di kolom internal `upload_nonce` dan wajib disembunyikan dari `items.list`/`items.get`.
 - `file.ticket` harus menerima `payload: { entity, entityId, uploadNonce }`. Server hanya menerbitkan tiket untuk record baru (maksimal 15 menit) yang nonce-nya cocok, belum diarsipkan, dan belum memiliki `file_id/file_url`.
 - Tiket berlaku 5 menit dan terikat pada `entity`, `entityId`, serta nonce. `file.upload` memverifikasi scope dan mengonsumsi tiket sekali pakai di dalam lock.
 - Upload publik ditolak bila attachment sudah ada. Hanya sesi bertanda tangan ber-role `ADMIN` atau `STAFF` yang boleh mengganti attachment.
-  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
-  - Integrasi Eksternal: `webhook.receive`
-- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
 
 ---
 
@@ -164,11 +166,12 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
    - `INTERNAL_APP`: Langsung menuju layar login & workspace operasional padat data (tanpa landing page pemasaran).
    - `PUBLIC_SERVICE`: Papan informasi/antrean/formulir layanan publik + panel petugas terproteksi.
    - `MARKETPLACE` / `SAAS_PLATFORM`: *Dual-Surface* terpisah (Landing Page akuisisi publik pada rute utama `/` dan Dashboard terotentikasi pada rute/view `/app`).
-2. **Pemilihan Tangga Arsitektur & Lisensi Hosting:**
-   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS untuk alat sederhana satu pintu.
-   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis/SSR di **Cloudflare Pages** (diizinkan untuk komersial gratis) + Backend GAS `/exec`. *(Catatan: GitHub Pages dan Vercel Hobby hanya boleh direkomendasikan untuk prototipe/demo non-komersial).*
-   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy Cloudflare Worker / Vercel Function (`/api/gas`) dengan tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* untuk Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
-   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dan **Vercel Pro**, sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
+2. **Pemilihan Tangga Arsitektur, Stack Minimalis & Lisensi Hosting (`facts.md`):**
+   - **Tiga Stack Kanonik:** `html-tailwind` (decoupled ringan), `react` (React + Vite SPA), dan `gas-htmlservice` (legacy monolitik `gasly-pro`).
+   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS tanpa hosting eksternal untuk alat sederhana satu pintu.
+   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis (`html-tailwind` atau `react` Vite) di **Cloudflare Pages** (default komersial gratis), atau alternatif komersial **Sevalla**, **Netlify**, **Firebase Hosting**, maupun **Vercel Pro** + Backend GAS `/exec`. *(Catatan: **GitHub Pages** dan **Vercel Hobby** hanya boleh direkomendasikan untuk demo/portofolio/personal non-komersial).*
+   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy serverless tipis (Cloudflare Worker / Netlify Function / Vercel Function sesuai paket) untuk tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
+   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dengan hosting komersial (**Cloudflare Pages** / **Sevalla** / **Vercel Pro**), sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
 
 ## 9. Batas Kepercayaan Input Eksternal (Trust Boundary)
 

@@ -13,16 +13,16 @@ Anda adalah engineering coordinator. Baca `GASLY_CONTRACT.json`, `PRD-Final.md`,
 Skill ini **tidak menggantikan** `gasly-data` (backend `.gs`), `gasly-ui` (frontend), atau `gasly-deploy-guide` (deployment guide). Ia mengunci kontrak bersama, urutan kerja, integrasi, dan acceptance.
 
 ## 2. Referensi Wajib
-- `references/voice-and-brevity.md`: gaya mentor profesional yang singkat dan to-the-point.
-- `references/contract.md`, `references/access-profiles.md`, `references/gates.md`: kontrak API, envelope, profil akses, dan Hard Gates.
-- `references/config.md` & `references/integrations.md`: konfigurasi `ScriptProperties`, batas kuota, dan integrasi tersedia.
-- `references/presets.md`, `references/dials.md`, `references/tokens.schema.json`: design system kanonik.
-- `references/INHERIT.md` & `references/PLANNED.md`: batas dukungan stack frontend dan roadmap.
+- `references/contract.md` & `references/facts.md`: kontrak API, response envelope, kuota GAS, dan lisensi hosting target.
+- `references/access-profiles.md`: access profile dan authentication model.
+- `references/gates.md`: quality/security gates (`U-01`–`U-12`, `G-01`–`G-12`, `W-01`–`W-10`).
+- `references/presets.md`, `references/dials.md`, `references/saas-craft.md`, `references/tokens.schema.json`: design system & standar visual polish SaaS kanonik.
+- Implementasi detail `.gs` didelegasikan penuh ke skill `gasly-data`; implementasi adapter frontend (`html-tailwind` atau `react`) didelegasikan penuh ke skill `gasly-ui`.
 
 ## 3. Gerbang Sebelum Build
-1. Pastikan PRD dan `GASLY_CONTRACT.json` tersedia (atau catat artifact yang harus dilengkapi dulu).
-2. Bila `UIUX_HANDOFF.md`/`DESIGN.md` belum ada, tawarkan `gasly-prd-to-uiux` atau minta persetujuan build berbasis PRD saja.
-3. Validasi stack: adapter penuh (`html-tailwind`, `nextjs+shadcn`, `astro`) vs `INHERIT`; jangan mengklaim adapter produksi untuk item `PLANNED`.
+1. Pastikan PRD dan kontrak proyek tersedia atau catat artifact mana yang harus dibuat terlebih dahulu.
+2. Pastikan UI reference atau `UIUX_HANDOFF.md` tersedia; bila tidak ada, tawarkan tahap `gasly-prd-to-uiux` atau minta persetujuan pengguna untuk implementasi berbasis PRD saja.
+3. Validasi bahwa stack frontend yang diminta adalah salah satu dari 2 stack decoupled kanonik (`html-tailwind` atau `react`); jika pengguna meminta monolitik `HtmlService`, arahkan ke skill legacy `gasly-pro`.
 4. Pastikan klasifikasi data (`CONFIDENTIAL`/`SENSITIVE_PII` $\rightarrow$ Drive `private`), auth (`idToken`), upload (`uploadNonce` $\rightarrow$ `file.ticket` $\rightarrow$ `file.upload`), dan action registry konsisten.
 5. Tetapkan kepemilikan file: `gasly-data` untuk `.gs`, `gasly-ui` untuk frontend, dan koordinator ini untuk kontrak integrasi & checklist acceptance.
 
@@ -35,7 +35,7 @@ Skill ini **tidak menggantikan** `gasly-data` (backend `.gs`), `gasly-ui` (front
 
 ## 5. Modul Tambahan & Anti-Slop
 - Tolak konten fiktif, dead UI, dan klaim "production-ready" tanpa bukti tes.
-- Email/WhatsApp/AI wajib merujuk handler di `references/integrations.md`. Ungkap risiko Fonnte (gateway non-resmi), consent, opt-out, dan kuota.
+- Email/WhatsApp: gunakan handler yang benar-benar tersedia di modul integrasi `gasly-data` (`src/gas/integrations.md`). Fonnte adalah gateway non-resmi; ungkap risiko dan minta persetujuan untuk skenario pesan massal, opt-in, opt-out, dan pembatasan.
 - Migrasi database dan document-generation belum tersedia sebagai skill mandiri; rancang terpisah dengan dry-run & rollback plan bila diminta.
 
 ## Audit Mode Inheritance

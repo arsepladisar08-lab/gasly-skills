@@ -2,120 +2,6 @@
 
 
 ---
-<!-- FILE: references/INHERIT.md -->
-<!-- KB_VERSION: 2.1.0 -->
-# TOKEN & GATE INHERITANCE FOR 15 ADDITIONAL STACKS (`stacks/INHERIT.md`)
-**KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-prd` dan `gasly-ui` ketika pengguna meminta salah satu dari 15 stack pewaris (*inheriting stacks*).
-
-## Daftar Isi
-1. [Daftar 15 Stack Pewaris Resmi](#1-daftar-15-stack-pewaris-resmi)
-2. [Kontrak yang Diwarisi oleh Seluruh 15 Stack](#2-kontrak-yang-diwarisi-oleh-seluruh-15-stack)
-3. [Matriks Adaptasi Teknis per Kelompok Stack](#3-matriks-adaptasi-teknis-per-kelompok-stack)
-
----
-
-## 1. Daftar 15 Stack Pewaris Resmi
-
-Kelima belas stack berikut tidak memiliki file boilerplate adapter khusus pada tahap ini, tetapi **didukung melalui mode pewarisan (`STACK_MODE: INHERIT`)** dengan mewarisi kontrak protokol `/exec`, token desain JSON/CSS, karakter 3 dials, serta gerbang kualitas:
-
-1. `angular`
-2. `avalonia`
-3. `flutter`
-4. `javafx`
-5. `jetpack-compose`
-6. `laravel`
-7. `react-native`
-8. `svelte`
-9. `swiftui`
-10. `threejs`
-11. `uno`
-12. `uwp`
-13. `vue`
-14. `winui`
-15. `wpf`
-
----
-
-## 2. Kontrak yang Diwarisi oleh Seluruh 15 Stack
-
-Ketika membangun pada salah satu dari 15 stack di atas, agen wajib menerapkan 4 kontrak inti berikut tanpa pengecualian:
-
-1. **Kontrak Komunikasi (`references/contract.md`):**
-   - Hanya menggunakan satu konfigurasi URL Web App publik (`.../exec`).
-   - Mengirim permintaan `POST` dengan `Content-Type: text/plain;charset=utf-8`, mengikuti pengalihan `HTTP 302` (`followRedirects = true`), membungkus payload `{ action, v: 1, auth, idem, payload }`, dan hanya melakukan retry pada aksi yang memiliki kunci `idem` atau aksi baca.
-2. **Kontrak Gambar Drive (`driveImageUrl`):**
-   - Mengambil gambar menggunakan `https://drive.google.com/thumbnail?id=<fileId>&sz=w<width>` dengan fallback otomatis ke `https://lh3.googleusercontent.com/d/<fileId>=w<width>`.
-   - Mengompres foto di sisi client ke sekitar `<= 1 MB` sebelum mengirim base64 ke `file.upload` dengan 5 state (`idle`, `compressing`, `uploading`, `error`, `done`).
-3. **Kontrak Token Desain & Preset (`references/presets/<preset>.tokens.json`):**
-   - Mengambil nilai hex dari `modes.light` dan `modes.dark` pada file JSON preset yang dipilih (`aura`, `editorial-light`, `dense-dashboard`, `warm-friendly`) sehingga seluruh pasangan teks dan latar tetap lulus kontras **WCAG AA (>= 4,5:1)**.
-4. **Kontrak Gerbang Kualitas (`references/gates.md`):**
-   - Seluruh 15 stack wajib mematuhi seluruh gerbang **`UNIVERSAL` (`U-01` s/d `U-09`)**.
-   - Stack berbasis web (`angular`, `laravel`, `svelte`, `threejs`, `vue`) wajib mematuhi seluruh gerbang **`WEB-ONLY` (`W-01` s/d `W-08`)**.
-
----
-
-## 3. Matriks Adaptasi Teknis per Kelompok Stack
-
-| Kelompok Stack | Anggota Stack | Cara Konsumsi Token Desain | Aturan HTTP Client ke `/exec` & Penyimpanan Token |
-| :--- | :--- | :--- | :--- |
-| **Web Frameworks & 3D Web** | `angular`, `laravel`, `svelte`, `threejs`, `vue` | Impor langsung `references/css/<preset>.css` (`var(--bg-base)`, dll.). Untuk `threejs`, gunakan UI overlay HTML/CSS di atas `<canvas>` untuk form/tabel dan ambil warna scene dari JSON token. | Gunakan `fetch` dengan `Content-Type: text/plain;charset=utf-8` dan `redirect: "follow"`.(Pada `laravel`, pemanggilan dari PHP `Http::withOptions(['allow_redirects' => true])` juga didukung untuk bacaan server). Simpan token di memori state aplikasi. |
-| **Mobile & Cross-Platform Native** | `flutter`, `react-native`, `jetpack-compose`, `swiftui` | Petakan `modes.light` dan `modes.dark` dari `<preset>.tokens.json` ke objek tema native (`ThemeData`, `StyleSheet`, `MaterialTheme`, `Color`). | Pastikan HTTP client (`http`/`dio`, `OkHttp`, `URLSession`) mengikuti redirect `302` pada request `POST` (atau tangani redirect manual bila library mengubah `POST` menjadi `GET` saat `302`). Simpan session token di memori (atau Keychain/EncryptedSharedPreferences bila sesi perlu dipertahankan). |
-| **Desktop .NET & JVM** | `avalonia`, `uno`, `uwp`, `winui`, `wpf`, `javafx` | Petakan nilai hex dari `<preset>.tokens.json` ke `ResourceDictionary` XAML (`SolidColorBrush`) atau stylesheet CSS JavaFX. | Pada `.NET HttpClient` / Java `HttpClient`, aktifkan pengikutan redirect dan kirim body JSON sebagai `StringContent(json, Encoding.UTF8, "text/plain")`. Simpan session token di variabel memori proses aplikasi. |
-
-
----
-<!-- FILE: references/PLANNED.md -->
-<!-- KB_VERSION: 2.1.0 -->
-# PLANNED FEATURES & NEXT-STAGE ROADMAP (`stacks/PLANNED.md`)
-**KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-prd`, `gasly-data`, dan `gasly-ui` ketika pengguna menanyakan fitur atau adapter yang dijadwalkan untuk tahap pengembangan berikutnya.
-
-## Daftar Isi
-1. [Status Item `PLANNED` (Dokumentasi Saja — Jangan Diimplementasikan Sebagai Fitur Matang)](#1-status-item-planned-dokumentasi-saja--jangan-diimplementasikan-sebagai-fitur-matang)
-2. [Access Profile `P2` (`public-with-accounts` via Supabase Auth)](#2-access-profile-p2-public-with-accounts-via-supabase-auth)
-3. [Adapter Penuh Tahap Berikutnya (`react-vite+shadcn` & `nuxtjs+nuxt-ui`)](#3-adapter-penuh-tahap-berikutnya-react-viteshadcn--nuxtjsnuxt-ui)
-4. [Ekspor Token Otomatis untuk Stack Native & Desktop](#4-ekspor-token-otomatis-untuk-stack-native--desktop)
-
----
-
-## 1. Status Item `PLANNED` (Dokumentasi Saja — Jangan Diimplementasikan Sebagai Fitur Matang)
-
-Item yang tercantum di dalam dokumen ini berstatus **`PLANNED` (Direncanakan untuk Tahap Berikutnya)**.
-- Agen tidak boleh mengklaim bahwa fitur-fitur di bawah ini sudah tersedia sebagai boilerplate siap pakai di repositori saat ini.
-- Apabila pengguna meminta salah satu item di bawah ini, jelaskan statusnya secara transparan dan tawarkan jalur alternatif yang sudah didukung penuh pada tahap ini.
-
----
-
-## 2. Access Profile `P2` (`public-with-accounts` via Supabase Auth)
-
-- **Tujuan:** Mengizinkan ribuan pengguna publik mendaftar mandiri, melakukan reset kata sandi, dan hanya membaca/mengubah baris data milik mereka sendiri (*row-level ownership*).
-- **Mengapa Ditunda ke Tahap Berikutnya:** Google Apps Script dan Google Sheets tidak dirancang sebagai penyedia identitas publik berskala besar (kuota pengiriman email harian terbatas dan latensi Sheet meningkat pada tabel pengguna besar). Rencana tahap berikutnya adalah mengintegrasikan **Supabase Auth** sebagai penyedia identitas eksternal sementara data bisnis tetap disimpan di Google Sheets/Drive.
-- **Alternatif Saat Ini (Sudah Didukung di v2.3.0):**
-  - Gunakan **`P2-lite`** pada `gasly-data` (`P2_LITE_AUTO_PROVISION = 'TRUE'` di `ScriptProperties` bersama `auth.google` dan tabel `USERS` berklasifikasi `SENSITIVE_PII`) untuk pendaftaran mandiri ber-rate-limit (maks. 10/10 menit) tanpa menguras kuota `MailApp`, dilengkapi pengaturan passphrase/PIN via `auth.setCredentials` dan step-up PIN 6 digit via `auth.verifyPin`.
-  - Gunakan **`P3` (`public-plus-admin`)** jika pengunjung publik hanya perlu mengirim formulir/unggah bukti (dengan tiket sekali pakai `file.ticket`) dan melacak status menggunakan `tracking_token`, sementara persetujuan dilakukan oleh Admin.
-  - Gunakan **`P4` (`internal-only`)** dengan login multi-user `USERS` (`auth.login`) atau Google ID Token (`auth.google` + sheet `USERS`/`ALLOWLIST`) jika seluruh pengguna adalah anggota tim atau mitra terdaftar.
-
----
-
-## 3. Adapter Penuh Tahap Berikutnya (`react-vite+shadcn` & `nuxtjs+nuxt-ui`)
-
-1. **`react` (Vite) + `shadcn/ui` (`PLANNED`):**
-   - Direncanakan sebagai adapter penuh SPA murni untuk dashboard internal tanpa kebutuhan SSR/ISR.
-   - *Solusi Saat Ini:* Gunakan adapter penuh **`nextjs` + `shadcn`** (dapat dijalankan dalam mode statis/CSR maupun SSR) atau **`html-tailwind`**. Jika pengguna tetap memilih Vite + React, gunakan aturan pewarisan di `references/INHERIT.md` bersama modul `gasClient.ts` dan `ImageUploader.tsx` dari `references/nextjs-shadcn.md`.
-2. **`nuxtjs` + `nuxt-ui` (`PLANNED`):**
-   - Direncanakan sebagai adapter penuh ekosistem Vue/Nuxt dengan dukungan pembacaan publik saat build/SSR.
-   - *Solusi Saat Ini:* Gunakan adapter penuh **`astro`** atau **`nextjs` + `shadcn`**, atau bangun di atas Vue/Nuxt menggunakan mode pewarisan `STACK_MODE: INHERIT` (`references/INHERIT.md`).
-
----
-
-## 4. Ekspor Token Otomatis untuk Stack Native & Desktop
-
-- **Rencana Tahap Berikutnya:** Menambahkan skrip generator yang mengonversi `src/design/presets/*.tokens.json` secara otomatis menjadi file kode tema siap impor untuk SwiftUI (`Color+Gasly.swift`), Jetpack Compose (`Color.kt`), Flutter (`gasly_theme.dart`), dan .NET XAML (`GaslyColors.xaml`).
-- **Solusi Saat Ini:** Agen yang membangun pada stack native/desktop dalam mode `INHERIT` membaca langsung nilai hex terverifikasi WCAG AA dari file `src/design/presets/<preset>.tokens.json`.
-
-
----
 <!-- FILE: references/access-profiles.md -->
 <!-- KB_VERSION: 2.1.0 -->
 # ACCESS PROFILES & AUTHENTICATION ARCHITECTURE (`core/access-profiles.md`)
@@ -217,502 +103,6 @@ Dalam arsitektur *decoupled frontend* yang memanggil `script.google.com/.../exec
 
 
 ---
-<!-- FILE: references/astro.md -->
-<!-- KB_VERSION: 2.1.0 -->
-# STACK ADAPTER: ASTRO (`stacks/astro.md`)
-**KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-ui` ketika stack yang dipilih adalah `astro`.
-
-## Daftar Isi
-1. [Struktur Proyek & Konvensi `PUBLIC_GAS_EXEC_URL`](#1-struktur-proyek--konvensi-public_gas_exec_url)
-2. [Strategi Build-Time Public Reads & Browser Island Writes](#2-strategi-build-time-public-reads--browser-island-writes)
-3. [Kode Lengkap `src/lib/gasClient.ts` & `src/lib/driveImage.ts`](#3-kode-lengkap-srclibgasclientts--srclibdriveimagets)
-4. [Kode Lengkap `src/pages/index.astro` (Build-Time Read + Interactive Island)](#4-kode-lengkap-srcpagesindexastro-build-time-read--interactive-island)
-
----
-
-## 1. Struktur Proyek & Konvensi `PUBLIC_GAS_EXEC_URL`
-
-```text
-astro-gasly-app/
-├── .env                                # PUBLIC_GAS_EXEC_URL=https://script.google.com/macros/s/<ID>/exec
-├── astro.config.mjs
-├── package.json                        # Menggunakan <<PIN_VERSION>> untuk astro dan @astrojs/tailwind
-└── src/
-    ├── styles/
-    │   └── preset.css                  # Salinan CSS variabel preset (mis. editorial-light.css / warm-friendly.css)
-    ├── lib/
-    │   ├── gasClient.ts                # Klien HTTP text/plain POST/GET, retry idempoten, & memori token
-    │   └── driveImage.ts               # Helper tunggal driveImageUrl(fileId, width) + fallback
-    └── pages/
-        └── index.astro                 # Frontmatter build-time GET + client-side interactive script
-```
-
-- **Satu Konfigurasi Lingkungan:** Di `.env`, tetapkan:
-  `PUBLIC_GAS_EXEC_URL=https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec`
-- Variabel berawalan `PUBLIC_` di Astro dapat diakses baik di dalam *frontmatter server/build* (`import.meta.env.PUBLIC_GAS_EXEC_URL`) maupun di dalam skrip interaktif sisi browser.
-
----
-
-## 2. Strategi Build-Time Public Reads & Browser Island Writes
-
-1. **Baca Publik Saat Build (`src/pages/index.astro` frontmatter):**
-   - Saat `astro build` dijalankan, bagian frontmatter (`---`) mengambil data publik (`action=items.list&v=1`) dari URL `/exec` menggunakan `redirect: "follow"` dan merender HTML awal yang cepat serta ramah SEO.
-2. **Pembaruan Langsung & Mutasi dari Browser:**
-   - Aksi tulis (`items.create`, `file.ticket`, `file.upload`, `items.delete`) dan login admin (`auth.login` dengan token sesi di memori atau `sessionStorage` opsional) dieksekusi langsung dari browser ke URL `/exec` menggunakan `Content-Type: text/plain;charset=utf-8`.
-
----
-
-## 3. Kode Lengkap `src/lib/gasClient.ts` & `src/lib/driveImage.ts`
-
-```typescript
-// FILE: src/lib/gasClient.ts
-export interface GasEnvelope<T = unknown> {
-  status: 'success' | 'error';
-  data: T | null;
-  message: string;
-  code:
-    | 'OK'
-    | 'VALIDATION_ERROR'
-    | 'NOT_FOUND'
-    | 'FORBIDDEN'
-    | 'CONFLICT'
-    | 'LOCK_TIMEOUT'
-    | 'INTERNAL_ERROR';
-  meta: {
-    schemaVersion?: string;
-    timestamp: string;
-    idempotentReplay?: boolean;
-    retryAfterSeconds?: number;
-  };
-}
-
-const SESSION_KEY = 'GASLY_ASTRO_SESSION_TOKEN';
-let inMemoryToken: string | null = null;
-
-export function getExecUrl(): string {
-  return import.meta.env.PUBLIC_GAS_EXEC_URL || '';
-}
-
-export function getSessionToken(): string | null {
-  if (inMemoryToken) return inMemoryToken;
-  if (typeof window !== 'undefined') {
-    try {
-      return window.sessionStorage.getItem(SESSION_KEY);
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-export function setSessionToken(token: string | null, persistInTab = false): void {
-  inMemoryToken = token;
-  if (typeof window !== 'undefined') {
-    try {
-      if (token && persistInTab) {
-        window.sessionStorage.setItem(SESSION_KEY, token);
-      } else {
-        window.sessionStorage.removeItem(SESSION_KEY);
-      }
-    } catch {}
-  }
-}
-
-export function generateUuid(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-export async function gasPost<T = unknown>(
-  action: string,
-  payload: Record<string, unknown> = {},
-  options: { idempotent?: boolean; idemKey?: string; timeoutMs?: number; maxRetries?: number } = {}
-): Promise<GasEnvelope<T>> {
-  const execUrl = getExecUrl();
-  if (!execUrl || execUrl.includes('REPLACE_WITH_DEPLOYMENT_ID')) {
-    return {
-      status: 'error',
-      data: null,
-      message: 'PUBLIC_GAS_EXEC_URL belum dikonfigurasi pada file .env.',
-      code: 'VALIDATION_ERROR',
-      meta: { timestamp: new Date().toISOString() }
-    };
-  }
-
-  const isRead = action.endsWith('.list') || action.endsWith('.get');
-  const isIdempotent = options.idempotent ?? !isRead;
-  const idemKey = options.idemKey || (isIdempotent ? generateUuid() : null);
-  const canRetry = isRead || Boolean(idemKey);
-  const maxRetries = canRetry ? (options.maxRetries ?? 2) : 0;
-  const timeoutMs = options.timeoutMs ?? 20000;
-
-  const body = JSON.stringify({
-    action,
-    v: 1,
-    auth: getSessionToken(),
-    idem: idemKey,
-    payload
-  });
-
-  let attempt = 0;
-  while (true) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const res = await fetch(execUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        redirect: 'follow',
-        body,
-        signal: controller.signal
-      });
-      const text = await res.text();
-      const env = JSON.parse(text) as GasEnvelope<T>;
-
-      if (env.code === 'FORBIDDEN' && !action.startsWith('auth.')) {
-        setSessionToken(null, false);
-      }
-      if (env.code === 'LOCK_TIMEOUT' && attempt < maxRetries) {
-        attempt += 1;
-        await new Promise((r) => setTimeout(r, 400 * Math.pow(2, attempt)));
-        continue;
-      }
-      return env;
-    } catch (err) {
-      if (attempt < maxRetries) {
-        attempt += 1;
-        await new Promise((r) => setTimeout(r, 400 * Math.pow(2, attempt)));
-        continue;
-      }
-      return {
-        status: 'error',
-        data: null,
-        message: err instanceof Error && err.name === 'AbortError'
-          ? 'Permintaan melewati batas waktu tunggu (timeout).'
-          : 'Gagal menghubungi endpoint Google Apps Script (/exec).',
-        code: 'INTERNAL_ERROR',
-        meta: { timestamp: new Date().toISOString() }
-      };
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-}
-
-export async function fetchBuildTimePublic<T = unknown>(
-  action: string,
-  payload: Record<string, unknown> = {}
-): Promise<GasEnvelope<T>> {
-  const execUrl = getExecUrl();
-  if (!execUrl || execUrl.includes('REPLACE_WITH_DEPLOYMENT_ID')) {
-    return {
-      status: 'error',
-      data: null,
-      message: 'PUBLIC_GAS_EXEC_URL belum dikonfigurasi.',
-      code: 'VALIDATION_ERROR',
-      meta: { timestamp: new Date().toISOString() }
-    };
-  }
-  const url = new URL(execUrl);
-  url.searchParams.set('action', action);
-  url.searchParams.set('v', '1');
-  if (Object.keys(payload).length > 0) {
-    url.searchParams.set('payload', JSON.stringify(payload));
-  }
-  try {
-    const res = await fetch(url.toString(), { method: 'GET', redirect: 'follow' });
-    return (await res.json()) as GasEnvelope<T>;
-  } catch {
-    return {
-      status: 'error',
-      data: null,
-      message: 'Data build-time belum tersedia; akan dimuat ulang di browser.',
-      code: 'INTERNAL_ERROR',
-      meta: { timestamp: new Date().toISOString() }
-    };
-  }
-}
-```
-
-```typescript
-// FILE: src/lib/driveImage.ts
-export function driveImageUrl(fileId: string | null | undefined, width = 800): string {
-  const cleanId = String(fileId || '').trim();
-  if (!cleanId) return '';
-  const w = Math.max(64, Math.min(2400, Math.floor(width)));
-  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(cleanId)}&sz=w${w}`;
-}
-
-export function driveImageFallbackUrl(fileId: string | null | undefined, width = 800): string {
-  const cleanId = String(fileId || '').trim();
-  if (!cleanId) return '';
-  const w = Math.max(64, Math.min(2400, Math.floor(width)));
-  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(cleanId)}=w${w}`;
-}
-
-const idr = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
-
-export function formatIdr(val: unknown): string {
-  if (val === null || val === undefined || val === '' || typeof val === 'boolean') return '-';
-  const n = Number(val);
-  return Number.isFinite(n) ? idr.format(n) : 'Data tidak valid';
-}
-```
-
----
-
-## 4. Kode Lengkap `src/pages/index.astro` (Build-Time Read + Interactive Island)
-
-```astro
----
-// FILE: src/pages/index.astro
-import '../styles/preset.css';
-import { fetchBuildTimePublic } from '../lib/gasClient';
-import { driveImageUrl, driveImageFallbackUrl, formatIdr } from '../lib/driveImage';
-
-interface ItemRow {
-  id: string;
-  title: string;
-  category: string;
-  amount: number;
-  file_id?: string;
-}
-
-const buildEnv = await fetchBuildTimePublic<{ items: ItemRow[] }>('items.list');
-const initialItems = buildEnv.status === 'success' && buildEnv.data?.items ? buildEnv.data.items : [];
----
-
-<!DOCTYPE html>
-<html lang="id" data-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Katalog & Formulir Layanan — Gasly Astro</title>
-  </head>
-  <body style="background-color: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans);" class="min-h-screen">
-    <main class="max-w-5xl mx-auto p-4 md:p-8 space-y-8">
-      <header class="space-y-2">
-        <h1 style="font-family: var(--font-display);" class="text-3xl md:text-4xl font-bold tracking-tight">
-          Katalog &amp; Pengajuan Layanan
-        </h1>
-        <p style="color: var(--text-secondary);" class="text-sm">
-          Data katalog dimuat saat build-time dan pengajuan baru dikirim langsung ke Google Sheets &amp; Drive (/exec).
-        </p>
-      </header>
-
-      <!-- Daftar Item Hasil Build-Time -->
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-4" id="catalog-grid">
-        {initialItems.length === 0 ? (
-          <p style="color: var(--text-helper);" class="text-sm md:col-span-3">
-            Belum ada item katalog yang ditampilkan.
-          </p>
-        ) : (
-          initialItems.map((item) => (
-            <article
-              style="background-color: var(--bg-surface); border: 1px solid var(--border-subtle);"
-              class="p-4 rounded-xl space-y-3"
-            >
-              {item.file_id && (
-                <img
-                  src={driveImageUrl(item.file_id, 480)}
-                  data-fallback={driveImageFallbackUrl(item.file_id, 480)}
-                  onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src=this.dataset.fallback;}"
-                  referrerpolicy="no-referrer"
-                  loading="lazy"
-                  alt={item.title}
-                  class="w-full h-40 object-cover rounded-lg"
-                />
-              )}
-              <div class="flex items-center justify-between text-xs" style="color: var(--text-helper);">
-                <span>{item.category}</span>
-                <span class="font-mono">{item.id}</span>
-              </div>
-              <h2 class="text-base font-semibold">{item.title}</h2>
-              <p class="text-sm font-bold tabular-nums">{formatIdr(item.amount)}</p>
-            </article>
-          ))
-        )}
-      </section>
-
-      <!-- Client Island: Form Pengajuan + Kompresi Upload Foto -->
-      <section
-        style="background-color: var(--bg-surface); border: 1px solid var(--border-subtle);"
-        class="p-6 rounded-xl space-y-4"
-      >
-        <h2 class="text-lg font-bold">Kirim Pengajuan Baru + Foto Bukti</h2>
-        <form id="astro-submit-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label for="f-title" style="color: var(--text-secondary);" class="block text-xs font-semibold mb-1">
-              Judul Pengajuan *
-            </label>
-            <input
-              id="f-title"
-              name="title"
-              type="text"
-              required
-              minlength="3"
-              maxlength="120"
-              style="background-color: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border-subtle);"
-              class="w-full min-h-[42px] px-3 py-2 rounded-lg text-sm"
-            />
-          </div>
-          <div>
-            <label for="f-amount" style="color: var(--text-secondary);" class="block text-xs font-semibold mb-1">
-              Nominal Estimasi (Rp) *
-            </label>
-            <input
-              id="f-amount"
-              name="amount"
-              type="number"
-              required
-              min="0"
-              style="background-color: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border-subtle);"
-              class="w-full min-h-[42px] px-3 py-2 rounded-lg text-sm tabular-nums"
-            />
-          </div>
-          <div>
-            <label for="f-photo" style="color: var(--text-secondary);" class="block text-xs font-semibold mb-1">
-              Foto Lampiran (JPEG/PNG/WebP)
-            </label>
-            <input
-              id="f-photo"
-              name="photo"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              style="background-color: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border-subtle);"
-              class="w-full min-h-[42px] px-2 py-1.5 rounded-lg text-xs"
-            />
-            <p id="f-upload-state" aria-live="polite" style="color: var(--text-helper);" class="text-xs mt-1">
-              [IDLE] Siap mengunggah
-            </p>
-          </div>
-          <div class="md:col-span-3 flex justify-end">
-            <button
-              id="f-submit-btn"
-              type="submit"
-              style="background-color: var(--accent-solid); color: var(--accent-text-on-solid);"
-              class="min-h-[44px] px-5 py-2 rounded-lg text-sm font-semibold"
-            >
-              Kirim Pengajuan
-            </button>
-          </div>
-        </form>
-      </section>
-    </main>
-
-    <script>
-      import { gasPost, getSessionToken } from '../lib/gasClient';
-
-      const form = document.getElementById('astro-submit-form') as HTMLFormElement | null;
-      const btn = document.getElementById('f-submit-btn') as HTMLButtonElement | null;
-      const stateEl = document.getElementById('f-upload-state');
-      let busy = false;
-
-      async function compressPhoto(file: File): Promise<{ fileName: string; mimeType: string; base64: string }> {
-        const url = URL.createObjectURL(file);
-        try {
-          const img = await new Promise<HTMLImageElement>((res, rej) => {
-            const i = new Image();
-            i.onload = () => res(i);
-            i.onerror = () => rej(new Error('Gagal memuat gambar'));
-            i.src = url;
-          });
-          const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
-          const c = document.createElement('canvas');
-          c.width = Math.round(img.width * scale);
-          c.height = Math.round(img.height * scale);
-          c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
-          const mime = file.type === 'image/png' ? 'image/webp' : file.type;
-          const dataUrl = c.toDataURL(mime, 0.78);
-          return { fileName: file.name, mimeType: mime, base64: dataUrl.split(',')[1] || '' };
-        } finally {
-          URL.revokeObjectURL(url);
-        }
-      }
-
-      form?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (busy || !btn || !stateEl) return;
-        busy = true;
-        btn.disabled = true;
-        btn.textContent = 'Menyimpan...';
-
-        try {
-          const fd = new FormData(form);
-          const createEnv = await gasPost<{ item: { id: string }; uploadNonce?: string }>('items.create', {
-            title: String(fd.get('title') || ''),
-            category: 'Operasional',
-            amount: Number(fd.get('amount') || 0),
-            status: 'PENDING'
-          });
-
-          if (createEnv.status !== 'success' || !createEnv.data?.item) {
-            stateEl.textContent = `[ERROR] ${createEnv.message}`;
-            return;
-          }
-
-          const photoInput = document.getElementById('f-photo') as HTMLInputElement | null;
-          const file = photoInput?.files?.[0];
-          if (file) {
-            stateEl.textContent = '[COMPRESSING] Mengompres foto...';
-            const comp = await compressPhoto(file);
-            stateEl.textContent = '[UPLOADING] Mengunggah foto ke Google Drive...';
-
-            let ticket: string | null = null;
-            if (!getSessionToken()) {
-              const tEnv = await gasPost<{ ticket: string }>(
-                'file.ticket',
-                {
-                  entity: 'ITEMS',
-                  entityId: createEnv.data.item.id,
-                  uploadNonce: createEnv.data.uploadNonce || ''
-                },
-                { idempotent: false }
-              );
-              if (tEnv.status !== 'success' || !tEnv.data?.ticket) {
-                stateEl.textContent = `[ERROR] ${tEnv.message}`;
-                return;
-              }
-              ticket = tEnv.data.ticket;
-            }
-
-            const upEnv = await gasPost('file.upload', {
-              entity: 'ITEMS',
-              entityId: createEnv.data.item.id,
-              fileName: comp.fileName,
-              mimeType: comp.mimeType,
-              base64: comp.base64,
-              ticket
-            });
-
-            if (upEnv.status !== 'success' || upEnv.code !== 'OK') {
-              stateEl.textContent = `[ERROR] ${upEnv.message}`;
-              return;
-            }
-          }
-
-          stateEl.textContent = '[DONE] Pengajuan dan foto berhasil disimpan.';
-          form.reset();
-        } finally {
-          busy = false;
-          btn.disabled = false;
-          btn.textContent = 'Kirim Pengajuan';
-        }
-      });
-    </script>
-  </body>
-</html>
-```
-
-
----
 <!-- FILE: references/contract.md -->
 <!-- KB_VERSION: 2.1.0 -->
 # GASLY HEADLESS ARCHITECTURE & WIRE CONTRACT (`core/contract.md`)
@@ -788,7 +178,7 @@ Body HTTP `POST` adalah string JSON yang valid dengan struktur berikut:
 ```
 
 ### B. Format Query Parameter `GET` (Khusus Operasi Baca)
-Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya saat *build-time* atau *ISR revalidation* di Next.js/Astro) dengan parameter query:
+Operasi baca publik/idempoten (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` dengan parameter query:
 `?action=domain.verb&v=1&auth=<opsional>&payload=<encodeURIComponent(JSON.stringify(payload))>`
 
 ### C. Konvensi Penamaan `action` dan Allowlist Registry
@@ -797,16 +187,18 @@ Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya sa
   - Otentikasi: `auth.login`, `auth.google`, `auth.logout`, `auth.setCredentials`, `auth.verifyPin`
   - Entitas Data: `<entity>.list`, `<entity>.get`, `<entity>.create`, `<entity>.update`, `<entity>.delete`
   - Unggahan File Drive: `file.ticket`, `file.upload`, `file.replace`, `file.delete`
-  - **Kontrak Step-Up PIN (`stepUpToken`):** Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
+  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
+  - Integrasi Eksternal & Monetisasi: `webhook.receive`, `mail.send`, `notify.whatsapp`, `ai.generate`, `plans.list`, `subscription.get`, `payment.createCheckout`
+- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
+
+**Kontrak Step-Up PIN (`stepUpToken`):**
+- Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
 
 **Kontrak Upload Publik:**
 - Respons `items.create` memberikan `data.uploadNonce` sekali kepada pemanggil. Nilai ini disimpan di kolom internal `upload_nonce` dan wajib disembunyikan dari `items.list`/`items.get`.
 - `file.ticket` harus menerima `payload: { entity, entityId, uploadNonce }`. Server hanya menerbitkan tiket untuk record baru (maksimal 15 menit) yang nonce-nya cocok, belum diarsipkan, dan belum memiliki `file_id/file_url`.
 - Tiket berlaku 5 menit dan terikat pada `entity`, `entityId`, serta nonce. `file.upload` memverifikasi scope dan mengonsumsi tiket sekali pakai di dalam lock.
 - Upload publik ditolak bila attachment sudah ada. Hanya sesi bertanda tangan ber-role `ADMIN` atau `STAFF` yang boleh mengganti attachment.
-  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
-  - Integrasi Eksternal: `webhook.receive`
-- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
 
 ---
 
@@ -880,11 +272,12 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
    - `INTERNAL_APP`: Langsung menuju layar login & workspace operasional padat data (tanpa landing page pemasaran).
    - `PUBLIC_SERVICE`: Papan informasi/antrean/formulir layanan publik + panel petugas terproteksi.
    - `MARKETPLACE` / `SAAS_PLATFORM`: *Dual-Surface* terpisah (Landing Page akuisisi publik pada rute utama `/` dan Dashboard terotentikasi pada rute/view `/app`).
-2. **Pemilihan Tangga Arsitektur & Lisensi Hosting:**
-   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS untuk alat sederhana satu pintu.
-   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis/SSR di **Cloudflare Pages** (diizinkan untuk komersial gratis) + Backend GAS `/exec`. *(Catatan: GitHub Pages dan Vercel Hobby hanya boleh direkomendasikan untuk prototipe/demo non-komersial).*
-   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy Cloudflare Worker / Vercel Function (`/api/gas`) dengan tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* untuk Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
-   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dan **Vercel Pro**, sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
+2. **Pemilihan Tangga Arsitektur, Stack Minimalis & Lisensi Hosting (`facts.md`):**
+   - **Tiga Stack Kanonik:** `html-tailwind` (decoupled ringan), `react` (React + Vite SPA), dan `gas-htmlservice` (legacy monolitik `gasly-pro`).
+   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS tanpa hosting eksternal untuk alat sederhana satu pintu.
+   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis (`html-tailwind` atau `react` Vite) di **Cloudflare Pages** (default komersial gratis), atau alternatif komersial **Sevalla**, **Netlify**, **Firebase Hosting**, maupun **Vercel Pro** + Backend GAS `/exec`. *(Catatan: **GitHub Pages** dan **Vercel Hobby** hanya boleh direkomendasikan untuk demo/portofolio/personal non-komersial).*
+   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy serverless tipis (Cloudflare Worker / Netlify Function / Vercel Function sesuai paket) untuk tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
+   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dengan hosting komersial (**Cloudflare Pages** / **Sevalla** / **Vercel Pro**), sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
 
 ## 9. Batas Kepercayaan Input Eksternal (Trust Boundary)
 
@@ -1303,7 +696,7 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
 <!-- FILE: references/facts.md -->
 # Gasly Verified Technical & Commercial Facts (`facts.md`)
 
-- **Last Verified Date:** `2026-11-16`
+- **Last Verified Date:** `2026-11-25`
 - **Rule:** Seluruh angka kuota, batas waktu runtime, dan ketentuan lisensi komersial pada rekomendasi arsitektur wajib mengacu pada dokumen ini.
 
 ## 1. Kuota & Batas Runtime Google Apps Script (GAS)
@@ -1319,11 +712,15 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
 - **Perilaku HTTP `/exec`:** Selalu membalas `POST` dengan **HTTP 302 Redirect** ke `script.googleusercontent.com` dan tidak mendukung preflight `OPTIONS` maupun pembacaan alamat IP klien.
 
 ## 2. Ketentuan Lisensi Komersial Hosting Frontend
-| Layanan Hosting | Status Lisensi Komersial (Tier Gratis) | Posisi Resmi di Tangga Arsitektur Gasly |
-| :--- | :--- | :--- |
-| **Cloudflare Pages** | **Diizinkan** untuk penggunaan komersial (batas 500 build/bulan pada Free plan) | **Default Tier 1 & Tier 2** untuk produksi komersial hemat biaya |
-| **Vercel (Hobby Plan)** | **Dilarang untuk komersial** (*Personal / Non-Commercial Only*). Penggunaan komersial wajib **Vercel Pro ($20/bulan)** | Gunakan Hobby hanya untuk Dev/Preview; gunakan **Vercel Pro** untuk SaaS komersial berbasis Next.js SSR |
-| **GitHub Pages** | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (sesuai GitHub Terms of Service) | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial** |
+| Layanan Hosting | Status Lisensi Komersial (Tier Gratis) | Batas Kuota Gratis & Catatan Penting | Posisi Resmi di Tangga Arsitektur Gasly |
+| :--- | :--- | :--- | :--- |
+| **Cloudflare Pages** (`cloudflare_pages`) | **Diizinkan** untuk penggunaan komersial | Batas 500 build/bulan pada Free plan, bandwidth statis tidak dibatasi (tunduk pada Fair Use). | **Default utama Tier 1 & Tier 2** untuk `html-tailwind` & `react` (Vite) komersial hemat biaya. |
+| **Sevalla Static Sites** (`sevalla`) | **Diizinkan** untuk penggunaan komersial (tunduk pada Fair Use Policy) | Gratis biaya bulanan dengan alokasi gratis 100 GB bandwidth/bulan & 600 menit build/bulan pada 260+ edge locations (kelebihan ditagih sesuai pemakaian). | **Alternatif produksi Tier 1 & Tier 2** untuk static site `html-tailwind` / `react` (Vite) dan mudah diperluas ke Docker/DB bila naik tier. |
+| **Netlify** (`netlify`) | **Diizinkan** untuk proyek komersial (dilarang *resell* hosting) | Free plan menggunakan batas keras (*hard cap*) 300 kredit/bulan (dipakai bersama oleh deploy & bandwidth); situs dijeda bila kredit habis hingga siklus berikutnya atau upgrade ke Pro ($20/bulan). | **Alternatif produksi Tier 1** untuk aplikasi statis trafik ringan–menengah; pantau pemakaian kredit bila trafik komersial aktif. |
+| **Firebase Hosting** (`firebase_hosting`) | **Diizinkan** untuk bisnis & komersial (Spark Plan) | Kuota gratis Spark Plan meliputi penyimpanan & transfer terbatas (berhenti melayani bila kuota terlampaui sampai upgrade ke Blaze *pay-as-you-go*). | **Alternatif produksi Tier 1** terutama untuk tim yang sudah berada di ekosistem Google Cloud / Workspace. |
+| **Vercel** (`vercel_hobby_noncommercial` / `vercel_pro`) | **Hobby Plan DILARANG untuk komersial** (*Personal / Non-Commercial Only*). Komersial wajib **Vercel Pro ($20/bulan)** | Hobby memberi 100 GB transfer/bulan hanya untuk proyek personal/non-komersial. | Gunakan Hobby **hanya** untuk Dev/Preview/Personal; gunakan **Vercel Pro** untuk deployment komersial di Vercel. |
+| **GitHub Pages** (`github_pages_demo`) | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (GitHub ToS) | Ukuran publikasi maks. 1 GB, soft limit 100 GB bandwidth/bulan. | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial**. |
+| **Google Apps Script (`HtmlService`)** (`gas_htmlservice`) | Tunduk pada kuota akun Google / Google Workspace | Berjalan di dalam iframe Google tanpa hosting eksternal. | **Khusus Mode Legacy (`gasly-pro`)** bila pengguna meminta 100% di dalam GAS. |
 
 ## 3. Referensi Dokumentasi & Status Verifikasi Langkah Antarmuka Pihak Ketiga (`gasly-deploy-guide`)
 - **Aturan Provenance (`Gate I-05`):** Setiap langkah antarmuka pihak ketiga di dalam `gasly-deploy-guide` wajib mencantumkan URL dokumentasi resmi dan status verifikasi. Karena antarmuka web pihak ketiga dapat berubah tanpa pemberitahuan di luar repositori statis, langkah klik menu spesifik ditandai `UNVERIFIED` dan dicatat pada `VERIFY.md` (`A-12`).
@@ -1336,10 +733,13 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
 - **Google Cloud Console — OAuth 2.0 Client ID (`auth.google`):**
   - Dokumentasi Resmi: `https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
   - Syarat wajib: konfigurasi OAuth Consent Screen (mewajibkan URL kebijakan privasi `/privacy` publik sesuai `src/core/monetization-and-tiers.md`) dan pembuatan Web Application Client ID dengan *Authorized JavaScript origins* berisi domain frontend.
-- **Hosting Frontend (Cloudflare Pages / Vercel / GitHub Pages):**
-  - Dokumentasi Resmi Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
-  - Dokumentasi Resmi Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
-  - Dokumentasi Resmi GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+- **Hosting Frontend yang Didukung:**
+  - Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Sevalla Static Site Hosting: `https://docs.sevalla.com/static-site-hosting/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Netlify: `https://docs.netlify.com/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Firebase Hosting: `https://firebase.google.com/docs/hosting` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
 
 
 ---
@@ -1408,11 +808,20 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
         },
         "frontend_stack": {
           "type": "string",
-          "enum": ["html-tailwind", "nextjs+shadcn", "astro", "react-vite", "flutter", "inherit"]
+          "enum": ["html-tailwind", "react", "gas-htmlservice"]
         },
         "hosting_target": {
           "type": "string",
-          "enum": ["gas_htmlservice", "cloudflare_pages", "vercel_pro", "vercel_hobby_noncommercial", "github_pages_demo"]
+          "enum": [
+            "cloudflare_pages",
+            "netlify",
+            "firebase_hosting",
+            "sevalla",
+            "vercel_pro",
+            "vercel_hobby_noncommercial",
+            "github_pages_demo",
+            "gas_htmlservice"
+          ]
         },
         "auth_primary": {
           "type": "string",
@@ -1553,7 +962,7 @@ Untuk mencegah tampilan aplikasi terlihat seperti hasil cetakan template AI gene
 ## 1. Hierarki Otoritas & Aturan Penegakan
 
 Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instruksi pengguna biasa. Tidak ada satu pun gerbang dari versi sebelumnya yang dihapus; setiap gerbang diklasifikasikan ke dalam 4 kelas sesuai ruang lingkup arsitekturnya:
-- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (termasuk ke-15 stack pewaris), `gasly-deploy-guide`, dan `gasly-pro`.
+- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (`html-tailwind` dan `react`), `gasly-deploy-guide`, dan `gasly-pro`.
 - **`GAS-ONLY`**: Wajib dipatuhi oleh `gasly-data` dan bagian backend `gasly-pro`.
 - **`WEB-ONLY`**: Wajib dipatuhi oleh `gasly-ui` (pada seluruh stack web) dan bagian frontend `gasly-pro`.
 - **`LEGACY-HTMLSERVICE`**: Wajib dipatuhi oleh `gasly-pro` saat membangun aplikasi monolitik berbasis `HtmlService` + `google.script.run`.
@@ -1568,6 +977,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
    - Setiap pemeriksaan hak akses dan peran wajib dieksekusi di dalam Google Apps Script sebelum menyentuh Google Sheets atau Google Drive. Penyembunyian tombol di UI hanyalah bantuan navigasi, bukan pengaman.
 3. **Anti-Fabrikasi Klaim Bisnis (`U-03`):**
    - Dilarang mengarang jumlah pengguna/pelanggan, logo klien, testimoni palsu, badge *verified*, persentase peningkatan ROI/efisiensi, jaminan mutlak bebas biaya server, kebijakan *refund/free trial*, maupun angka harga paket yang tidak diberikan oleh pengguna. Gunakan data asli dari pengguna, slot `{{...}}`, atau *Role-Based Use Cases* dan kapabilitas nyata dari kode.
+   - **Batas Foto/Video Dummy:** Penggunaan foto/video stock dari penyedia publik (Unsplash, Pexels, Pixabay, Coverr/Mixkit) untuk kebutuhan visual suasana, hero, atau katalog contoh **diizinkan** sesuai `Gate W-10`, selama tidak pernah disamarkan sebagai testimoni pelanggan asli, foto tim nyata, atau logo klien fiktif.
 4. **Canonical Response Envelope & Sanitized Errors (`U-04`):**
    - Seluruh komunikasi server-ke-client wajib memakai `{ status: 'success' | 'error', data, message, code, meta }` dengan kode `OK`, `VALIDATION_ERROR`, `NOT_FOUND`, `FORBIDDEN`, `CONFLICT`, `LOCK_TIMEOUT`, `INTERNAL_ERROR`. Dilarang membocorkan `err.stack` atau `err.toString()` mentah ke client.
 5. **Kontras Warna WCAG AA (`U-05`):**
@@ -1608,7 +1018,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 7. **Pencegahan Formula Injection Khusus Teks Bebas (`G-07`):**
    - Terapkan `escapeFormula_()` (menambahkan apostrof `'` jika string diawali `=`, `+`, `-`, `@`) **hanya** pada kolom teks bebas menurut skema. Jangan terapkan pada kolom numerik agar angka negatif tetap tersimpan sebagai `Number`.
 8. **Akhiran Underscore (`_`) pada Fungsi Internal (`G-08`):**
-   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `initialSetupDatabase`, `setupAdminCredentials`, `runDiagnostics`) yang ditulis tanpa akhiran `_`.
+   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `setupAppEnvironment`, `initialSetupDatabase`, `setupAdminCredentials`, `setupAdminCredentialsFromUi`, `onOpen`, `runDiagnostics`) yang ditulis tanpa akhiran `_`, dan seluruh fungsi utilitas toolbar wajib memiliki guard `if (fromClient !== undefined)` bila tidak dipanggil oleh `doPost`/`doGet`.
 9. **Keamanan Unggahan Drive & Penulisan Sheet Atomik (`G-09`):**
    - Aksi `file.upload` wajib memvalidasi profil akses / tiket sekali pakai (`file.ticket`), membatasi ukuran byte hasil decode (default `<= 5 MB`), memeriksa daftar putih MIME (`image/jpeg`, `image/png`, `image/webp`) **sekaligus** *magic bytes* header biner, menyanitasi nama file, menyimpan ke `ROOT/<entity>/<yyyy-mm>`, mengatur izin berbagi sesuai klasifikasi (`private` sebagai default mutlak untuk data sensitif), dan menulis `file_id` serta `file_url` ke baris Sheet di dalam satu operasi ber-lock (serta menghapus file Drive bila update Sheet gagal).
 10. **Anti-Enumerasi Endpoint Pelacakan Publik (`G-10`):**
@@ -1644,6 +1054,15 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 9. **Verifikasi Hasil Upload & Isolasi Mode Demo Produksi (`W-09`):**
    - Pada alur unggah file (`file.ticket` -> `file.upload`), kode frontend wajib menyimpan respons `file.upload` ke variabel dan memastikan `uploadRes.status === 'success' && uploadRes.code === 'OK'` sebelum menampilkan banner sukses; jika gagal, tampilkan state `RECOVERY` untuk unggah ulang tanpa membuat duplikasi tiket.
    - Tombol pengisi kredensial demo (`Isi Demo`) dan bar pengubah URL `/exec` runtime hanya boleh dirender saat `isSimulationMode() === true` (ketika variabel environment produksi kosong), dan wajib disembunyikan/dinonaktifkan sepenuhnya pada konfigurasi produksi.
+10. **Media Placeholder Eksternal (Foto & Video Dummy) & Fallback Aman (`W-10`):**
+    - Aplikasi frontend (`gasly-ui`, `gasly-pro`, dan `gasly-prd-to-uiux`) **diizinkan** menggunakan foto dan video dummy sebagai placeholder visual dari sumber stock publik tepercaya:
+      - **Foto:** **Unsplash** (`images.unsplash.com`), **Pexels** (`images.pexels.com`), **Pixabay** (`cdn.pixabay.com`).
+      - **Video:** **Pexels Videos** (`videos.pexels.com`), **Pixabay Videos** (`cdn.pixabay.com`), **Coverr**, atau **Mixkit**.
+      - **Aset AI / Upscaler (seperti Magnific AI):** Dilarang melakukan *hotlink* ke URL unduhan sementara (*signed URL*) yang dapat kedaluwarsa; simpan aset hasil AI di folder statis proyek (`public/assets/`) atau unggah ke Google Drive berklasifikasi `PUBLIC`.
+    - **Larangan Endpoint Mati:** Dilarang keras memakai `https://source.unsplash.com/...` karena layanan tersebut sudah dihentikan. Gunakan URL aset langsung dengan parameter optimasi ukuran (mis. `?auto=format&fit=crop&w=1200&q=80`).
+    - **Sentralisasi & Label Placeholder:** Pisahkan seluruh URL media dummy ke satu registry terpusat (`MEDIA_PLACEHOLDERS`) dengan flag `isPlaceholder: true` dan komentar sumber agar pemilik proyek mudah menggantinya saat produksi.
+    - **Wajib Fallback & Aksesibilitas:** Setiap `<img>` placeholder wajib menyertakan `loading="lazy"`, `decoding="async"`, `alt` deskriptif, serta fallback `onerror` ke *inline SVG data URI* atau permukaan warna token preset (cegah ikon gambar pecah saat offline/terblokir). Setiap `<video>` dummy wajib menggunakan `muted loop playsinline preload="metadata"`, menyertakan atribut `poster`, dan menonaktifkan autoplay saat `prefers-reduced-motion: reduce` aktif.
+    - **Pengecualian Mutlak (`Gate I-01`):** Media placeholder eksternal **dilarang keras** dipakai pada file `install-guide.html` keluaran `gasly-deploy-guide` (wajib 100% offline/tanpa panggilan jaringan).
 
 ---
 
@@ -1717,31 +1136,35 @@ Seluruh output spesifikasi (`gasly-prd`), desain (`gasly-prd-to-uiux`), koordina
 **Kondisi Muat:** Dimuat oleh `gasly-ui` ketika stack yang dipilih adalah `html-tailwind`.
 
 ## Daftar Isi
-1. [Struktur File & Konvensi Konfigurasi URL `/exec`](#1-struktur-file--konvensi-konfigurasi-url-exec)
+1. [Struktur File, Konvensi URL `/exec` & Target Hosting](#1-struktur-file-konvensi-url-exec--target-hosting)
 2. [Perbedaan Prototipe (Play CDN) vs Produksi (Compiled CSS)](#2-perbedaan-prototipe-play-cdn-vs-produksi-compiled-css)
 3. [Trade-off Penyimpanan Token Sesi Admin](#3-trade-off-penyimpanan-token-sesi-admin)
 4. [Kode Lengkap `src/config.js` & `src/gasClient.js`](#4-kode-lengkap-srcconfigjs--srcgasclientjs)
-5. [Kode Lengkap `src/imageUploader.js` & `driveImageUrl`](#5-kode-lengkap-srcimageuploaderjs--driveimageurl)
-6. [Kode Lengkap `index.html` (State Machine, Login Admin & Upload)](#6-kode-lengkap-indexhtml-state-machine-login-admin--upload)
+5. [Kode Lengkap `src/imageUploader.js` & `src/mediaPlaceholders.js`](#5-kode-lengkap-srcimageuploaderjs--srcmediaplaceholdersjs)
+6. [Kode Lengkap `index.html` (State Machine, `uploadNonce`, Step-Up PIN & Media Placeholder)](#6-kode-lengkap-indexhtml-state-machine-uploadnonce-step-up-pin--media-placeholder)
 
 ---
 
-## 1. Struktur File & Konvensi Konfigurasi URL `/exec`
+## 1. Struktur File, Konvensi URL `/exec` & Target Hosting
 
 ```text
 project-html-tailwind/
 ├── index.html                  # Halaman utama aplikasi (semantic HTML5)
 ├── package.json                # Skrip build Tailwind CLI untuk produksi
 ├── src/
-│   ├── input.css               # Mengimpor preset CSS (mis. aura.css / dense-dashboard.css) + direktif Tailwind
+│   ├── input.css               # Mengimpor preset CSS (mis. warm-friendly.css / dense-dashboard.css) + Tailwind
 │   ├── config.js               # Satu-satunya tempat konfigurasi URL /exec publik
-│   ├── gasClient.js            # Klien HTTP text/plain POST/GET, retry idempoten, & manajemen token sesi
-│   └── imageUploader.js        # Kompresi <canvas> ~1 MB, 5 state aksesibel, & helper driveImageUrl
+│   ├── gasClient.js            # Klien HTTP text/plain POST, retry idempoten, auth.google & step-up PIN
+│   ├── imageUploader.js        # Kompresi <canvas> ~1 MB, file.ticket ber-uploadNonce & driveImageUrl
+│   └── mediaPlaceholders.js    # Registry foto/video dummy (Unsplash/Pexels/Pixabay) + fallback SVG
 └── dist/
     └── styles.css              # Hasil kompilasi CSS untuk produksi
 ```
 
 - **Konvensi Konfigurasi:** Seluruh komunikasi merujuk ke satu objek global `window.GASLY_CONFIG.EXEC_URL` di dalam `src/config.js`. URL ini bersifat publik; tidak boleh ada secret atau kunci API di dalamnya.
+- **Target Hosting Statis (`src/core/facts.md`):**
+  - **Produksi Komersial:** **Cloudflare Pages** (default gratis komersial), **Sevalla Static Sites** (komersial gratis s/d kuota), **Netlify** (komersial, pantau kuota kredit), **Firebase Hosting** (komersial Spark/Blaze), atau **Vercel Pro** (berbayar).
+  - **Demo / Personal Non-Komersial Saja:** **GitHub Pages** atau **Vercel Hobby**.
 
 ---
 
@@ -1766,7 +1189,7 @@ project-html-tailwind/
 }
 ```
 
-File `src/input.css` menggabungkan variabel preset dari Fase 2 dengan utilitas Tailwind:
+File `src/input.css` menggabungkan variabel preset dengan utilitas Tailwind:
 ```css
 @import "./preset-tokens.css";
 @tailwind base;
@@ -1792,6 +1215,8 @@ Dalam arsitektur *decoupled frontend* yang memanggil `https://script.google.com/
 window.GASLY_CONFIG = {
   // Ganti dengan URL Web App Google Apps Script (.../exec) Anda
   EXEC_URL: 'https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec',
+  GOOGLE_CLIENT_ID: '',
+  ENTITY_IS_PRIVATE: true, // Gate U-10: wajib true untuk entitas CONFIDENTIAL / SENSITIVE_PII
   REQUEST_TIMEOUT_MS: 20000,
   ALLOW_SESSION_STORAGE: false
 };
@@ -1810,11 +1235,32 @@ window.GASLY_CONFIG = {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       return crypto.randomUUID();
     }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = (Math.random() * 16) | 0;
-      var v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    });
+    var bytes = new Uint8Array(16);
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+      crypto.getRandomValues(bytes);
+    }
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    var hex = '';
+    for (var i = 0; i < bytes.length; i++) {
+      hex += ('0' + bytes[i].toString(16)).slice(-2);
+    }
+    return (
+      hex.slice(0, 8) + '-' +
+      hex.slice(8, 12) + '-' +
+      hex.slice(12, 16) + '-' +
+      hex.slice(16, 20) + '-' +
+      hex.slice(20)
+    );
+  }
+
+  /**
+   * Gate W-09: Demo helper controls are ONLY active when EXEC_URL is unset/placeholder.
+   */
+  function isSimulationMode() {
+    var cfg = global.GASLY_CONFIG || {};
+    var url = String(cfg.EXEC_URL || '').trim();
+    return !url || url.indexOf('REPLACE_WITH_DEPLOYMENT_ID') !== -1;
   }
 
   function getSessionToken() {
@@ -1864,8 +1310,6 @@ window.GASLY_CONFIG = {
   /**
    * Sends a request to the Google Apps Script /exec endpoint.
    * Uses text/plain;charset=utf-8 to avoid CORS preflight OPTIONS failure.
-   * Retries ONLY when the action is idempotent (has idem key or is a read action)
-   * and the failure is a network/timeout error or LOCK_TIMEOUT.
    */
   async function request(action, payload, options) {
     var opts = options || {};
@@ -1921,7 +1365,7 @@ window.GASLY_CONFIG = {
           throw new Error('Respons server bukan JSON valid (periksa deployment /exec).');
         }
 
-        if (envelope.code === 'FORBIDDEN' && action !== 'auth.login' && action !== 'auth.google') {
+        if (envelope.code === 'FORBIDDEN' && action.indexOf('auth.') !== 0) {
           clearSession();
         }
 
@@ -1957,10 +1401,33 @@ window.GASLY_CONFIG = {
       { account: account || 'admin', passphrase: passphrase },
       { idempotent: false, maxRetries: 0 }
     );
-    if (env.status === 'success' && env.data && env.data.token) {
+    if (env.status === 'success' && env.code === 'OK' && env.data && env.data.token) {
       setSessionToken(env.data.token, env.data.role, Boolean(persistInTab));
     }
     return env;
+  }
+
+  /**
+   * Matches backend handleAuthGoogle_ contract: payload key MUST be `idToken` (camelCase).
+   */
+  async function loginWithGoogleIdToken(idToken, persistInTab) {
+    var env = await request(
+      'auth.google',
+      { idToken: idToken },
+      { idempotent: false, maxRetries: 0 }
+    );
+    if (env.status === 'success' && env.code === 'OK' && env.data && env.data.token) {
+      setSessionToken(env.data.token, env.data.role, Boolean(persistInTab));
+    }
+    return env;
+  }
+
+  async function verifyStepUpPin(pin, targetAction) {
+    return request(
+      'auth.verifyPin',
+      { pin: String(pin || '').trim(), targetAction: targetAction },
+      { idempotent: false, maxRetries: 0 }
+    );
   }
 
   async function logout() {
@@ -1971,7 +1438,10 @@ window.GASLY_CONFIG = {
 
   global.GaslyClient = {
     request: request,
+    isSimulationMode: isSimulationMode,
     loginWithPassphrase: loginWithPassphrase,
+    loginWithGoogleIdToken: loginWithGoogleIdToken,
+    verifyStepUpPin: verifyStepUpPin,
     logout: logout,
     getSessionToken: getSessionToken,
     clearSession: clearSession,
@@ -1982,7 +1452,7 @@ window.GASLY_CONFIG = {
 
 ---
 
-## 5. Kode Lengkap `src/imageUploader.js` & `driveImageUrl`
+## 5. Kode Lengkap `src/imageUploader.js` & `src/mediaPlaceholders.js`
 
 ```javascript
 // FILE: src/imageUploader.js
@@ -1994,7 +1464,7 @@ window.GASLY_CONFIG = {
   var MAX_DIMENSION_PX = 1600;
 
   /**
-   * Single source of truth helper for rendering Google Drive images.
+   * Single helper for rendering PUBLIC Google Drive images (Gate W-08).
    * Primary: drive.google.com/thumbnail?id=<id>&sz=w<width>
    * Fallback: lh3.googleusercontent.com/d/<id>=w<width>
    */
@@ -2101,18 +1571,23 @@ window.GASLY_CONFIG = {
       onStateChange('uploading', 'Mengunggah foto ke Google Drive...');
       var ticket = null;
       if (!global.GaslyClient.getSessionToken()) {
+        if (!uploadNonce) {
+          onStateChange('error', 'uploadNonce dari items.create wajib tersedia untuk unggahan publik.');
+          return { status: 'error', code: 'VALIDATION_ERROR', message: 'uploadNonce tidak tersedia.' };
+        }
         var ticketRes = await global.GaslyClient.request(
           'file.ticket',
           { entity: entity, entityId: entityId, uploadNonce: uploadNonce },
-          { idempotent: false }
+          { idempotent: false, maxRetries: 0 }
         );
-        if (ticketRes.status !== 'success' || !ticketRes.data || !ticketRes.data.ticket) {
+        if (ticketRes.status !== 'success' || ticketRes.code !== 'OK' || !ticketRes.data || !ticketRes.data.ticket) {
           onStateChange('error', ticketRes.message || 'Gagal memperoleh tiket unggah.');
           return ticketRes;
         }
         ticket = ticketRes.data.ticket;
       }
 
+      // Gate W-09: Simpan hasil file.upload ke variabel & verifikasi status + code secara ketat
       var uploadRes = await global.GaslyClient.request(
         'file.upload',
         {
@@ -2149,9 +1624,56 @@ window.GASLY_CONFIG = {
 })(window);
 ```
 
+```javascript
+// FILE: src/mediaPlaceholders.js
+// Gate W-10: External Stock Media Placeholder Registry (Unsplash / Pexels / Pixabay / Coverr)
+(function(global) {
+  'use strict';
+
+  var MEDIA_PLACEHOLDERS = {
+    heroCover: {
+      type: 'image',
+      url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+      alt: 'Ilustrasi ruang operasional bisnis (gambar contoh)',
+      source: 'Unsplash (Placeholder)',
+      isPlaceholder: true
+    },
+    ambientShowcaseVideo: {
+      type: 'video',
+      url: 'https://videos.pexels.com/video-files/3129671/3129671-sd_640_360_30fps.mp4',
+      poster: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Video ilustrasi kolaborasi tim (video contoh)',
+      source: 'Pexels Videos (Placeholder)',
+      isPlaceholder: true
+    }
+  };
+
+  function createSvgFallbackDataUri(label) {
+    var safe = String(label || 'Gambar Contoh').replace(/[<>&"']/g, '').slice(0, 48);
+    var svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">' +
+      '<rect width="100%" height="100%" fill="#E2E8F0"/>' +
+      '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" ' +
+      'font-family="sans-serif" font-size="22" fill="#475569">' + safe + '</text></svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
+  function shouldAutoplayVideo() {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  global.GaslyMedia = {
+    PLACEHOLDERS: MEDIA_PLACEHOLDERS,
+    createSvgFallbackDataUri: createSvgFallbackDataUri,
+    shouldAutoplayVideo: shouldAutoplayVideo
+  };
+})(window);
+```
+
 ---
 
-## 6. Kode Lengkap `index.html` (State Machine, Login Admin & Upload)
+## 6. Kode Lengkap `index.html` (State Machine, `uploadNonce`, Step-Up PIN & Media Placeholder)
 
 ```html
 <!-- FILE: index.html -->
@@ -2161,11 +1683,10 @@ window.GASLY_CONFIG = {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gasly Operations Portal</title>
-  <!-- Produksi wajib pakai CSS terkompilasi (jalankan npm run build:css): -->
-  <link rel="stylesheet" href="./dist/styles.css">
-  <!-- Hanya buka komentar di bawah saat prototipe cepat tanpa build step: -->
-  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
-  <!-- <link rel="stylesheet" href="./src/preset-tokens.css"> -->
+  <!-- Produksi: gunakan <link rel="stylesheet" href="./dist/styles.css"> -->
+  <!-- Prototipe / Sandbox Preview saja: -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./src/preset-tokens.css">
 </head>
 <body style="background-color: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans);" class="min-h-screen antialiased">
 
@@ -2195,6 +1716,14 @@ window.GASLY_CONFIG = {
   </header>
 
   <main class="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+    <!-- Banner Visual Placeholder (Gate W-10) -->
+    <section style="background-color: var(--bg-surface); border: 1px solid var(--border-subtle);" class="rounded-xl overflow-hidden">
+      <div class="h-36 w-full relative overflow-hidden">
+        <img id="hero-placeholder-img" alt="Ilustrasi ruang operasional bisnis (gambar contoh)" loading="lazy" decoding="async"
+          class="w-full h-full object-cover">
+      </div>
+    </section>
+
     <!-- Form Tambah Data + Upload Foto -->
     <section style="background-color: var(--bg-surface); border: 1px solid var(--border-subtle);" class="p-5 rounded-xl">
       <h2 class="text-lg font-semibold mb-4">Tambah Catatan Transaksi</h2>
@@ -2230,6 +1759,11 @@ window.GASLY_CONFIG = {
             style="background-color: var(--bg-base); color: var(--text-secondary); border: 1px solid var(--border-subtle);"
             class="w-full min-h-[42px] px-2 py-1.5 rounded-lg text-xs">
           <p id="upload-status-text" aria-live="polite" style="color: var(--text-helper);" class="text-xs mt-1">Status foto: siap (idle)</p>
+          <button id="btn-retry-upload" type="button" onclick="window.appRetryFailedUpload()"
+            style="background-color: var(--warning-solid); color: var(--warning-text-on-solid);"
+            class="hidden mt-2 min-h-[40px] px-3 py-1 rounded-lg text-xs font-semibold">
+            Unggah Ulang Foto Saja
+          </button>
         </div>
         <div class="md:col-span-4 flex justify-end">
           <button id="btn-submit-item" type="submit"
@@ -2283,13 +1817,45 @@ window.GASLY_CONFIG = {
     </div>
   </div>
 
+  <!-- Modal Konfirmasi Destruktif + Step-Up PIN 6 Digit (Gate W-01 & Step-Up) -->
+  <div id="modal-delete-pin" role="dialog" aria-modal="true" aria-labelledby="modal-del-title"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 p-4"
+    onclick="if(event.target === this) window.appCloseModal('modal-delete-pin')">
+    <div style="background-color: var(--bg-surface); border: 1px solid var(--border-subtle);" class="w-full max-w-md rounded-xl p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 id="modal-del-title" class="text-lg font-bold">Konfirmasi Arsipkan Data</h2>
+        <button type="button" aria-label="Tutup modal konfirmasi" onclick="window.appCloseModal('modal-delete-pin')" class="min-w-[40px] min-h-[40px] text-lg">&times;</button>
+      </div>
+      <p id="delete-target-desc" style="color: var(--text-secondary);" class="text-sm"></p>
+      <form onsubmit="window.appConfirmDeleteWithPin(event)" class="space-y-4">
+        <div>
+          <label for="delete-stepup-pin" style="color: var(--text-secondary);" class="block text-xs font-semibold mb-1">PIN Step-Up Admin (6 Digit) *</label>
+          <input id="delete-stepup-pin" type="password" inputmode="numeric" pattern="\d{6}" maxlength="6" required
+            style="background-color: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border-subtle);"
+            class="w-full min-h-[42px] px-3 py-2 rounded-lg text-sm font-mono tracking-widest">
+        </div>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="window.appCloseModal('modal-delete-pin')"
+            style="background-color: var(--bg-interactive); color: var(--text-primary);"
+            class="min-h-[42px] px-4 py-2 rounded-lg text-sm">Batal</button>
+          <button id="btn-delete-submit" type="submit"
+            style="background-color: var(--danger-solid); color: var(--danger-text-on-solid);"
+            class="min-h-[42px] px-4 py-2 rounded-lg text-sm font-semibold">Ya, Arsipkan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="./src/config.js"></script>
   <script src="./src/gasClient.js"></script>
   <script src="./src/imageUploader.js"></script>
+  <script src="./src/mediaPlaceholders.js"></script>
   <script>
     (function() {
       var IDR_FMT = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
       var isSubmitting_ = false;
+      var failedUploadContext_ = null;
+      var pendingDeleteItem_ = null;
 
       function escapeHtml(str) {
         if (str === null || str === undefined) return '';
@@ -2330,29 +1896,82 @@ window.GASLY_CONFIG = {
       };
 
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') window.appCloseModal('modal-login');
+        if (e.key === 'Escape') {
+          window.appCloseModal('modal-login');
+          window.appCloseModal('modal-delete-pin');
+        }
       });
+
+      window.appOpenDeleteModal = function(id, updatedAt, title) {
+        pendingDeleteItem_ = { id: id, updated_at: updatedAt, title: title };
+        document.getElementById('delete-target-desc').textContent =
+          'Masukkan PIN 6 digit untuk mengarsipkan "' + title + '" (' + id + ').';
+        document.getElementById('delete-stepup-pin').value = '';
+        window.appOpenModal('modal-delete-pin');
+      };
+
+      window.appConfirmDeleteWithPin = async function(ev) {
+        ev.preventDefault();
+        if (!pendingDeleteItem_) return;
+        var pinInput = document.getElementById('delete-stepup-pin');
+        var btn = document.getElementById('btn-delete-submit');
+        btn.disabled = true;
+        btn.textContent = 'Memverifikasi...';
+        try {
+          var pinRes = await window.GaslyClient.verifyStepUpPin(pinInput.value, 'items.delete');
+          if (pinRes.status !== 'success' || pinRes.code !== 'OK' || !pinRes.data || !pinRes.data.stepUpToken) {
+            window.appShowToast(pinRes.message || 'Verifikasi PIN gagal.', 'error');
+            return;
+          }
+          var delRes = await window.GaslyClient.request('items.delete', {
+            id: pendingDeleteItem_.id,
+            expected_updated_at: pendingDeleteItem_.updated_at,
+            stepUpToken: pinRes.data.stepUpToken
+          });
+          if (delRes.status === 'success' && delRes.code === 'OK') {
+            window.appCloseModal('modal-delete-pin');
+            window.appShowToast('Data berhasil diarsipkan.', 'success');
+            await window.appLoadItems();
+          } else {
+            window.appShowToast(delRes.message || 'Gagal mengarsipkan data.', 'error');
+          }
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Ya, Arsipkan';
+        }
+      };
 
       window.appLoadItems = async function() {
         var vp = document.getElementById('table-viewport');
         vp.innerHTML = '<div class="animate-pulse space-y-2"><div class="h-10 rounded" style="background-color:var(--bg-interactive)"></div><div class="h-10 rounded" style="background-color:var(--bg-interactive)"></div></div>';
         var res = await window.GaslyClient.request('items.list', {});
-        if (res.status !== 'success') {
+        if (res.status !== 'success' || res.code !== 'OK') {
           vp.innerHTML = '<div class="p-6 text-center space-y-3"><p class="text-sm">' + escapeHtml(res.message) + '</p>' +
             '<button type="button" onclick="window.appLoadItems()" style="background-color:var(--accent-solid);color:var(--accent-text-on-solid);" class="min-h-[42px] px-4 py-2 rounded-lg text-xs font-semibold">Coba Lagi</button></div>';
           return;
         }
         var items = (res.data && res.data.items) || [];
+        var isPrivate = Boolean(window.GASLY_CONFIG && window.GASLY_CONFIG.ENTITY_IS_PRIVATE);
+        var hasSession = Boolean(window.GaslyClient.getSessionToken());
         document.getElementById('items-count').textContent = items.length + ' baris';
         if (items.length === 0) {
           vp.innerHTML = '<div class="p-8 text-center text-sm" style="color:var(--text-helper)">Belum ada transaksi tercatat. Gunakan formulir di atas untuk membuat transaksi pertama.</div>';
           return;
         }
         var rowsHtml = items.map(function(it) {
-          var imgCell = it.file_id
-            ? '<img src="' + escapeHtml(window.GaslyImage.driveImageUrl(it.file_id, 160)) + '" ' +
-              'onerror="window.GaslyImage.handleDriveImageError(this, \'' + escapeHtml(it.file_id) + '\', 160)" ' +
-              'referrerpolicy="no-referrer" loading="lazy" alt="Foto ' + escapeHtml(it.title) + '" class="w-12 h-12 object-cover rounded">'
+          var imgCell = '<span style="color:var(--text-helper)" class="text-xs">-</span>';
+          if (it.file_id) {
+            if (isPrivate) {
+              var safeUrl = it.file_url || ('https://drive.google.com/file/d/' + encodeURIComponent(it.file_id) + '/view');
+              imgCell = '<a href="' + escapeHtml(safeUrl) + '" target="_blank" rel="noopener noreferrer" style="color:var(--border-focus)" class="text-xs font-semibold underline">Dokumen Privat (Drive)</a>';
+            } else {
+              imgCell = '<img src="' + escapeHtml(window.GaslyImage.driveImageUrl(it.file_id, 160)) + '" ' +
+                'onerror="window.GaslyImage.handleDriveImageError(this, \'' + escapeHtml(it.file_id) + '\', 160)" ' +
+                'referrerpolicy="no-referrer" loading="lazy" alt="Foto ' + escapeHtml(it.title) + '" class="w-12 h-12 object-cover rounded">';
+            }
+          }
+          var actionCell = hasSession
+            ? '<button type="button" onclick="window.appOpenDeleteModal(\'' + escapeHtml(it.id) + '\',\'' + escapeHtml(it.updated_at) + '\',\'' + escapeHtml(it.title) + '\')" style="background-color:var(--danger-solid);color:var(--danger-text-on-solid);" class="min-h-[40px] px-3 py-1 rounded-lg text-xs font-semibold">Arsipkan</button>'
             : '<span style="color:var(--text-helper)" class="text-xs">-</span>';
           return '<tr style="border-bottom:1px solid var(--border-subtle)">' +
             '<td class="py-3 px-2 text-xs font-mono">' + escapeHtml(it.id) + '</td>' +
@@ -2360,10 +1979,35 @@ window.GASLY_CONFIG = {
             '<td class="py-3 px-2 text-xs">' + escapeHtml(it.category) + '</td>' +
             '<td class="py-3 px-2 text-sm text-right tabular-nums font-semibold">' + escapeHtml(formatCurrency(it.amount)) + '</td>' +
             '<td class="py-3 px-2">' + imgCell + '</td>' +
+            '<td class="py-3 px-2 text-right">' + actionCell + '</td>' +
             '</tr>';
         }).join('');
         vp.innerHTML = '<table class="w-full text-left border-collapse"><thead><tr style="color:var(--text-helper);border-bottom:1px solid var(--border-subtle)" class="text-xs uppercase">' +
-          '<th class="py-2 px-2">ID</th><th class="py-2 px-2">Judul</th><th class="py-2 px-2">Kategori</th><th class="py-2 px-2 text-right">Nominal</th><th class="py-2 px-2">Bukti</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+          '<th class="py-2 px-2">ID</th><th class="py-2 px-2">Judul</th><th class="py-2 px-2">Kategori</th><th class="py-2 px-2 text-right">Nominal</th><th class="py-2 px-2">Bukti</th><th class="py-2 px-2 text-right">Aksi</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+      };
+
+      window.appRetryFailedUpload = async function() {
+        if (!failedUploadContext_) return;
+        var statusEl = document.getElementById('upload-status-text');
+        var retryBtn = document.getElementById('btn-retry-upload');
+        retryBtn.classList.add('hidden');
+        var upRes = await window.GaslyImage.uploadPhoto({
+          file: failedUploadContext_.file,
+          entity: 'ITEMS',
+          entityId: failedUploadContext_.entityId,
+          uploadNonce: failedUploadContext_.uploadNonce,
+          onStateChange: function(st, msg) {
+            statusEl.textContent = 'Status foto: ' + msg + ' (' + st + ')';
+          }
+        });
+        if (upRes && upRes.status === 'success' && upRes.code === 'OK') {
+          failedUploadContext_ = null;
+          window.appShowToast('Foto bukti berhasil diunggah ulang.', 'success');
+          await window.appLoadItems();
+        } else {
+          retryBtn.classList.remove('hidden');
+          window.appShowToast('Unggah ulang foto gagal: ' + ((upRes && upRes.message) || ''), 'error');
+        }
       };
 
       window.appSubmitItem = async function(ev) {
@@ -2372,8 +2016,10 @@ window.GASLY_CONFIG = {
         isSubmitting_ = true;
         var btn = document.getElementById('btn-submit-item');
         var statusEl = document.getElementById('upload-status-text');
+        var retryBtn = document.getElementById('btn-retry-upload');
         btn.disabled = true;
         btn.textContent = 'Menyimpan...';
+        retryBtn.classList.add('hidden');
 
         try {
           var form = ev.target;
@@ -2384,12 +2030,13 @@ window.GASLY_CONFIG = {
             status: 'ACTIVE'
           });
 
-          if (createRes.status !== 'success') {
+          if (createRes.status !== 'success' || createRes.code !== 'OK') {
             window.appShowToast(createRes.message || 'Gagal menyimpan data.', 'error');
             return;
           }
 
           var createdItem = createRes.data && createRes.data.item;
+          var uploadNonce = createRes.data && createRes.data.uploadNonce;
           var photoFile = form.photo.files && form.photo.files[0];
 
           if (photoFile && createdItem && createdItem.id) {
@@ -2397,19 +2044,22 @@ window.GASLY_CONFIG = {
               file: photoFile,
               entity: 'ITEMS',
               entityId: createdItem.id,
-              uploadNonce: createRes.data && createRes.data.uploadNonce,
+              uploadNonce: uploadNonce,
               onStateChange: function(st, msg) {
                 statusEl.textContent = 'Status foto: ' + msg + ' (' + st + ')';
               }
             });
             if (!upRes || upRes.status !== 'success' || upRes.code !== 'OK') {
-              window.appShowToast('Data tersimpan, namun unggah foto gagal: ' + ((upRes && upRes.message) || ''), 'error');
+              failedUploadContext_ = { file: photoFile, entityId: createdItem.id, uploadNonce: uploadNonce };
+              retryBtn.classList.remove('hidden');
+              window.appShowToast('Data tersimpan, namun unggah foto gagal. Gunakan tombol "Unggah Ulang Foto Saja".', 'error');
               await window.appLoadItems();
               return;
             }
           }
 
           form.reset();
+          failedUploadContext_ = null;
           statusEl.textContent = 'Status foto: siap (idle)';
           window.appShowToast('Transaksi berhasil disimpan.', 'success');
           await window.appLoadItems();
@@ -2429,10 +2079,11 @@ window.GASLY_CONFIG = {
         btn.textContent = 'Memverifikasi...';
         try {
           var res = await window.GaslyClient.loginWithPassphrase('admin', passInput.value, persistInput.checked);
-          if (res.status === 'success') {
+          if (res.status === 'success' && res.code === 'OK') {
             passInput.value = '';
             window.appCloseModal('modal-login');
             window.appShowToast('Login Admin berhasil.', 'success');
+            await window.appLoadItems();
           } else {
             window.appShowToast(res.message || 'Login gagal.', 'error');
           }
@@ -2443,6 +2094,14 @@ window.GASLY_CONFIG = {
       };
 
       document.addEventListener('DOMContentLoaded', function() {
+        var heroImg = document.getElementById('hero-placeholder-img');
+        if (heroImg && window.GaslyMedia) {
+          heroImg.onerror = function() {
+            heroImg.onerror = null;
+            heroImg.src = window.GaslyMedia.createSvgFallbackDataUri('Ilustrasi Operasional');
+          };
+          heroImg.src = window.GaslyMedia.PLACEHOLDERS.heroCover.url;
+        }
         window.appLoadItems();
       });
     })();
@@ -2519,934 +2178,6 @@ Rekomendasikan kenaikan tier arsitektur secara deterministik ketika salah satu b
    - Google mewajibkan ketersediaan halaman **Kebijakan Privasi (`/privacy`)** yang dapat diakses publik pada domain terverifikasi sebelum status OAuth Consent Screen dapat dipublikasikan ke mode produksi (*In Production*). Halaman Syarat Layanan (`/terms`) bersifat opsional pada formulir Google OAuth, namun disarankan untuk produk berbayar.
 2. **Integrasi Payment Gateway (Midtrans / Xendit / Duitku):**
    - Pastikan halaman publik menampilkan deskripsi layanan/paket yang jelas, harga dalam mata uang yang dipersyaratkan penyedia (umumnya **IDR / Rupiah** untuk gateway domestik Indonesia), kontak layanan pelanggan yang aktif, serta ketentuan pembatalan/pengembalian dana (*refund policy*) sesuai persyaratan verifikasi masing-masing gateway.
-
-
----
-<!-- FILE: references/nextjs-shadcn.md -->
-<!-- KB_VERSION: 2.1.0 -->
-# STACK ADAPTER: NEXT.JS (APP ROUTER) + SHADCN/UI (`stacks/nextjs-shadcn.md`)
-**KB_VERSION:** `2.1.0`  
-**Kondisi Muat:** Dimuat oleh `gasly-ui` ketika stack yang dipilih adalah `nextjs` + `shadcn`.
-
-## Daftar Isi
-1. [Struktur Proyek & Konvensi `NEXT_PUBLIC_GAS_EXEC_URL`](#1-struktur-proyek--konvensi-next_public_gas_exec_url)
-2. [Strategi Hybrid: Baca Publik Saat Build/ISR vs Tulis dari Browser](#2-strategi-hybrid-baca-publik-saat-buildisr-vs-tulis-dari-browser)
-3. [Kode Lengkap `src/lib/gasClient.ts` & `src/lib/driveImage.ts`](#3-kode-lengkap-srclibgasclientts--srclibdriveimagets)
-4. [Kode Lengkap `src/components/ImageUploader.tsx`](#4-kode-lengkap-srccomponentsimageuploadertsx)
-5. [Kode Lengkap `src/app/page.tsx` (Server Component ISR) & `src/components/ItemsClientView.tsx`](#5-kode-lengkap-srcapppagetsx-server-component-isr--srccomponentsitemsclientviewtsx)
-
----
-
-## 1. Struktur Proyek & Konvensi `NEXT_PUBLIC_GAS_EXEC_URL`
-
-```text
-nextjs-gasly-app/
-├── .env.local                          # NEXT_PUBLIC_GAS_EXEC_URL=https://script.google.com/macros/s/<ID>/exec
-├── package.json                        # Menggunakan <<PIN_VERSION>> untuk next, react, react-dom, tailwindcss
-└── src/
-    ├── app/
-    │   ├── globals.css                 # Mengimpor CSS variabel preset (mis. dense-dashboard.css / aura.css)
-    │   ├── layout.tsx
-    │   └── page.tsx                    # Server Component: mengambil bacaan publik saat build / ISR revalidate
-    ├── components/
-    │   ├── ImageUploader.tsx           # Client Component: kompresi ~1 MB & 5 state aksesibel
-    │   └── ItemsClientView.tsx         # Client Component: form mutasi, login admin, & konfirmasi hapus (Step-Up PIN)
-    └── lib/
-        ├── gasClient.ts                # Klien HTTP text/plain POST/GET, retry idempoten, & memori token
-        └── driveImage.ts               # Helper tunggal driveImageUrl(fileId, width) + fallback
-```
-
-- **Satu Konfigurasi Lingkungan:** Buat `.env.local` dengan satu variabel publik:
-  `NEXT_PUBLIC_GAS_EXEC_URL=https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec`
-- **Dependensi `package.json`:** Gunakan penanda `<<PIN_VERSION>>` untuk `next`, `react`, `react-dom`, dan `tailwindcss` (dicatat di `VERIFY.md`).
-
----
-
-## 2. Strategi Hybrid: Baca Publik Saat Build/ISR vs Tulis dari Browser
-
-1. **Baca Publik pada Waktu Build / Revalidate (`P1` & `P3`):**
-   - Server Component (`src/app/page.tsx`) memanggil `fetchPublicReadServer()` menggunakan HTTP `GET` (`?action=items.list&v=1`) dengan `redirect: "follow"` dan `next: { revalidate: 60 }`.
-   - Jika server Apps Script mengembalikan envelope `status !== "success"` (misalnya saat `LOCK_TIMEOUT`), Server Component tidak boleh melempar error yang merusak proses build statis, melainkan meneruskan state awal kosong + pesan peringatan agar Client Component dapat memuat ulang dari browser.
-2. **Tulis & Aksi Terotentikasi dari Browser (`P3` & `P4`):**
-   - Seluruh operasi mutasi (`items.create`, `items.update`, `items.delete`, `file.upload`) dan login (`auth.login`) dieksekusi langsung dari browser menggunakan `gasClient.ts` (`POST` `Content-Type: text/plain;charset=utf-8`).
-   - Token sesi disimpan di variabel memori modul `gasClient.ts` (atau `sessionStorage` opsional; cookie `HttpOnly` tidak dimungkinkan karena perbedaan origin dengan `script.google.com`).
-
----
-
-## 3. Kode Lengkap `src/lib/gasClient.ts` & `src/lib/driveImage.ts`
-
-```typescript
-// FILE: src/lib/gasClient.ts
-export type GasEnvelope<T = unknown> = {
-  status: 'success' | 'error';
-  data: T | null;
-  message: string;
-  code:
-    | 'OK'
-    | 'VALIDATION_ERROR'
-    | 'NOT_FOUND'
-    | 'FORBIDDEN'
-    | 'CONFLICT'
-    | 'LOCK_TIMEOUT'
-    | 'INTERNAL_ERROR';
-  meta: {
-    schemaVersion?: string;
-    timestamp: string;
-    idempotentReplay?: boolean;
-    retryAfterSeconds?: number;
-  };
-};
-
-const SESSION_STORAGE_KEY = 'GASLY_NEXT_SESSION_TOKEN';
-let memorySessionToken: string | null = null;
-
-export function getExecUrl(): string {
-  return process.env.NEXT_PUBLIC_GAS_EXEC_URL || '';
-}
-
-export function getSessionToken(): string | null {
-  if (memorySessionToken) return memorySessionToken;
-  if (typeof window !== 'undefined') {
-    try {
-      return window.sessionStorage.getItem(SESSION_STORAGE_KEY);
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-export function setSessionToken(token: string | null, persistInSessionStorage = false): void {
-  memorySessionToken = token;
-  if (typeof window !== 'undefined') {
-    try {
-      if (token && persistInSessionStorage) {
-        window.sessionStorage.setItem(SESSION_STORAGE_KEY, token);
-      } else {
-        window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
-      }
-    } catch {
-      // Ignore storage restriction in sandboxed contexts
-    }
-  }
-}
-
-export function clearSessionToken(): void {
-  setSessionToken(null, false);
-}
-
-export function generateIdempotencyKey(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-export interface GasRequestOptions {
-  idempotent?: boolean;
-  idemKey?: string;
-  timeoutMs?: number;
-  maxRetries?: number;
-}
-
-/**
- * Browser & Server compatible client for Google Apps Script /exec.
- * Sends POST with Content-Type: text/plain;charset=utf-8 to avoid CORS preflight.
- */
-export async function gasRequest<T = unknown>(
-  action: string,
-  payload: Record<string, unknown> = {},
-  options: GasRequestOptions = {}
-): Promise<GasEnvelope<T>> {
-  const execUrl = getExecUrl();
-  if (!execUrl || execUrl.includes('REPLACE_WITH_DEPLOYMENT_ID')) {
-    return {
-      status: 'error',
-      data: null,
-      message: 'NEXT_PUBLIC_GAS_EXEC_URL belum dikonfigurasi pada .env.local.',
-      code: 'VALIDATION_ERROR',
-      meta: { timestamp: new Date().toISOString() }
-    };
-  }
-
-  const isRead = action.endsWith('.list') || action.endsWith('.get');
-  const isIdempotent = options.idempotent ?? !isRead;
-  const idemKey = options.idemKey || (isIdempotent ? generateIdempotencyKey() : null);
-  const canRetry = isRead || Boolean(idemKey);
-  const maxRetries = canRetry ? (options.maxRetries ?? 2) : 0;
-  const timeoutMs = options.timeoutMs ?? 20000;
-
-  const bodyString = JSON.stringify({
-    action,
-    v: 1,
-    auth: getSessionToken(),
-    idem: idemKey,
-    payload
-  });
-
-  let attempt = 0;
-  while (true) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const response = await fetch(execUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        redirect: 'follow',
-        body: bodyString,
-        signal: controller.signal
-      });
-
-      const rawText = await response.text();
-      const envelope = JSON.parse(rawText) as GasEnvelope<T>;
-
-      if (envelope.code === 'FORBIDDEN' && !action.startsWith('auth.')) {
-        clearSessionToken();
-      }
-
-      if (envelope.code === 'LOCK_TIMEOUT' && attempt < maxRetries) {
-        attempt += 1;
-        await new Promise((r) => setTimeout(r, 400 * Math.pow(2, attempt)));
-        continue;
-      }
-
-      return envelope;
-    } catch (err) {
-      if (attempt < maxRetries) {
-        attempt += 1;
-        await new Promise((r) => setTimeout(r, 400 * Math.pow(2, attempt)));
-        continue;
-      }
-      const isAbort = err instanceof Error && err.name === 'AbortError';
-      return {
-        status: 'error',
-        data: null,
-        message: isAbort
-          ? 'Permintaan ke server melewati batas waktu tunggu (timeout).'
-          : 'Gagal terhubung ke endpoint Google Apps Script (/exec).',
-        code: 'INTERNAL_ERROR',
-        meta: { timestamp: new Date().toISOString() }
-      };
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-}
-
-/**
- * Build-time / ISR public read helper for Next.js Server Components.
- */
-export async function fetchPublicReadServer<T = unknown>(
-  action: string,
-  payload: Record<string, unknown> = {},
-  revalidateSeconds = 60
-): Promise<GasEnvelope<T>> {
-  const execUrl = getExecUrl();
-  if (!execUrl || execUrl.includes('REPLACE_WITH_DEPLOYMENT_ID')) {
-    return {
-      status: 'error',
-      data: null,
-      message: 'NEXT_PUBLIC_GAS_EXEC_URL belum disetel.',
-      code: 'VALIDATION_ERROR',
-      meta: { timestamp: new Date().toISOString() }
-    };
-  }
-
-  const url = new URL(execUrl);
-  url.searchParams.set('action', action);
-  url.searchParams.set('v', '1');
-  if (Object.keys(payload).length > 0) {
-    url.searchParams.set('payload', JSON.stringify(payload));
-  }
-
-  try {
-    const res = await fetch(url.toString(), {
-      method: 'GET',
-      redirect: 'follow',
-      next: { revalidate: revalidateSeconds }
-    });
-    const text = await res.text();
-    return JSON.parse(text) as GasEnvelope<T>;
-  } catch {
-    return {
-      status: 'error',
-      data: null,
-      message: 'Gagal memuat data awal pada saat build/revalidate.',
-      code: 'INTERNAL_ERROR',
-      meta: { timestamp: new Date().toISOString() }
-    };
-  }
-}
-```
-
-```typescript
-// FILE: src/lib/driveImage.ts
-/**
- * Single helper for Google Drive image display URLs.
- * Primary: https://drive.google.com/thumbnail?id=<id>&sz=w<width>
- * Fallback: https://lh3.googleusercontent.com/d/<id>=w<width>
- */
-export function driveImageUrl(fileId: string | null | undefined, width = 800): string {
-  const cleanId = String(fileId || '').trim();
-  if (!cleanId) return '';
-  const w = Math.max(64, Math.min(2400, Math.floor(width)));
-  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(cleanId)}&sz=w${w}`;
-}
-
-export function driveImageFallbackUrl(fileId: string | null | undefined, width = 800): string {
-  const cleanId = String(fileId || '').trim();
-  if (!cleanId) return '';
-  const w = Math.max(64, Math.min(2400, Math.floor(width)));
-  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(cleanId)}=w${w}`;
-}
-
-const idrFormatter = new Intl.NumberFormat('id-ID', {
-  style: 'currency',
-  currency: 'IDR',
-  maximumFractionDigits: 0
-});
-
-export function formatCurrencyIdr(value: unknown): string {
-  if (value === null || value === undefined || value === '' || typeof value === 'boolean') {
-    return '-';
-  }
-  const num = Number(value);
-  if (!Number.isFinite(num)) {
-    return 'Data tidak valid';
-  }
-  return idrFormatter.format(num);
-}
-```
-
----
-
-## 4. Kode Lengkap `src/components/ImageUploader.tsx`
-
-```tsx
-// FILE: src/components/ImageUploader.tsx
-'use client';
-
-import React, { useState } from 'react';
-import { gasRequest, getSessionToken } from '@/lib/gasClient';
-
-export type UploadStatus = 'idle' | 'compressing' | 'uploading' | 'error' | 'done';
-
-interface ImageUploaderProps {
-  entity: string;
-  entityId: string;
-  uploadNonce?: string;
-  onUploaded?: (result: { fileId: string; fileUrl: string }) => void;
-}
-
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const TARGET_BYTES = 1024 * 1024;
-const MAX_DIMENSION = 1600;
-
-async function compressFileToBase64(file: File): Promise<{
-  fileName: string;
-  mimeType: string;
-  base64: string;
-}> {
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    throw new Error('Format file harus JPEG, PNG, atau WebP.');
-  }
-
-  const objectUrl = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const el = new Image();
-      el.onload = () => resolve(el);
-      el.onerror = () => reject(new Error('Gagal membaca gambar.'));
-      el.src = objectUrl;
-    });
-
-    let width = img.naturalWidth || img.width;
-    let height = img.naturalHeight || img.height;
-    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-      const scale = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
-      width = Math.round(width * scale);
-      height = Math.round(height * scale);
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Konteks canvas 2D tidak tersedia.');
-    ctx.drawImage(img, 0, 0, width, height);
-
-    const outMime = file.type === 'image/png' ? 'image/webp' : file.type;
-    const qualities = [0.82, 0.68, 0.54, 0.42];
-    let base64 = '';
-
-    for (const q of qualities) {
-      const dataUrl = canvas.toDataURL(outMime, q);
-      base64 = dataUrl.split(',')[1] || '';
-      if (Math.floor((base64.length * 3) / 4) <= TARGET_BYTES) {
-        break;
-      }
-    }
-
-    return {
-      fileName: file.name,
-      mimeType: outMime,
-      base64
-    };
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
-}
-
-export function ImageUploader({ entity, entityId, uploadNonce = '', onUploaded }: ImageUploaderProps) {
-  const [state, setState] = useState<UploadStatus>('idle');
-  const [statusMessage, setStatusMessage] = useState<string>('Pilih foto (maks. ~1 MB setelah kompresi).');
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setState('compressing');
-    setStatusMessage('Mengompres ukuran foto...');
-
-    try {
-      const compressed = await compressFileToBase64(file);
-      setState('uploading');
-      setStatusMessage('Mengunggah foto ke Google Drive...');
-
-      let ticket: string | null = null;
-      if (!getSessionToken()) {
-        const ticketEnv = await gasRequest<{ ticket: string }>(
-          'file.ticket',
-          { entity, entityId, uploadNonce },
-          { idempotent: false }
-        );
-        if (ticketEnv.status !== 'success' || !ticketEnv.data?.ticket) {
-          setState('error');
-          setStatusMessage(ticketEnv.message || 'Gagal memperoleh tiket unggah.');
-          return;
-        }
-        ticket = ticketEnv.data.ticket;
-      }
-
-      const uploadEnv = await gasRequest<{ fileId: string; fileUrl: string }>(
-        'file.upload',
-        {
-          entity,
-          entityId,
-          fileName: compressed.fileName,
-          mimeType: compressed.mimeType,
-          base64: compressed.base64,
-          ticket
-        },
-        { idempotent: true }
-      );
-
-      if (uploadEnv.status !== 'success' || uploadEnv.code !== 'OK' || !uploadEnv.data) {
-        setState('error');
-        setStatusMessage(uploadEnv.message || 'Gagal mengunggah foto.');
-        return;
-      }
-
-      setState('done');
-      setStatusMessage('Foto berhasil disimpan ke Google Drive.');
-      onUploaded?.(uploadEnv.data);
-    } catch (err) {
-      setState('error');
-      setStatusMessage(err instanceof Error ? err.message : 'Gagal memproses foto.');
-    }
-  }
-
-  return (
-    <div className="space-y-1.5" aria-busy={state === 'compressing' || state === 'uploading'}>
-      <label
-        htmlFor={`uploader-${entityId}`}
-        style={{ color: 'var(--text-secondary)' }}
-        className="block text-xs font-semibold"
-      >
-        Unggah Foto Bukti
-      </label>
-      <input
-        id={`uploader-${entityId}`}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        disabled={state === 'compressing' || state === 'uploading'}
-        onChange={handleFileChange}
-        style={{
-          backgroundColor: 'var(--bg-base)',
-          color: 'var(--text-primary)',
-          borderColor: 'var(--border-subtle)'
-        }}
-        className="block w-full min-h-[42px] text-xs rounded-lg border px-2.5 py-1.5"
-      />
-      <p
-        aria-live="polite"
-        style={{
-          color: state === 'error' ? 'var(--danger-solid)' : 'var(--text-helper)'
-        }}
-        className="text-xs"
-      >
-        [{state.toUpperCase()}] {statusMessage}
-      </p>
-    </div>
-  );
-}
-```
-
----
-
-## 5. Kode Lengkap `src/app/page.tsx` (Server Component ISR) & `src/components/ItemsClientView.tsx`
-
-```tsx
-// FILE: src/app/page.tsx
-import React from 'react';
-import { fetchPublicReadServer } from '@/lib/gasClient';
-import { ItemsClientView, ItemRecord } from '@/components/ItemsClientView';
-
-export default async function HomePage() {
-  const initialEnvelope = await fetchPublicReadServer<{ items: ItemRecord[] }>('items.list', {}, 60);
-  const initialItems = initialEnvelope.status === 'success' && initialEnvelope.data?.items
-    ? initialEnvelope.data.items
-    : [];
-
-  return (
-    <main className="max-w-6xl mx-auto p-4 md:p-6">
-      <ItemsClientView
-        initialItems={initialItems}
-        initialError={initialEnvelope.status === 'error' ? initialEnvelope.message : null}
-      />
-    </main>
-  );
-}
-```
-
-```tsx
-// FILE: src/components/ItemsClientView.tsx
-'use client';
-
-import React, { useState } from 'react';
-import { gasRequest, setSessionToken, clearSessionToken } from '@/lib/gasClient';
-import { driveImageUrl, driveImageFallbackUrl, formatCurrencyIdr } from '@/lib/driveImage';
-import { ImageUploader } from '@/components/ImageUploader';
-
-export interface ItemRecord {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  category: string;
-  amount: number;
-  status: string;
-  file_id?: string;
-  file_url?: string;
-}
-
-interface ItemsClientViewProps {
-  initialItems: ItemRecord[];
-  initialError: string | null;
-}
-
-export function ItemsClientView({ initialItems, initialError }: ItemsClientViewProps) {
-  const [items, setItems] = useState<ItemRecord[]>(initialItems);
-  const [errorMsg, setErrorMsg] = useState<string | null>(initialError);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>('');
-  const [category, setCategory] = useState<string>('Operasional');
-  const [amount, setAmount] = useState<string>('');
-  const [passphrase, setPassphrase] = useState<string>('');
-  const [persistTab, setPersistTab] = useState<boolean>(false);
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
-  const [deleteTarget, setDeleteTarget] = useState<ItemRecord | null>(null);
-  const [deletePin, setDeletePin] = useState<string>('');
-  const [uploadNonces, setUploadNonces] = useState<Record<string, string>>({});
-
-  async function refreshItems() {
-    setIsLoading(true);
-    setErrorMsg(null);
-    const res = await gasRequest<{ items: ItemRecord[] }>('items.list', {});
-    setIsLoading(false);
-    if (res.status === 'success' && res.data?.items) {
-      setItems(res.data.items);
-    } else {
-      setErrorMsg(res.message || 'Gagal memuat data.');
-    }
-  }
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (isSaving) return;
-    setIsSaving(true);
-    setErrorMsg(null);
-
-    const res = await gasRequest<{ item: ItemRecord; uploadNonce?: string }>('items.create', {
-      title,
-      category,
-      amount: Number(amount),
-      status: 'ACTIVE'
-    });
-
-    setIsSaving(false);
-    if (res.status === 'success' && res.data?.item) {
-      if (res.data.uploadNonce) {
-        const createdId = res.data.item.id;
-        const nonce = res.data.uploadNonce;
-        setUploadNonces((prev) => ({ ...prev, [createdId]: nonce }));
-      }
-      setTitle('');
-      setAmount('');
-      await refreshItems();
-    } else {
-      // Preserve form inputs on error (U-08 RECOVERY gate)
-      setErrorMsg(res.message || 'Gagal menyimpan data.');
-    }
-  }
-
-  async function handleConfirmDelete() {
-    if (!deleteTarget || isSaving) return;
-    if (!/^\d{6}$/.test(deletePin.trim())) {
-      setErrorMsg('Masukkan PIN step-up 6 digit angka untuk mengarsipkan data.');
-      return;
-    }
-
-    setIsSaving(true);
-    setErrorMsg(null);
-    const pinRes = await gasRequest<{ stepUpToken: string }>(
-      'auth.verifyPin',
-      { pin: deletePin.trim(), targetAction: 'items.delete' },
-      { idempotent: false, maxRetries: 0 }
-    );
-
-    if (pinRes.status !== 'success' || !pinRes.data?.stepUpToken) {
-      setIsSaving(false);
-      setErrorMsg(pinRes.message || 'Verifikasi PIN step-up gagal.');
-      return;
-    }
-
-    const res = await gasRequest('items.delete', {
-      id: deleteTarget.id,
-      updated_at: deleteTarget.updated_at,
-      stepUpToken: pinRes.data.stepUpToken
-    });
-    setIsSaving(false);
-    setDeletePin('');
-    setDeleteTarget(null);
-    if (res.status === 'success') {
-      await refreshItems();
-    } else {
-      setErrorMsg(res.message || 'Gagal mengarsipkan data.');
-    }
-  }
-
-  async function handleAdminLogin(e: React.FormEvent) {
-    e.preventDefault();
-    const res = await gasRequest<{ token: string; role: string }>(
-      'auth.login',
-      { account: 'admin', passphrase },
-      { idempotent: false, maxRetries: 0 }
-    );
-    if (res.status === 'success' && res.data?.token) {
-      setSessionToken(res.data.token, persistTab);
-      setPassphrase('');
-      setIsAdminLoggedIn(true);
-    } else {
-      setErrorMsg(res.message || 'Login admin gagal.');
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header & Admin Auth Bar */}
-      <section
-        style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
-        className="p-4 rounded-xl border flex flex-wrap items-center justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Data Operasional</h1>
-          <p style={{ color: 'var(--text-helper)' }} className="text-xs">
-            Pembacaan awal via ISR • penulisan langsung ke Apps Script (/exec)
-          </p>
-        </div>
-
-        {!isAdminLoggedIn ? (
-          <form onSubmit={handleAdminLogin} className="flex flex-wrap items-end gap-2">
-            <div>
-              <label htmlFor="admin-pass" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
-                Passphrase Admin
-              </label>
-              <input
-                id="admin-pass"
-                type="password"
-                required
-                minLength={12}
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-                style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
-                className="min-h-[42px] px-3 py-1.5 rounded-lg border text-sm"
-              />
-            </div>
-            <label htmlFor="persist-tab" style={{ color: 'var(--text-helper)' }} className="flex items-center gap-1.5 text-xs py-2">
-              <input
-                id="persist-tab"
-                type="checkbox"
-                checked={persistTab}
-                onChange={(e) => setPersistTab(e.target.checked)}
-              />
-              SessionStorage
-            </label>
-            <button
-              type="submit"
-              style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-text-on-solid)' }}
-              className="min-h-[42px] px-4 py-2 rounded-lg text-sm font-semibold"
-            >
-              Login Admin
-            </button>
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              clearSessionToken();
-              setIsAdminLoggedIn(false);
-            }}
-            style={{ backgroundColor: 'var(--bg-interactive)', color: 'var(--text-primary)' }}
-            className="min-h-[42px] px-4 py-2 rounded-lg text-sm font-medium"
-          >
-            Keluar Sesi Admin
-          </button>
-        )}
-      </section>
-
-      {errorMsg && (
-        <div
-          role="alert"
-          style={{ backgroundColor: 'var(--danger-solid)', color: 'var(--danger-text-on-solid)' }}
-          className="p-4 rounded-xl flex items-center justify-between gap-4 text-sm"
-        >
-          <span>{errorMsg}</span>
-          <button
-            type="button"
-            onClick={refreshItems}
-            className="min-h-[40px] px-3 py-1 rounded bg-black/20 font-semibold text-xs"
-          >
-            Coba Lagi
-          </button>
-        </div>
-      )}
-
-      {/* Create Form */}
-      <form
-        onSubmit={handleCreate}
-        style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
-        className="p-5 rounded-xl border grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
-      >
-        <div>
-          <label htmlFor="item-title" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
-            Judul Transaksi *
-          </label>
-          <input
-            id="item-title"
-            type="text"
-            required
-            minLength={3}
-            maxLength={120}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
-            className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm"
-          />
-        </div>
-        <div>
-          <label htmlFor="item-cat" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
-            Kategori
-          </label>
-          <select
-            id="item-cat"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
-            className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm"
-          >
-            <option value="Operasional">Operasional</option>
-            <option value="Pemasaran">Pemasaran</option>
-            <option value="Infrastruktur">Infrastruktur</option>
-            <option value="Lisensi">Lisensi</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="item-amt" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
-            Nominal (Rp) *
-          </label>
-          <input
-            id="item-amt"
-            type="number"
-            required
-            min={0}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
-            className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm tabular-nums"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={isSaving}
-          style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-text-on-solid)' }}
-          className="min-h-[42px] px-5 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
-        >
-          {isSaving ? 'Menyimpan...' : 'Tambah Data'}
-        </button>
-      </form>
-
-      {/* Items Table */}
-      <section
-        style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
-        className="rounded-xl border overflow-x-auto p-4"
-      >
-        {isLoading ? (
-          <div className="animate-pulse space-y-2">
-            <div className="h-10 rounded" style={{ backgroundColor: 'var(--bg-interactive)' }} />
-            <div className="h-10 rounded" style={{ backgroundColor: 'var(--bg-interactive)' }} />
-          </div>
-        ) : items.length === 0 ? (
-          <p style={{ color: 'var(--text-helper)' }} className="p-6 text-center text-sm">
-            Belum ada data. Tambahkan transaksi pertama melalui formulir di atas.
-          </p>
-        ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr style={{ color: 'var(--text-helper)', borderColor: 'var(--border-subtle)' }} className="border-b text-xs uppercase">
-                <th className="py-2 px-2">ID</th>
-                <th className="py-2 px-2">Judul</th>
-                <th className="py-2 px-2 text-right">Nominal</th>
-                <th className="py-2 px-2">Foto Drive</th>
-                <th className="py-2 px-2">Unggah Bukti</th>
-                <th className="py-2 px-2 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((it) => (
-                <tr key={it.id} style={{ borderColor: 'var(--border-subtle)' }} className="border-b">
-                  <td className="py-3 px-2 text-xs font-mono">{it.id}</td>
-                  <td className="py-3 px-2 text-sm font-medium">{it.title}</td>
-                  <td className="py-3 px-2 text-sm text-right tabular-nums font-semibold">
-                    {formatCurrencyIdr(it.amount)}
-                  </td>
-                  <td className="py-3 px-2">
-                    {it.file_id ? (
-                      <img
-                        src={driveImageUrl(it.file_id, 160)}
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          if (target.dataset.fallbackApplied !== 'true') {
-                            target.dataset.fallbackApplied = 'true';
-                            target.src = driveImageFallbackUrl(it.file_id, 160);
-                          }
-                        }}
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
-                        alt={`Bukti ${it.title}`}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    ) : (
-                      <span style={{ color: 'var(--text-helper)' }} className="text-xs">-</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-2">
-                    <ImageUploader
-                      entity="ITEMS"
-                      entityId={it.id}
-                      uploadNonce={uploadNonces[it.id]}
-                      onUploaded={() => refreshItems()}
-                    />
-                  </td>
-                  <td className="py-3 px-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDeletePin('');
-                        setDeleteTarget(it);
-                      }}
-                      style={{ backgroundColor: 'var(--danger-solid)', color: 'var(--danger-text-on-solid)' }}
-                      className="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-semibold"
-                    >
-                      Arsipkan
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      {/* Custom Confirmation Modal + Step-Up PIN (Gate W-01 & auth.verifyPin) */}
-      {deleteTarget && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="confirm-del-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-        >
-          <div
-            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
-            className="w-full max-w-md rounded-xl border p-6 space-y-4"
-          >
-            <h2 id="confirm-del-title" className="text-lg font-bold">Konfirmasi Pengarsipan</h2>
-            <p style={{ color: 'var(--text-secondary)' }} className="text-sm">
-              Apakah Anda yakin ingin mengarsipkan transaksi <strong>{deleteTarget.title}</strong> ({deleteTarget.id})?
-            </p>
-            <div>
-              <label htmlFor="delete-stepup-pin" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
-                PIN Konfirmasi Admin (6 Digit) *
-              </label>
-              <input
-                id="delete-stepup-pin"
-                type="password"
-                inputMode="numeric"
-                maxLength={6}
-                value={deletePin}
-                onChange={(e) => setDeletePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="6 digit angka"
-                style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
-                className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm font-mono tabular-nums"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setDeletePin('');
-                  setDeleteTarget(null);
-                }}
-                style={{ backgroundColor: 'var(--bg-interactive)', color: 'var(--text-primary)' }}
-                className="min-h-[42px] px-4 py-2 rounded-lg text-sm"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                disabled={isSaving}
-                onClick={handleConfirmDelete}
-                style={{ backgroundColor: 'var(--danger-solid)', color: 'var(--danger-text-on-solid)' }}
-                className="min-h-[42px] px-4 py-2 rounded-lg text-sm font-semibold"
-              >
-                {isSaving ? 'Memproses...' : 'Ya, Arsipkan'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-```
 
 
 ---
@@ -3932,6 +2663,1308 @@ export function ItemsClientView({ initialItems, initialError }: ItemsClientViewP
    - Gunakan variabel semantik (`var(--bg-base)`, `var(--bg-surface)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--text-helper)`, `var(--accent-solid)`, `var(--accent-text-on-solid)`) agar pergantian tema (`data-theme="light"` vs `data-theme="dark"`) selalu mempertahankan rasio kontras WCAG AA.
 2. **Pada Stack Native / Desktop Pewaris (`flutter`, `react-native`, `swiftui`, `jetpack-compose`, `wpf`, dll.):**
    - Baca nilai hex langsung dari `src/design/presets/<preset>.tokens.json` pada objek `modes.light` dan `modes.dark`, serta patuhi daftar `contrastPairs`.
+
+
+---
+<!-- FILE: references/react-vite.md -->
+<!-- KB_VERSION: 2.1.0 -->
+# STACK ADAPTER: REACT (VITE + TYPESCRIPT + TAILWIND) (`stacks/react-vite.md`)
+**KB_VERSION:** `2.1.0`  
+**Kondisi Muat:** Dimuat oleh `gasly-ui` ketika stack yang dipilih adalah `react`.
+
+## Daftar Isi
+1. [Struktur Proyek, Konvensi `VITE_GAS_EXEC_URL` & Target Hosting](#1-struktur-proyek-konvensi-vite_gas_exec_url--target-hosting)
+2. [Kode Lengkap `src/lib/gasClient.ts` (Transport `text/plain`, `auth.google`, Step-Up PIN & Isolasi Demo)](#2-kode-lengkap-srclibgasclientts-transport-textplain-authgoogle-step-up-pin--isolasi-demo)
+3. [Kode Lengkap `src/lib/driveImage.ts` & `src/lib/mediaPlaceholders.ts` (`Gate W-08` & `W-10`)](#3-kode-lengkap-srclibdriveimagets--srclibmediaplaceholdersts-gate-w-08--w-10)
+4. [Kode Lengkap `src/components/ImageUploader.tsx` (Kompresi ~1 MB, `uploadNonce` & State `RECOVERY`)](#4-kode-lengkap-srccomponentsimageuploadertsx-kompresi-1-mb-uploadnonce--state-recovery)
+5. [Kode Lengkap `src/components/StepUpPinModal.tsx` (Modal Konfirmasi & PIN 6 Digit)](#5-kode-lengkap-srccomponentsstepuppinmodaltsx-modal-konfirmasi--pin-6-digit)
+6. [Kode Lengkap `src/App.tsx` (Workspace End-to-End & Paritas Kontrak)](#6-kode-lengkap-srcapptsx-workspace-end-to-end--paritas-kontrak)
+
+---
+
+## 1. Struktur Proyek, Konvensi `VITE_GAS_EXEC_URL` & Target Hosting
+
+```text
+react-gasly-app/
+├── .env                                # VITE_GAS_EXEC_URL=https://script.google.com/macros/s/<ID>/exec
+├── index.html                          # Viewport aksesibel (tanpa user-scalable=no)
+├── package.json                        # Menggunakan <<PIN_VERSION>> untuk vite, react, tailwindcss
+└── src/
+    ├── index.css                       # Mengimpor preset CSS (mis. dense-dashboard.css / warm-friendly.css) + Tailwind
+    ├── lib/
+    │   ├── gasClient.ts                # Klien HTTP text/plain POST, retry idempoten, memori token & auth.google
+    │   ├── driveImage.ts               # Helper driveImageUrl (public) vs tautan aman file_url (private)
+    │   └── mediaPlaceholders.ts        # Registry foto/video dummy (Unsplash/Pexels/Pixabay) + fallback SVG
+    ├── components/
+    │   ├── ImageUploader.tsx           # Kompresi <canvas> ~1 MB, file.ticket ber-uploadNonce & state RECOVERY
+    │   └── StepUpPinModal.tsx          # Modal kustom 6-digit PIN (auth.verifyPin -> stepUpToken)
+    └── App.tsx                         # Aplikasi SPA utama terhubung end-to-end ke /exec
+```
+
+### Konfigurasi Environment & Build per Hosting Target
+- **Environment Variable (`.env`):**
+  - `VITE_GAS_EXEC_URL=https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec`
+  - `VITE_GOOGLE_CLIENT_ID=` *(opsional, wajib diisi jika `auth_google_enabled: true`)*
+- **Build Output Statis (SPA):** Perintah build `npm run build`, direktori output `dist/`.
+  - **Cloudflare Pages (`cloudflare_pages` — Default Komersial Gratis):** Build command `npm run build`, output `dist`. SPA routing otomatis via fallback `index.html`.
+  - **Sevalla (`sevalla` — Komersial Gratis s/d kuota):** Pilih Static Site, build command `npm run build`, publish directory `dist`, atur fallback `index.html`.
+  - **Netlify (`netlify` — Komersial, kuota kredit):** Build `npm run build`, publish `dist`, tambahkan `public/_redirects` berisi `/* /index.html 200`.
+  - **Firebase Hosting (`firebase_hosting` — Komersial Spark/Blaze):** Setel `"public": "dist"` dan rewrite `** -> /index.html` di `firebase.json`.
+  - **Vercel (`vercel_pro` untuk komersial / `vercel_hobby_noncommercial` untuk personal):** Framework Preset `Vite`, output `dist`.
+  - **GitHub Pages (`github_pages_demo` — Demo Non-Komersial Saja):** Setel `base` di `vite.config.ts` sesuai nama repositori.
+
+---
+
+## 2. Kode Lengkap `src/lib/gasClient.ts` (Transport `text/plain`, `auth.google`, Step-Up PIN & Isolasi Demo)
+
+```typescript
+// FILE: src/lib/gasClient.ts
+export type GasCode =
+  | 'OK'
+  | 'VALIDATION_ERROR'
+  | 'NOT_FOUND'
+  | 'FORBIDDEN'
+  | 'CONFLICT'
+  | 'LOCK_TIMEOUT'
+  | 'RATE_LIMITED'
+  | 'INTERNAL_ERROR';
+
+export interface GasEnvelope<T = unknown> {
+  status: 'success' | 'error';
+  data: T | null;
+  message: string;
+  code: GasCode;
+  meta: {
+    schemaVersion?: string;
+    timestamp: string;
+    idempotentReplay?: boolean;
+    retryAfterSeconds?: number;
+  };
+}
+
+export interface SessionInfo {
+  token: string;
+  sub: string;
+  role: string;
+  expiresAt?: string;
+}
+
+const SESSION_STORAGE_KEY = 'GASLY_REACT_SESSION_TOKEN';
+let memorySessionToken: string | null = null;
+
+export function getExecUrl(): string {
+  return String(import.meta.env.VITE_GAS_EXEC_URL || '').trim();
+}
+
+export function getGoogleClientId(): string {
+  return String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+}
+
+/**
+ * Gate W-09: Demo controls and runtime URL switcher are ONLY allowed when
+ * no production /exec URL is configured in build environment variables.
+ */
+export function isSimulationMode(): boolean {
+  const url = getExecUrl();
+  return !url || url.includes('REPLACE_WITH_DEPLOYMENT_ID');
+}
+
+export function getSessionToken(): string | null {
+  if (memorySessionToken) return memorySessionToken;
+  if (typeof window !== 'undefined') {
+    try {
+      return window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+export function setSessionToken(token: string | null, persistInTab = false): void {
+  memorySessionToken = token;
+  if (typeof window !== 'undefined') {
+    try {
+      if (token && persistInTab) {
+        window.sessionStorage.setItem(SESSION_STORAGE_KEY, token);
+      } else {
+        window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      }
+    } catch {
+      // Abaikan jika sandbox memblokir sessionStorage; memori tetap aktif
+    }
+  }
+}
+
+export function clearSessionToken(): void {
+  setSessionToken(null, false);
+}
+
+export function generateIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  const bytes = new Uint8Array(16);
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    crypto.getRandomValues(bytes);
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+export interface GasRequestOptions {
+  idempotent?: boolean;
+  idemKey?: string;
+  timeoutMs?: number;
+  maxRetries?: number;
+}
+
+/**
+ * Single HTTP client for Google Apps Script /exec.
+ * Sends POST with Content-Type: text/plain;charset=utf-8 to avoid CORS preflight.
+ */
+export async function gasRequest<T = unknown>(
+  action: string,
+  payload: Record<string, unknown> = {},
+  options: GasRequestOptions = {}
+): Promise<GasEnvelope<T>> {
+  const execUrl = getExecUrl();
+  if (!execUrl || execUrl.includes('REPLACE_WITH_DEPLOYMENT_ID')) {
+    return {
+      status: 'error',
+      data: null,
+      message: 'VITE_GAS_EXEC_URL belum dikonfigurasi pada file .env.',
+      code: 'VALIDATION_ERROR',
+      meta: { timestamp: new Date().toISOString() }
+    };
+  }
+
+  const isRead = action.endsWith('.list') || action.endsWith('.get');
+  const isIdempotent = options.idempotent ?? !isRead;
+  const idemKey = options.idemKey || (isIdempotent ? generateIdempotencyKey() : null);
+  const canRetry = isRead || Boolean(idemKey);
+  const maxRetries = canRetry ? (options.maxRetries ?? 2) : 0;
+  const timeoutMs = options.timeoutMs ?? 20000;
+
+  const bodyString = JSON.stringify({
+    action,
+    v: 1,
+    auth: getSessionToken(),
+    idem: idemKey,
+    payload
+  });
+
+  let attempt = 0;
+  while (true) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(execUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        redirect: 'follow',
+        body: bodyString,
+        signal: controller.signal
+      });
+
+      const rawText = await response.text();
+      const envelope = JSON.parse(rawText) as GasEnvelope<T>;
+
+      if (envelope.code === 'FORBIDDEN' && !action.startsWith('auth.')) {
+        clearSessionToken();
+      }
+
+      if (envelope.code === 'LOCK_TIMEOUT' && attempt < maxRetries) {
+        attempt += 1;
+        await new Promise((r) => setTimeout(r, 400 * Math.pow(2, attempt)));
+        continue;
+      }
+
+      return envelope;
+    } catch (err) {
+      if (attempt < maxRetries) {
+        attempt += 1;
+        await new Promise((r) => setTimeout(r, 400 * Math.pow(2, attempt)));
+        continue;
+      }
+      const isAbort = err instanceof Error && err.name === 'AbortError';
+      return {
+        status: 'error',
+        data: null,
+        message: isAbort
+          ? 'Permintaan ke server melewati batas waktu tunggu (timeout).'
+          : 'Gagal terhubung ke endpoint Google Apps Script (/exec).',
+        code: 'INTERNAL_ERROR',
+        meta: { timestamp: new Date().toISOString() }
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+}
+
+export async function loginWithPassphrase(
+  account: string,
+  passphrase: string,
+  persistInTab = false
+): Promise<GasEnvelope<SessionInfo>> {
+  const res = await gasRequest<SessionInfo>(
+    'auth.login',
+    { account: account || 'admin', passphrase },
+    { idempotent: false, maxRetries: 0 }
+  );
+  if (res.status === 'success' && res.code === 'OK' && res.data?.token) {
+    setSessionToken(res.data.token, persistInTab);
+  }
+  return res;
+}
+
+/**
+ * Matches backend handleAuthGoogle_ contract: payload key MUST be `idToken` (camelCase).
+ */
+export async function loginWithGoogleIdToken(
+  idToken: string,
+  persistInTab = false
+): Promise<GasEnvelope<SessionInfo>> {
+  const res = await gasRequest<SessionInfo>(
+    'auth.google',
+    { idToken },
+    { idempotent: false, maxRetries: 0 }
+  );
+  if (res.status === 'success' && res.code === 'OK' && res.data?.token) {
+    setSessionToken(res.data.token, persistInTab);
+  }
+  return res;
+}
+
+export async function verifyStepUpPin(
+  pin: string,
+  targetAction: 'items.delete' | 'admin.purgeSeed' | 'file.delete' | 'auth.setCredentials'
+): Promise<GasEnvelope<{ stepUpToken: string; targetAction: string; expiresInSeconds: number }>> {
+  return gasRequest(
+    'auth.verifyPin',
+    { pin, targetAction },
+    { idempotent: false, maxRetries: 0 }
+  );
+}
+
+export async function logoutSession(): Promise<void> {
+  try {
+    await gasRequest('auth.logout', {}, { idempotent: false, maxRetries: 0 });
+  } finally {
+    clearSessionToken();
+  }
+}
+```
+
+---
+
+## 3. Kode Lengkap `src/lib/driveImage.ts` & `src/lib/mediaPlaceholders.ts` (`Gate W-08` & `W-10`)
+
+```typescript
+// FILE: src/lib/driveImage.ts
+/**
+ * Single helper for PUBLIC Google Drive images (Gate W-08).
+ * For CONFIDENTIAL / SENSITIVE_PII entities (visibility: 'private'), DO NOT render
+ * public thumbnails—render a safe external link to `file_url` instead (Gate U-10).
+ */
+export function driveImageUrl(fileId: string | null | undefined, width = 800): string {
+  const cleanId = String(fileId || '').trim();
+  if (!cleanId) return '';
+  const w = Math.max(64, Math.min(2400, Math.floor(width)));
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(cleanId)}&sz=w${w}`;
+}
+
+export function driveImageFallbackUrl(fileId: string | null | undefined, width = 800): string {
+  const cleanId = String(fileId || '').trim();
+  if (!cleanId) return '';
+  const w = Math.max(64, Math.min(2400, Math.floor(width)));
+  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(cleanId)}=w${w}`;
+}
+
+const idrFormatter = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  maximumFractionDigits: 0
+});
+
+/**
+ * Gate U-07: Never hide null/undefined/NaN values as "Rp 0".
+ */
+export function formatCurrencyIdr(value: unknown): string {
+  if (value === null || value === undefined || value === '' || typeof value === 'boolean') {
+    return '-';
+  }
+  const num = Number(value);
+  if (!Number.isFinite(num)) {
+    return 'Data tidak valid';
+  }
+  return idrFormatter.format(num);
+}
+```
+
+```typescript
+// FILE: src/lib/mediaPlaceholders.ts
+/**
+ * Gate W-10: Centralized external stock media placeholders (Unsplash, Pexels, Pixabay, Coverr/Mixkit).
+ * - Never use deprecated `source.unsplash.com`.
+ * - Never hotlink expiring AI signed URLs (e.g., Magnific AI outputs should be saved to public/assets/).
+ * - Never disguise stock portraits as real customer testimonials (Gate U-03).
+ */
+export interface PlaceholderMediaAsset {
+  type: 'image' | 'video';
+  url: string;
+  poster?: string;
+  alt: string;
+  source: string;
+  isPlaceholder: true;
+}
+
+export const MEDIA_PLACEHOLDERS: Record<string, PlaceholderMediaAsset> = {
+  heroCover: {
+    type: 'image',
+    url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Ilustrasi ruang kerja operasional (gambar contoh)',
+    source: 'Unsplash (Placeholder)',
+    isPlaceholder: true
+  },
+  catalogSample: {
+    type: 'image',
+    url: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800',
+    alt: 'Ilustrasi kolaborasi tim (gambar contoh)',
+    source: 'Pexels (Placeholder)',
+    isPlaceholder: true
+  },
+  ambientShowcaseVideo: {
+    type: 'video',
+    url: 'https://videos.pexels.com/video-files/3129671/3129671-sd_640_360_30fps.mp4',
+    poster: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    alt: 'Video latar ilustratif (video contoh)',
+    source: 'Pexels Videos (Placeholder)',
+    isPlaceholder: true
+  }
+};
+
+export function createSvgFallbackDataUri(label = 'Gambar Contoh'): string {
+  const safe = String(label).replace(/[<>&"']/g, '').slice(0, 48);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+    <rect width="100%" height="100%" fill="#E2E8F0"/>
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+      font-family="sans-serif" font-size="22" fill="#475569">${safe}</text>
+  </svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+export function shouldAutoplayVideo(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+```
+
+---
+
+## 4. Kode Lengkap `src/components/ImageUploader.tsx` (Kompresi ~1 MB, `uploadNonce` & State `RECOVERY`)
+
+```tsx
+// FILE: src/components/ImageUploader.tsx
+import React, { useState } from 'react';
+import { gasRequest, getSessionToken } from '../lib/gasClient';
+
+export type UploadStatus = 'idle' | 'compressing' | 'uploading' | 'error' | 'done';
+
+interface ImageUploaderProps {
+  entity: string;
+  entityId: string;
+  /** Wajib diisi pada alur upload publik (P3) dari respons items.create */
+  uploadNonce?: string | null;
+  onUploaded?: (result: { fileId: string; fileUrl: string; visibility: string }) => void;
+}
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const TARGET_BYTES = 1024 * 1024;
+const MAX_DIMENSION = 1600;
+
+async function compressFileToBase64(file: File): Promise<{
+  fileName: string;
+  mimeType: string;
+  base64: string;
+}> {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error('Format file harus JPEG, PNG, atau WebP.');
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('Gagal membaca gambar untuk kompresi.'));
+      el.src = objectUrl;
+    });
+
+    let width = img.naturalWidth || img.width;
+    let height = img.naturalHeight || img.height;
+    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+      const scale = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Konteks canvas 2D tidak tersedia.');
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const outMime = file.type === 'image/png' ? 'image/webp' : file.type;
+    const qualities = [0.82, 0.68, 0.54, 0.42];
+    let base64 = '';
+
+    for (const q of qualities) {
+      const dataUrl = canvas.toDataURL(outMime, q);
+      base64 = dataUrl.split(',')[1] || '';
+      if (Math.floor((base64.length * 3) / 4) <= TARGET_BYTES) {
+        break;
+      }
+    }
+
+    return { fileName: file.name, mimeType: outMime, base64 };
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+export function ImageUploader({ entity, entityId, uploadNonce, onUploaded }: ImageUploaderProps) {
+  const [state, setState] = useState<UploadStatus>('idle');
+  const [statusMessage, setStatusMessage] = useState<string>('Pilih foto bukti (otomatis dikompres ~1 MB).');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  async function executeUpload(file: File) {
+    setState('compressing');
+    setStatusMessage('Mengompres ukuran foto...');
+
+    try {
+      const compressed = await compressFileToBase64(file);
+      setState('uploading');
+      setStatusMessage('Mengunggah foto ke Google Drive...');
+
+      let ticket: string | null = null;
+      if (!getSessionToken()) {
+        if (!uploadNonce) {
+          setState('error');
+          setStatusMessage('Token uploadNonce record tidak tersedia untuk unggahan publik.');
+          return;
+        }
+        const ticketRes = await gasRequest<{ ticket: string }>(
+          'file.ticket',
+          { entity, entityId, uploadNonce },
+          { idempotent: false, maxRetries: 0 }
+        );
+        if (ticketRes.status !== 'success' || ticketRes.code !== 'OK' || !ticketRes.data?.ticket) {
+          setState('error');
+          setStatusMessage(ticketRes.message || 'Gagal memperoleh tiket unggah.');
+          return;
+        }
+        ticket = ticketRes.data.ticket;
+      }
+
+      // Gate W-09: Simpan respons ke variabel dan verifikasi status + code secara ketat
+      const uploadRes = await gasRequest<{ fileId: string; fileUrl: string; visibility: string }>(
+        'file.upload',
+        {
+          entity,
+          entityId,
+          fileName: compressed.fileName,
+          mimeType: compressed.mimeType,
+          base64: compressed.base64,
+          ticket
+        },
+        { idempotent: true }
+      );
+
+      if (uploadRes.status !== 'success' || uploadRes.code !== 'OK' || !uploadRes.data) {
+        setState('error');
+        setStatusMessage(uploadRes.message || 'Gagal mengunggah foto ke Google Drive.');
+        return;
+      }
+
+      setState('done');
+      setStatusMessage('Foto berhasil diunggah dan ditautkan ke record.');
+      onUploaded?.(uploadRes.data);
+    } catch (err) {
+      setState('error');
+      setStatusMessage(err instanceof Error ? err.message : 'Terjadi kesalahan saat memproses foto.');
+    }
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] || null;
+    setSelectedFile(file);
+    if (file) {
+      void executeUpload(file);
+    }
+  }
+
+  return (
+    <div className="space-y-2" aria-busy={state === 'compressing' || state === 'uploading'}>
+      <label
+        htmlFor={`uploader-${entityId}`}
+        style={{ color: 'var(--text-secondary)' }}
+        className="block text-xs font-semibold"
+      >
+        Unggah Foto Bukti (JPEG/PNG/WebP)
+      </label>
+      <input
+        id={`uploader-${entityId}`}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        disabled={state === 'compressing' || state === 'uploading'}
+        onChange={handleFileChange}
+        style={{
+          backgroundColor: 'var(--bg-base)',
+          color: 'var(--text-primary)',
+          borderColor: 'var(--border-subtle)'
+        }}
+        className="block w-full min-h-[42px] text-xs rounded-lg border px-2.5 py-1.5"
+      />
+      <p
+        aria-live="polite"
+        style={{ color: state === 'error' ? 'var(--danger-solid)' : 'var(--text-helper)' }}
+        className="text-xs"
+      >
+        [{state.toUpperCase()}] {statusMessage}
+      </p>
+      {state === 'error' && selectedFile && (
+        <button
+          type="button"
+          onClick={() => void executeUpload(selectedFile)}
+          style={{
+            backgroundColor: 'var(--accent-solid)',
+            color: 'var(--accent-text-on-solid)'
+          }}
+          className="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-semibold"
+        >
+          Unggah Ulang Foto Saja (Tanpa Duplikasi Data)
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+## 5. Kode Lengkap `src/components/StepUpPinModal.tsx` (Modal Konfirmasi & PIN 6 Digit)
+
+```tsx
+// FILE: src/components/StepUpPinModal.tsx
+import React, { useEffect, useState } from 'react';
+import { verifyStepUpPin } from '../lib/gasClient';
+
+interface StepUpPinModalProps {
+  open: boolean;
+  title: string;
+  description: string;
+  targetAction: 'items.delete' | 'admin.purgeSeed' | 'file.delete' | 'auth.setCredentials';
+  confirmLabel?: string;
+  onCancel: () => void;
+  onVerified: (stepUpToken: string) => Promise<void>;
+}
+
+export function StepUpPinModal({
+  open,
+  title,
+  description,
+  targetAction,
+  confirmLabel = 'Verifikasi & Lanjutkan',
+  onCancel,
+  onVerified
+}: StepUpPinModalProps) {
+  const [pin, setPin] = useState('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !isBusy) onCancel();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, isBusy, onCancel]);
+
+  if (!open) return null;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (isBusy) return;
+    if (!/^\d{6}$/.test(pin.trim())) {
+      setErrorMsg('Masukkan tepat 6 digit angka PIN.');
+      return;
+    }
+
+    setIsBusy(true);
+    setErrorMsg(null);
+    const pinRes = await verifyStepUpPin(pin.trim(), targetAction);
+    if (pinRes.status !== 'success' || pinRes.code !== 'OK' || !pinRes.data?.stepUpToken) {
+      setIsBusy(false);
+      setErrorMsg(pinRes.message || 'Verifikasi PIN gagal.');
+      return;
+    }
+
+    try {
+      await onVerified(pinRes.data.stepUpToken);
+      setPin('');
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="stepup-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isBusy) onCancel();
+      }}
+    >
+      <div
+        style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+        className="w-full max-w-md rounded-xl border p-6 space-y-4"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="stepup-modal-title" className="text-lg font-bold">
+            {title}
+          </h2>
+          <button
+            type="button"
+            aria-label="Tutup dialog konfirmasi"
+            disabled={isBusy}
+            onClick={onCancel}
+            className="min-w-[40px] min-h-[40px] text-lg"
+          >
+            &times;
+          </button>
+        </div>
+
+        <p style={{ color: 'var(--text-secondary)' }} className="text-sm">
+          {description}
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="stepup-pin-input"
+              style={{ color: 'var(--text-secondary)' }}
+              className="block text-xs font-semibold mb-1"
+            >
+              PIN Step-Up Admin (6 Digit Angka) *
+            </label>
+            <input
+              id="stepup-pin-input"
+              type="password"
+              inputMode="numeric"
+              pattern="\d{6}"
+              maxLength={6}
+              required
+              autoFocus
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              style={{
+                backgroundColor: 'var(--bg-base)',
+                color: 'var(--text-primary)',
+                borderColor: 'var(--border-subtle)'
+              }}
+              className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm font-mono tracking-widest"
+            />
+          </div>
+
+          {errorMsg && (
+            <p role="alert" style={{ color: 'var(--danger-solid)' }} className="text-xs font-medium">
+              {errorMsg}
+            </p>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              disabled={isBusy}
+              onClick={onCancel}
+              style={{ backgroundColor: 'var(--bg-interactive)', color: 'var(--text-primary)' }}
+              className="min-h-[42px] px-4 py-2 rounded-lg text-sm"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={isBusy}
+              style={{ backgroundColor: 'var(--danger-solid)', color: 'var(--danger-text-on-solid)' }}
+              className="min-h-[42px] px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+            >
+              {isBusy ? 'Memverifikasi...' : confirmLabel}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## 6. Kode Lengkap `src/App.tsx` (Workspace End-to-End & Paritas Kontrak)
+
+```tsx
+// FILE: src/App.tsx
+import React, { useEffect, useState } from 'react';
+import {
+  gasRequest,
+  getSessionToken,
+  isSimulationMode,
+  loginWithPassphrase,
+  logoutSession
+} from './lib/gasClient';
+import { driveImageUrl, driveImageFallbackUrl, formatCurrencyIdr } from './lib/driveImage';
+import { MEDIA_PLACEHOLDERS, createSvgFallbackDataUri } from './lib/mediaPlaceholders';
+import { ImageUploader } from './components/ImageUploader';
+import { StepUpPinModal } from './components/StepUpPinModal';
+
+interface ItemRecord {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  title: string;
+  category: string;
+  amount: number;
+  status: string;
+  file_id?: string;
+  file_url?: string;
+}
+
+const ENTITY_IS_PRIVATE = true; // Sesuaikan dengan data_classification di GASLY_CONTRACT_JSON (Gate U-10)
+
+export default function App() {
+  const [items, setItems] = useState<ItemRecord[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
+
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('Operasional');
+  const [amount, setAmount] = useState('');
+
+  // Menyimpan uploadNonce hasil items.create untuk alur upload publik (P3)
+  const [pendingUpload, setPendingUpload] = useState<{ entityId: string; uploadNonce: string } | null>(null);
+
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => Boolean(getSessionToken()));
+  const [passphrase, setPassphrase] = useState('');
+  const [persistTab, setPersistTab] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ItemRecord | null>(null);
+
+  async function loadItems() {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await gasRequest<{ items: ItemRecord[] }>('items.list', {});
+    setIsLoading(false);
+    if (res.status === 'success' && res.code === 'OK' && res.data?.items) {
+      setItems(res.data.items);
+    } else {
+      setErrorMsg(res.message || 'Gagal memuat daftar data.');
+    }
+  }
+
+  useEffect(() => {
+    void loadItems();
+  }, []);
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    setErrorMsg(null);
+    setNoticeMsg(null);
+
+    const res = await gasRequest<{ item: ItemRecord; uploadNonce?: string }>('items.create', {
+      title,
+      category,
+      amount: Number(amount),
+      status: 'ACTIVE'
+    });
+
+    setIsSaving(false);
+    if (res.status === 'success' && res.code === 'OK' && res.data?.item) {
+      setTitle('');
+      setAmount('');
+      setNoticeMsg(`Data ${res.data.item.id} berhasil disimpan.`);
+      if (res.data.uploadNonce) {
+        setPendingUpload({ entityId: res.data.item.id, uploadNonce: res.data.uploadNonce });
+      }
+      await loadItems();
+    } else {
+      // Pertahankan ketikan form saat gagal (Gate U-08 RECOVERY)
+      setErrorMsg(res.message || 'Gagal menyimpan data.');
+    }
+  }
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMsg(null);
+    const res = await loginWithPassphrase('admin', passphrase, persistTab);
+    if (res.status === 'success' && res.code === 'OK') {
+      setPassphrase('');
+      setIsLoggedIn(true);
+      setNoticeMsg('Login berhasil.');
+      await loadItems();
+    } else {
+      setErrorMsg(res.message || 'Login gagal.');
+    }
+  }
+
+  async function handleDeleteWithStepUp(stepUpToken: string) {
+    if (!deleteTarget) return;
+    const res = await gasRequest('items.delete', {
+      id: deleteTarget.id,
+      expected_updated_at: deleteTarget.updated_at,
+      stepUpToken
+    });
+    setDeleteTarget(null);
+    if (res.status === 'success' && res.code === 'OK') {
+      setNoticeMsg(`Data ${deleteTarget.id} berhasil diarsipkan.`);
+      await loadItems();
+    } else {
+      setErrorMsg(res.message || 'Gagal mengarsipkan data.');
+    }
+  }
+
+  return (
+    <div
+      style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}
+      className="min-h-screen"
+    >
+      <main className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+        {/* Header + Visual Cover Placeholder (Gate W-10) */}
+        <header
+          style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          className="rounded-xl border overflow-hidden"
+        >
+          <div className="h-36 w-full relative overflow-hidden">
+            <img
+              src={MEDIA_PLACEHOLDERS.heroCover.url}
+              alt={MEDIA_PLACEHOLDERS.heroCover.alt}
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = createSvgFallbackDataUri('Ilustrasi Operasional');
+              }}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="p-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Portal Operasional Gasly (React)</h1>
+              <p style={{ color: 'var(--text-helper)' }} className="text-xs">
+                {isSimulationMode()
+                  ? 'Mode Konfigurasi Lokal (VITE_GAS_EXEC_URL belum diisi)'
+                  : 'Terhubung ke Google Apps Script Headless API (/exec)'}
+              </p>
+            </div>
+
+            {!isLoggedIn ? (
+              <form onSubmit={handleLogin} className="flex flex-wrap items-end gap-2">
+                <div>
+                  <label
+                    htmlFor="login-passphrase"
+                    style={{ color: 'var(--text-secondary)' }}
+                    className="block text-xs font-semibold mb-1"
+                  >
+                    Passphrase Admin (Min. 12 Karakter)
+                  </label>
+                  <input
+                    id="login-passphrase"
+                    type="password"
+                    required
+                    minLength={12}
+                    value={passphrase}
+                    onChange={(e) => setPassphrase(e.target.value)}
+                    style={{
+                      backgroundColor: 'var(--bg-base)',
+                      color: 'var(--text-primary)',
+                      borderColor: 'var(--border-subtle)'
+                    }}
+                    className="min-h-[42px] px-3 py-1.5 rounded-lg border text-sm"
+                  />
+                </div>
+                <label htmlFor="persist-tab" style={{ color: 'var(--text-helper)' }} className="flex items-center gap-1.5 text-xs py-2">
+                  <input
+                    id="persist-tab"
+                    type="checkbox"
+                    checked={persistTab}
+                    onChange={(e) => setPersistTab(e.target.checked)}
+                  />
+                  SessionStorage
+                </label>
+                <button
+                  type="submit"
+                  style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-text-on-solid)' }}
+                  className="min-h-[42px] px-4 py-2 rounded-lg text-sm font-semibold"
+                >
+                  Login Admin
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={async () => {
+                  await logoutSession();
+                  setIsLoggedIn(false);
+                  setNoticeMsg('Sesi berhasil diakhiri.');
+                }}
+                style={{ backgroundColor: 'var(--bg-interactive)', color: 'var(--text-primary)' }}
+                className="min-h-[42px] px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Keluar Sesi
+              </button>
+            )}
+          </div>
+        </header>
+
+        {errorMsg && (
+          <div
+            role="alert"
+            style={{ backgroundColor: 'var(--danger-solid)', color: 'var(--danger-text-on-solid)' }}
+            className="p-4 rounded-xl flex items-center justify-between gap-4 text-sm"
+          >
+            <span>{errorMsg}</span>
+            <button type="button" onClick={() => void loadItems()} className="min-h-[40px] px-3 py-1 rounded bg-black/20 text-xs font-semibold">
+              Coba Lagi
+            </button>
+          </div>
+        )}
+
+        {noticeMsg && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{ backgroundColor: 'var(--success-solid)', color: 'var(--success-text-on-solid)' }}
+            className="p-3 rounded-xl text-sm font-medium"
+          >
+            {noticeMsg}
+          </div>
+        )}
+
+        {/* Form Tambah Transaksi */}
+        <form
+          onSubmit={handleCreate}
+          style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          className="p-5 rounded-xl border grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+        >
+          <div>
+            <label htmlFor="f-title" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
+              Judul Transaksi *
+            </label>
+            <input
+              id="f-title"
+              type="text"
+              required
+              minLength={3}
+              maxLength={120}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
+              className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="f-cat" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
+              Kategori
+            </label>
+            <select
+              id="f-cat"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
+              className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm"
+            >
+              <option value="Operasional">Operasional</option>
+              <option value="Pemasaran">Pemasaran</option>
+              <option value="Infrastruktur">Infrastruktur</option>
+              <option value="Lisensi">Lisensi</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="f-amt" style={{ color: 'var(--text-secondary)' }} className="block text-xs font-semibold mb-1">
+              Nominal (Rp) *
+            </label>
+            <input
+              id="f-amt"
+              type="number"
+              required
+              min={0}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}
+              className="w-full min-h-[42px] px-3 py-2 rounded-lg border text-sm tabular-nums"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isSaving}
+            style={{ backgroundColor: 'var(--accent-solid)', color: 'var(--accent-text-on-solid)' }}
+            className="min-h-[42px] px-5 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+          >
+            {isSaving ? 'Menyimpan...' : 'Simpan Transaksi'}
+          </button>
+        </form>
+
+        {/* Panel Unggah Bukti Pasca-Create (Mengirim uploadNonce yang valid) */}
+        {pendingUpload && (
+          <section
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-focus)' }}
+            className="p-4 rounded-xl border space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold">Lampirkan Foto Bukti untuk {pendingUpload.entityId}</h2>
+              <button
+                type="button"
+                onClick={() => setPendingUpload(null)}
+                className="min-h-[40px] px-3 text-xs underline"
+              >
+                Lewati
+              </button>
+            </div>
+            <ImageUploader
+              entity="ITEMS"
+              entityId={pendingUpload.entityId}
+              uploadNonce={pendingUpload.uploadNonce}
+              onUploaded={async () => {
+                setPendingUpload(null);
+                await loadItems();
+              }}
+            />
+          </section>
+        )}
+
+        {/* Tabel Data */}
+        <section
+          style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          className="rounded-xl border overflow-x-auto p-4"
+        >
+          {isLoading ? (
+            <div className="animate-pulse space-y-2">
+              <div className="h-10 rounded" style={{ backgroundColor: 'var(--bg-interactive)' }} />
+              <div className="h-10 rounded" style={{ backgroundColor: 'var(--bg-interactive)' }} />
+            </div>
+          ) : items.length === 0 ? (
+            <p style={{ color: 'var(--text-helper)' }} className="p-6 text-center text-sm">
+              Belum ada data tercatat. Gunakan formulir di atas untuk membuat transaksi pertama.
+            </p>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr style={{ color: 'var(--text-helper)', borderColor: 'var(--border-subtle)' }} className="border-b text-xs uppercase">
+                  <th className="py-2 px-2">ID</th>
+                  <th className="py-2 px-2">Judul</th>
+                  <th className="py-2 px-2 text-right">Nominal</th>
+                  <th className="py-2 px-2">Lampiran</th>
+                  <th className="py-2 px-2 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((it) => (
+                  <tr key={it.id} style={{ borderColor: 'var(--border-subtle)' }} className="border-b">
+                    <td className="py-3 px-2 text-xs font-mono">{it.id}</td>
+                    <td className="py-3 px-2 text-sm font-medium">{it.title}</td>
+                    <td className="py-3 px-2 text-sm text-right tabular-nums font-semibold">
+                      {formatCurrencyIdr(it.amount)}
+                    </td>
+                    <td className="py-3 px-2">
+                      {it.file_id && ENTITY_IS_PRIVATE ? (
+                        <a
+                          href={it.file_url || `https://drive.google.com/file/d/${encodeURIComponent(it.file_id)}/view`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--border-focus)' }}
+                          className="text-xs font-semibold underline"
+                        >
+                          Buka Dokumen Privat (Drive)
+                        </a>
+                      ) : it.file_id ? (
+                        <img
+                          src={driveImageUrl(it.file_id, 160)}
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (target.dataset.fallbackApplied !== 'true') {
+                              target.dataset.fallbackApplied = 'true';
+                              target.src = driveImageFallbackUrl(it.file_id, 160);
+                            }
+                          }}
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                          alt={`Lampiran ${it.title}`}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      ) : (
+                        <span style={{ color: 'var(--text-helper)' }} className="text-xs">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      {isLoggedIn && (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(it)}
+                          style={{ backgroundColor: 'var(--danger-solid)', color: 'var(--danger-text-on-solid)' }}
+                          className="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-semibold"
+                        >
+                          Arsipkan
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </main>
+
+      <StepUpPinModal
+        open={Boolean(deleteTarget)}
+        title="Konfirmasi Pengarsipan"
+        description={
+          deleteTarget
+            ? `Masukkan PIN 6 digit untuk mengarsipkan transaksi "${deleteTarget.title}" (${deleteTarget.id}).`
+            : ''
+        }
+        targetAction="items.delete"
+        confirmLabel="Ya, Arsipkan"
+        onCancel={() => setDeleteTarget(null)}
+        onVerified={handleDeleteWithStepUp}
+      />
+    </div>
+  );
+}
+
+
+---
+<!-- FILE: references/saas-craft.md -->
+<!-- KB_VERSION: 2.1.0 -->
+# SAAS VISUAL CRAFT & $49/MONTH PRODUCT POLISH (`design/saas-craft.md`)
+**KB_VERSION:** `2.1.0`  
+**Kondisi Muat:** Selalu dimuat oleh `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, dan `gasly-ui`.
+
+## Daftar Isi
+1. [Prinsip Visual Kelas SaaS Komersial](#1-prinsip-visual-kelas-saas-komersial)
+2. [Pola Tata Letak per `SURFACE_PROFILE` (Larangan Form Menumpuk)](#2-pola-tata-letak-per-surface_profile-larangan-form-menumpuk)
+3. [Bento KPI Summary Strip Berbasis Data Nyata](#3-bento-kpi-summary-strip-berbasis-data-nyata)
+4. [Ikonografi Inline SVG Presisi (Nol Emoji di UI Chrome)](#4-ikonografi-inline-svg-presisi-nol-emoji-di-ui-chrome)
+5. [Data Table Toolbar, Refined Status Pills & Mobile Card View](#5-data-table-toolbar-refined-status-pills--mobile-card-view)
+6. [Micro-Surface, Skeleton Realistis, Empty State & Sonner Toast](#6-micro-surface-skeleton-realistis-empty-state--sonner-toast)
+7. [Checklist Self-Audit Estetika $49/Bulan](#7-checklist-self-audit-estetika-49bulan)
+
+---
+
+## 1. Prinsip Visual Kelas SaaS Komersial
+
+Lulus kontras WCAG AA (`4,5:1`) adalah **syarat minimum**, bukan standar akhir. Untuk menghasilkan antarmuka yang terasa setara dengan aplikasi SaaS modern ($49/bulan seperti Linear, Stripe Dashboard, Cal.com, atau Notion):
+1. **Keheningan Visual (*Visual Restraint*):** Gunakan warna aksen utama (`var(--accent-solid)`) hanya pada 1 CTA primer per layar, indikator tab aktif, dan *focus ring*. Hindari mewarnai setiap kartu dengan warna pelangi atau gradien mencolok.
+2. **Hierarki Tipografi & Spasi 8px:** Pisahkan dengan tegas antara `Display/H1` (`font-weight: 700–800`, `tracking-tight`), judul kartu (`15px–16px`, `font-weight: 600`), body (`14px`, `var(--text-secondary)`), dan label metadata (`12px`, `var(--text-helper)`). Seluruh angka wajib memakai `.tabular-nums`.
+3. **Kedalaman Halus (*Subtle Elevation*):**
+   - Di **Light Mode:** Permukaan kartu `var(--bg-surface)` di atas kanvas `var(--bg-base)` memakai hairline border `1px solid var(--border-subtle)` + bayangan tipis `box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.03)`.
+   - Di **Dark Mode:** Hindari shadow gelap tebal; gunakan pembedaan luminansi permukaan (`--bg-base` $\rightarrow$ `--bg-surface` $\rightarrow$ `--bg-interactive`) dan hairline border `1px solid var(--border-subtle)`.
+
+---
+
+## 2. Pola Tata Letak per `SURFACE_PROFILE` (Larangan Form Menumpuk)
+
+### A. `INTERNAL_APP` & `SAAS_PLATFORM` (`/app` Workspace)
+- **App Shell 2-Bagian:**
+  - **Sidebar Kiri (`240px` di layar `>=1024px`, tersembunyi ke Off-Canvas Drawer di `<1024px`):** Berisi identitas brand minimal di atas, menu navigasi modul nyata di tengah, serta footer informatif (status koneksi `/exec` atau `Preview Mode`, versi skema, dan tombol Keluar Sesi).
+  - **Sticky Topbar (`height: 56px`):** Judul tampilan aktif di kiri; tombol *Refresh*, *Theme Toggle* (Light/Dark), dan tombol CTA Primer (`+ Tambah ...`) di kanan.
+- **Aturan Anti-CRUD Polos (Slide-Over Drawer / Modal Form):**
+  - **Jangan menumpuk form input panjang terbuka di atas tabel utama.** Letakkan form tambah/edit data di dalam **Slide-Over Drawer sisi kanan (`max-w-md` / `max-w-lg`)** atau **Centered Modal** yang dipicu oleh tombol `+ Tambah ...`. Dengan begitu, begitu pengguna masuk, mereka langsung melihat **KPI Summary Strip + Toolbar Filter + Data Table** di paruh atas layar (*above the fold*).
+
+### B. `PUBLIC_SERVICE` & `MARKETPLACE` (Halaman Publik)
+- **Floating / Sticky Navbar:** Tinggi `64px`, `backdrop-filter: blur(10px)` (hanya di navbar & modal sesuai `Gate W-04`), identitas brand, tautan section fungsional, tombol **Cek Status**, dan tombol **Login Admin** yang tidak mendominasi CTA pembeli.
+- **Split Hero atau Bento Showcase (`Gate W-10`):**
+  - Gunakan layout 2 kolom di desktop (kiri: badge konteks + headline transformatif + sub-headline + 2 CTA + capability strip nyata; kanan: kartu visual rasio terkunci `aspect-[16/10] rounded-2xl overflow-hidden` berisi foto/video placeholder dari `MEDIA_PLACEHOLDERS` lengkap dengan fallback SVG `onerror`).
+  - Jika menaruh teks di atas gambar/video, wajib pasang *gradient scrim* gelap (`linear-gradient(to top, rgba(9,9,11,0.82), rgba(9,9,11,0.18))`) agar kontras teks tetap `>= 4,5:1`.
+
+---
+
+## 3. Bento KPI Summary Strip Berbasis Data Nyata
+
+Tampilkan **3–4 kartu KPI** di bagian atas workspace dalam grid `grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4`:
+- Setiap angka **wajib dihitung langsung (*computed live*) dari array state data** (dilarang keras menaruh angka persentase pertumbuhan fiktif seperti `"+24.5% bulan ini"` bila tidak ada perhitungan historis nyata sesuai `Gate U-03`).
+- Anatomi 1 Kartu KPI:
+  1. Baris atas: Label singkat (`12px`, `font-semibold`, `var(--text-helper)`) + wadah ikon SVG `32×32px` berlatar `var(--bg-interactive)` (`rounded-lg`).
+  2. Baris tengah: Angka utama besar (`text-2xl font-bold tracking-tight tabular-nums`).
+  3. Baris bawah: Konteks nyata dari data (mis. `"4 dari 16 berstatus PENDING"` atau micro progress bar lebar `pct%` yang dihitung dari data aktif).
+
+---
+
+## 4. Ikonografi Presisi (Nol Emoji di UI Chrome — `lucide-react` & Iconify)
+
+- **Larangan Keras:** Jangan gunakan emoji Unicode (`📦`, `💰`, `🗑️`, `🔍`, `✅`, `⚠️`) sebagai ikon navigasi sidebar, tombol aksi, kartu KPI, atau notifikasi toast.
+- **Aturan Pemilihan per Stack:**
+  1. **Stack `react` (Vite):** Gunakan paket **`lucide-react`** (ter-bundle lokal saat build, 0 request jaringan runtime).
+  2. **Stack `html-tailwind` (dan opsional `gasly-pro`):** Diizinkan menggunakan **Iconify Web Component** (`<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>`) dengan tag `<iconify-icon icon="lucide:<nama>" width="18" height="18" aria-hidden="true"></iconify-icon>` agar mewarisi `currentColor` di Light/Dark mode dan menghemat token.
+     - **Dilarang** memakai `<img src="https://api.iconify.design/...">` untuk ikon UI interaktif karena tidak mewarisi `currentColor` saat *Theme Toggle*.
+     - **Kunci 1 Keluarga Ikon:** Gunakan konsisten 1 set per proyek (default: **`lucide:*`**; alternatif: `tabler:*` atau `solar:*-linear`). Jangan mencampur gaya tipis & tebal di layar yang sama.
+     - **Kunci Dimensi (Zero CLS):** Selalu sertakan `width` & `height` eksplisit (mis. `16`, `18`, `20`) serta `aria-hidden="true"` bila mendampingi label teks.
+     - **Gunakan Nama Ikon Terverifikasi:** Prioritaskan nama ikon `lucide` standar (`plus`, `search`, `refresh-cw`, `trash-2`, `pencil`, `check-circle-2`, `alert-circle`, `shield-check`, `upload`, `download`, `x`, `menu`, `sun`, `moon`, `log-out`, `package`, `users`, `calendar`, `clock`, `file-text`, `external-link`, `utensils`, `truck`, `wallet`, `filter`, `chevron-down`).
+     - **Kontrol Kritikal:** Tombol tutup modal (`&times;` / inline SVG) tetap harus terlihat meskipun jaringan ke `api.iconify.design` terputus.
+  3. **Pengecualian Mutlak (`Gate I-01`):** `api.iconify.design` / `code.iconify.design` **dilarang keras** digunakan di dalam `install-guide.html` (`gasly-deploy-guide` wajib 100% offline).
+
+---
+
+## 5. Data Table Toolbar, Refined Status Pills & Mobile Card View
+
+1. **Unified Table Toolbar:**
+   Letakkan dalam satu kontainer kartu bersama tabelnya (`border-b` tipis):
+   - Kiri: Input pencarian real-time berikon kaca pembesar + deretan **Filter Pill** (mis. `Semua`, `PENDING`, `ACTIVE`, `COMPLETED`) dengan hitungan jumlah baris per status.
+   - Kanan: Dropdown urutkan (*Terbaru / Nominal Tertinggi*) + penghitung hasil (`"Menampilkan 12 dari 16 data"`).
+2. **Refined Status Pill (Bukan Kotak Warna Solid Kasar):**
+   - Bentuk: `inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border`.
+   - Gunakan dot indikator `6px` + latar lembut ber-border halus yang menjaga kontras teks `>= 4,5:1` di Light maupun Dark Mode.
+3. **Dual Responsive Rendering (`Desktop Table` + `Mobile Card View`):**
+   - **Layar `>= 768px` (`hidden md:block`):** Tabel dengan header lengket (*sticky*), teks rata kiri, kode ID `font-mono text-xs`, nominal rata kanan `.tabular-nums font-semibold`, dan tombol aksi rapi di kolom kanan.
+   - **Layar `< 768px` (`md:hidden space-y-3`):** Render setiap baris sebagai kartu ringkas bertumpuk (*stacked card*): Baris 1 (Judul + Status Pill), Baris 2 (ID monospace + Kategori + Tanggal), Baris 3 (Nominal besar `.tabular-nums` + tombol aksi minimum `40×40px`).
+
+---
+
+## 6. Micro-Surface, Skeleton Realistis, Empty State & Sonner Toast
+
+- **Realistic Skeleton Loader:** Saat `LOADING`, render 4 kartu skeleton KPI dan 5 baris skeleton tabel dengan tinggi yang sama persis dengan konten asli (`animate-pulse`, mematuhi `prefers-reduced-motion`).
+- **Illustrated Empty State:** Ketika data kosong atau pencarian menghasilkan `0` baris, tampilkan kontainer terpusat (`py-12`) berisi lingkaran ikon SVG `48×48px`, judul tegas, penjelasan 1 baris, dan 1 tombol aksi langsung (`"+ Buat Data Pertama"` atau `"Reset Filter"`).
+- **Sonner-Style Stacked Toast:**
+  - Tempatkan di kanan-atas (atau kanan-bawah desktop) dengan lebar `max-w-sm`, kartu ber-border halus (`var(--bg-surface)` + strip aksen kiri `4px` sesuai varian `success`/`error`/`warning`/`info` + ikon SVG status + tombol tutup `×`), sehingga tidak menabrak badge `Preview Mode` di kiri-bawah.
+
+---
+
+## 7. Checklist Self-Audit Estetika $49/Bulan
+
+Sebelum menyelesaikan kode frontend (`gasly-ui` / `gasly-pro`), pastikan seluruh 8 poin berikut terpenuhi:
+- [ ] Nol emoji mentah dipakai sebagai ikon navigasi, tombol, KPI, atau toast (seluruhnya inline SVG konsisten).
+- [ ] Pada `INTERNAL_APP` / Dashboard, form tambah/edit berada di Slide-Over Drawer atau Modal—bukan menumpuk terbuka di atas tabel.
+- [ ] Tersedia 3–4 kartu Bento KPI di atas tabel yang dihitung *live* dari state data dengan `.tabular-nums`.
+- [ ] Tabel dilengkapi Search + Filter Pills + Status Pills lembut + Mobile Stacked Card View (`< 768px`).
+- [ ] Skeleton loader meniru bentuk kartu KPI & tabel asli, dan Empty State memiliki ikon SVG + tombol CTA.
+- [ ] Toast bergaya Sonner terstruktur dengan ikon SVG dan tombol tutup.
+- [ ] Seluruh foto/video dummy pada halaman publik memakai `MEDIA_PLACEHOLDERS` (`Gate W-10`) dengan rasio aspek terkunci dan fallback SVG.
+- [ ] Seluruh interaksi memiliki state `:hover`, `:active`, dan `:focus-visible` yang kontras serta halus (`150ms–200ms`).
 
 
 ---

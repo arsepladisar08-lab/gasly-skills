@@ -1,180 +1,180 @@
 {
   "files": {
     "claude-zips/gasly-data.zip": {
-      "bytes": 76398,
-      "sha256": "2ccfeca73a57776c9e253270ad8cf51020b96f8a41834ea43aa34bb3a61067bc"
+      "bytes": 80698,
+      "sha256": "f44c4a5336b15200d9938224aa60fce72f40495a797f29759618def6d17cb316"
     },
     "claude-zips/gasly-deploy-guide.zip": {
-      "bytes": 56225,
-      "sha256": "ac2f7fd5e3bbfc4915ea2d93d19a6a83e51e7179450fe77437e34a43bca6b6f4"
+      "bytes": 63860,
+      "sha256": "fe795cf589d002a4f8c6ddb258dae2f4ffc2ecdecc5e2279c322003be0bda6f8"
     },
     "claude-zips/gasly-prd-to-uiux.zip": {
-      "bytes": 52998,
-      "sha256": "5354e68005e8f1087c64413020350350b1520f54d34d0bf3d386cbaaf9128d63"
+      "bytes": 60717,
+      "sha256": "d15258c965aebcc214acfba2f1cc2baec0f900ebf3844f79c1603c871ed84937"
     },
     "claude-zips/gasly-prd.zip": {
-      "bytes": 59014,
-      "sha256": "e3e79c43ab259a2d862fd4db2ba32a448a524fd05b5e96ae435f5c4c34f9c3fd"
+      "bytes": 66842,
+      "sha256": "dc83fc6c718837c6a655f7b81d17fb6d49fca5e53d17df51649c01b5a2703385"
     },
     "claude-zips/gasly-pro-api.zip": {
-      "bytes": 54077,
-      "sha256": "4dc3ff94408ec334471bf707a67b527a95e799f7bcc1f76bf28f4ae8e997aeaf"
+      "bytes": 45730,
+      "sha256": "28949e85ca62f888339f265b4ae4d1e6246d651bfc53c14e808f91043933ef5c"
     },
     "claude-zips/gasly-pro.zip": {
-      "bytes": 32411,
-      "sha256": "bd7c9dd53cd533e5b6e8d9b67f59f01a9237bdf955d2c0cc43c285860b39b92a"
+      "bytes": 32870,
+      "sha256": "5c0474618d07ac81739381fa2b012fa6f5fcc60a408bbf5cd75b784871fbb1a4"
     },
     "claude-zips/gasly-start.zip": {
-      "bytes": 31915,
-      "sha256": "818c5234d7320b5d1e141b1b2bc076f9e0d6d288b33eb3cdc638c551363cdd9e"
+      "bytes": 34080,
+      "sha256": "6b5d1606052878283030fdeaf657c07e6bc287e56142eb444741592b152136e3"
     },
     "claude-zips/gasly-ui.zip": {
-      "bytes": 79020,
-      "sha256": "d1ca174bbf62b01c9ed89b35d2913ca92acdb1d706586c84f50378a85dac9f3e"
+      "bytes": 82385,
+      "sha256": "7aa2c81ed929d37fa0a66433c82c6f99e96475cfcd5ce89ec41fd6cc6a464b28"
     },
     "flat-lite/gasly-pro/SKILL.md": {
-      "bytes": 43511,
-      "sha256": "a02030de919edc57087269aee5d0851b0db563a0e23ecc3a9a24b6a5030783a8"
+      "bytes": 43978,
+      "sha256": "d68c21d711cea937266158d363aedc0b2fd0af8667715f0a8f31e6d629efe5f0"
     },
     "flat/gasly-prd/SKILL.md": {
-      "bytes": 45984,
-      "sha256": "f4d63156405697ce833d932a74915302040b68b8c7ead9447bd83ce2e0abb1b8"
+      "bytes": 46924,
+      "sha256": "e3df6de263224230786ddd6471f75b23b608e88bc1235ad51a2b4e10f5f30bcc"
     },
     "flat/gasly-pro/SKILL.md": {
-      "bytes": 83189,
-      "sha256": "992ad2c6414b3f084212d491ec0ac66ab6f25ddf1ddcf7b7fa5c793fa97e0ab0"
+      "bytes": 85434,
+      "sha256": "31393604c488d34ee1a2fe76d25b049232540b67d420b65dda22093cad804bc1"
     },
     "flat/gasly-prompt/SKILL.md": {
-      "bytes": 100,
-      "sha256": "6f047fe0cde77538338178549e7a597f0d50203a6d5bacfb0ae6b1049711ac67"
+      "bytes": 101,
+      "sha256": "79aef8b2bb1f558f9bd412a67b7f7f58a46dc0a2c2c6b2aa7e2b439a85d54613"
     },
     "modular/gasly-data/SKILL.md": {
-      "bytes": 12919,
-      "sha256": "8ee27a79604a1b5418f4f112bc16eccdcac9970537c8ac5c7b01fd8395a15e49"
+      "bytes": 13327,
+      "sha256": "61398d67a51d57c0664f765b8a88fac78c0d6846f2b79a848fd1b7ddd140f7a3"
     },
     "modular/gasly-data/references/access-profiles.md": {
-      "bytes": 7966,
-      "sha256": "5fd55f1be9634a7a4b8f5a5e284cf20795de5fb437d2fed3eba80d3ec1bdd40a"
+      "bytes": 8062,
+      "sha256": "30d6e8ee04e9578438027e617ad06bef9266dc856bfe07a85c69349601247fbb"
     },
     "modular/gasly-data/references/auth-and-ratelimit.md": {
-      "bytes": 29742,
-      "sha256": "200b55514495fc72a5a498ea929f75596f55982c13ab0fc5434145317af02579"
+      "bytes": 30467,
+      "sha256": "6fc0acc99352b935e343d244146680b67f8f74a2f3b57fce1cf65612864e3cb6"
     },
     "modular/gasly-data/references/config.md": {
-      "bytes": 16219,
-      "sha256": "c55f3150b10dbb2f620d312ca024a836444011e687dfb5ba730b1c6f13907d9e"
+      "bytes": 21747,
+      "sha256": "19d88400a3398e0409c4bec681452d76a91cbe843ba8d21285d918ed64e9284a"
     },
     "modular/gasly-data/references/contract.md": {
-      "bytes": 15248,
-      "sha256": "fc5f581c07c7f63f18607ba928454b6d6d68bf4dea8ef3ffb96d0defa0dcc0c2"
+      "bytes": 15937,
+      "sha256": "c68686738b57b36187b65effde5a986646ef6b0fe144972868847263ade243e8"
     },
     "modular/gasly-data/references/drive-upload.md": {
-      "bytes": 21959,
-      "sha256": "2365cad36e3312e03a6a363d7665d921a44c1ed498cf1fc6eb0f041b21a6a40b"
+      "bytes": 22485,
+      "sha256": "a215489d73ece59dbdab02109d56bc9b6b4a5e980b8a37f6905369ef2bc3e7b7"
     },
     "modular/gasly-data/references/facts.md": {
-      "bytes": 4718,
-      "sha256": "57f852212d3a24ffcca4ecd4bad737241df8c8033833c288a8da5c44a4a59d29"
+      "bytes": 6820,
+      "sha256": "1061cd6e9ce60b2dbc196128470351b96e408432f0f1ab5e48d98105eed564f0"
     },
     "modular/gasly-data/references/gasly-contract.schema.json": {
-      "bytes": 5686,
-      "sha256": "f123086e4ddb8397eaf08b60980849fe5f002fe04dc6b0ff4f8020dd7da1390c"
+      "bytes": 5811,
+      "sha256": "b83e16f558a7a1e80732cd290e5bcae71fc74558cb7042936e9f29da77bfa777"
     },
     "modular/gasly-data/references/gates.md": {
-      "bytes": 17826,
-      "sha256": "d40be354386821cb91600af41204b1924fb1e95d900353ece57601aadd13963a"
+      "bytes": 20418,
+      "sha256": "62112d62c0c70bb91055c6bbba892d6e454509152c48f14a8c8dd522ca048611"
     },
     "modular/gasly-data/references/hardening-gates-p0.md": {
-      "bytes": 3886,
-      "sha256": "ab4b994b73f8072186d84c72395ebb05e930806a474cc9483802fc822fed9633"
+      "bytes": 3915,
+      "sha256": "b8199488c474464f749ecc8cb78171ba46ae5d0651c6e606a0f59b320f57f4a5"
     },
     "modular/gasly-data/references/integrations.md": {
-      "bytes": 16449,
-      "sha256": "eb911fcf285fdaeed6561882121a32d2d34408ceef7f2fba03203a893703c747"
+      "bytes": 16886,
+      "sha256": "3ce02e5850ddd749d9ed5f943391c068b6886810e36837dd789091a572c2f9f6"
     },
     "modular/gasly-data/references/monetization-and-tiers.md": {
-      "bytes": 7492,
-      "sha256": "71aec4ef4794bbeaeed58d888a76905d46af44b2ccfd8b090024875d9fa30145"
+      "bytes": 7556,
+      "sha256": "9433adf1b3b323f61cf2f5052e4519d571f47ad3721021736de2c99b433b8446"
     },
     "modular/gasly-data/references/router-and-envelope.md": {
-      "bytes": 12476,
-      "sha256": "e55755bb2c33939c83311724698b1cad3c9cf2d4bc7f77234c1c36c452584ba4"
+      "bytes": 12845,
+      "sha256": "fc73b6adb46b736b37c53c49e1d3ff8d5fee23ac0323af67c6690ae2751b14a6"
     },
     "modular/gasly-data/references/sheets-repository.md": {
-      "bytes": 29877,
-      "sha256": "69389a20908f9e210aa1077b5f441b7a0abcf951263da09ae258ccacf2747601"
+      "bytes": 30672,
+      "sha256": "04839b4682011d330f21b1712ca145fd628402fbc6c26f6226851048b330e2e4"
     },
     "modular/gasly-data/references/voice-and-brevity.md": {
-      "bytes": 1624,
-      "sha256": "14e770cbb8fec93beb1d180bf7f2c57f93fcedec2ba42591c86efcac388aa7da"
+      "bytes": 1639,
+      "sha256": "112366b36afdd02e9d7c80e7b28ecfd26cc7eaff6504b5c78c6a54a793770fd8"
     },
     "modular/gasly-data/references/webhook-receiver.md": {
-      "bytes": 7665,
-      "sha256": "44ea62af9a7fc538aa45c80ce0e4d61bb8fa4ef68fed9360cdccff6d5857d1cf"
+      "bytes": 7851,
+      "sha256": "5983bd682c1c1f9e90515aad5c4bb7dc24be7713e97f964a3655d9bf0f01851e"
     },
     "modular/gasly-deploy-guide/SKILL.md": {
-      "bytes": 10627,
-      "sha256": "2f68a039c4a341315f8ce1a76d5b84862dc23ea7cf08e1769f727aecf29b2c27"
+      "bytes": 11521,
+      "sha256": "a428f6be4e199f1415ec580c56b5cd3de8d69a9f24d691d7446a532e53b9a8a9"
     },
     "modular/gasly-deploy-guide/references/access-profiles.md": {
-      "bytes": 7966,
-      "sha256": "5fd55f1be9634a7a4b8f5a5e284cf20795de5fb437d2fed3eba80d3ec1bdd40a"
+      "bytes": 8062,
+      "sha256": "30d6e8ee04e9578438027e617ad06bef9266dc856bfe07a85c69349601247fbb"
     },
     "modular/gasly-deploy-guide/references/config.md": {
-      "bytes": 16219,
-      "sha256": "c55f3150b10dbb2f620d312ca024a836444011e687dfb5ba730b1c6f13907d9e"
+      "bytes": 21747,
+      "sha256": "19d88400a3398e0409c4bec681452d76a91cbe843ba8d21285d918ed64e9284a"
     },
     "modular/gasly-deploy-guide/references/contract.md": {
-      "bytes": 15248,
-      "sha256": "fc5f581c07c7f63f18607ba928454b6d6d68bf4dea8ef3ffb96d0defa0dcc0c2"
+      "bytes": 15937,
+      "sha256": "c68686738b57b36187b65effde5a986646ef6b0fe144972868847263ade243e8"
     },
     "modular/gasly-deploy-guide/references/facts.md": {
-      "bytes": 4718,
-      "sha256": "57f852212d3a24ffcca4ecd4bad737241df8c8033833c288a8da5c44a4a59d29"
+      "bytes": 6820,
+      "sha256": "1061cd6e9ce60b2dbc196128470351b96e408432f0f1ab5e48d98105eed564f0"
     },
     "modular/gasly-deploy-guide/references/gasly-contract.schema.json": {
-      "bytes": 5686,
-      "sha256": "f123086e4ddb8397eaf08b60980849fe5f002fe04dc6b0ff4f8020dd7da1390c"
+      "bytes": 5811,
+      "sha256": "b83e16f558a7a1e80732cd290e5bcae71fc74558cb7042936e9f29da77bfa777"
     },
     "modular/gasly-deploy-guide/references/gates.md": {
-      "bytes": 17826,
-      "sha256": "d40be354386821cb91600af41204b1924fb1e95d900353ece57601aadd13963a"
+      "bytes": 20418,
+      "sha256": "62112d62c0c70bb91055c6bbba892d6e454509152c48f14a8c8dd522ca048611"
     },
     "modular/gasly-deploy-guide/references/guide-template.html": {
-      "bytes": 43319,
-      "sha256": "75f713037356cca118af64699225567fb56c960fa3990f183e9dba511cf3a26d"
+      "bytes": 60535,
+      "sha256": "b6b1c2de7adead5b2e8217139a0dab77ce42fb9602a8d334a904f20014fd9ca5"
     },
     "modular/gasly-deploy-guide/references/hardening-gates-p0.md": {
-      "bytes": 3886,
-      "sha256": "ab4b994b73f8072186d84c72395ebb05e930806a474cc9483802fc822fed9633"
+      "bytes": 3915,
+      "sha256": "b8199488c474464f749ecc8cb78171ba46ae5d0651c6e606a0f59b320f57f4a5"
     },
     "modular/gasly-deploy-guide/references/install-steps.md": {
-      "bytes": 10929,
-      "sha256": "5706f38c0d731f29d688d63293280eb59934a3e2de73cc1d9fc9fef0f95ad4fe"
+      "bytes": 11010,
+      "sha256": "36364133a44535a64736f95e89292ce675c4563a9cf48b6f589826c1ddd33a38"
     },
     "modular/gasly-deploy-guide/references/monetization-and-tiers.md": {
-      "bytes": 7492,
-      "sha256": "71aec4ef4794bbeaeed58d888a76905d46af44b2ccfd8b090024875d9fa30145"
+      "bytes": 7556,
+      "sha256": "9433adf1b3b323f61cf2f5052e4519d571f47ad3721021736de2c99b433b8446"
     },
     "modular/gasly-deploy-guide/references/voice-and-brevity.md": {
-      "bytes": 1624,
-      "sha256": "14e770cbb8fec93beb1d180bf7f2c57f93fcedec2ba42591c86efcac388aa7da"
+      "bytes": 1639,
+      "sha256": "112366b36afdd02e9d7c80e7b28ecfd26cc7eaff6504b5c78c6a54a793770fd8"
     },
     "modular/gasly-install/SKILL.md": {
-      "bytes": 412,
-      "sha256": "bcae2b9214b4803c9e4369cee16db6af3b868e57b8879ca0ba6ac693bad83c93"
+      "bytes": 423,
+      "sha256": "283cc77e1fd75e6c38bc1057b8fa1e8254e5f5ac1df4693bbec22ae78367216e"
     },
     "modular/gasly-prd-to-uiux/SKILL.md": {
-      "bytes": 6048,
-      "sha256": "dfbdb316da61ea226c41ce5000e4f5162273512116f4727bfc0b3401a19b357e"
+      "bytes": 6455,
+      "sha256": "e323ce68a92424414c39076a8b8e4af9cdaab968590b3ed5df06bc7cb2a110cc"
     },
     "modular/gasly-prd-to-uiux/references/access-profiles.md": {
-      "bytes": 7966,
-      "sha256": "5fd55f1be9634a7a4b8f5a5e284cf20795de5fb437d2fed3eba80d3ec1bdd40a"
+      "bytes": 8062,
+      "sha256": "30d6e8ee04e9578438027e617ad06bef9266dc856bfe07a85c69349601247fbb"
     },
     "modular/gasly-prd-to-uiux/references/contract.md": {
-      "bytes": 15248,
-      "sha256": "fc5f581c07c7f63f18607ba928454b6d6d68bf4dea8ef3ffb96d0defa0dcc0c2"
+      "bytes": 15937,
+      "sha256": "c68686738b57b36187b65effde5a986646ef6b0fe144972868847263ade243e8"
     },
     "modular/gasly-prd-to-uiux/references/css/aura.css": {
       "bytes": 2405,
@@ -193,32 +193,32 @@
       "sha256": "6cc195de75443e143fd1b6c309f8b1252596d9b0a903d611282350b5a27be891"
     },
     "modular/gasly-prd-to-uiux/references/dials.md": {
-      "bytes": 4500,
-      "sha256": "43d1279d64110dc1693688b41692abf43881edceb727a2ea1238915d2bc76a4f"
+      "bytes": 4548,
+      "sha256": "cdccfaf7e4527bedabf3a6b7ee633e208d7b19d351890dad57a8db119afe53a0"
     },
     "modular/gasly-prd-to-uiux/references/facts.md": {
-      "bytes": 4718,
-      "sha256": "57f852212d3a24ffcca4ecd4bad737241df8c8033833c288a8da5c44a4a59d29"
+      "bytes": 6820,
+      "sha256": "1061cd6e9ce60b2dbc196128470351b96e408432f0f1ab5e48d98105eed564f0"
     },
     "modular/gasly-prd-to-uiux/references/gasly-contract.schema.json": {
-      "bytes": 5686,
-      "sha256": "f123086e4ddb8397eaf08b60980849fe5f002fe04dc6b0ff4f8020dd7da1390c"
+      "bytes": 5811,
+      "sha256": "b83e16f558a7a1e80732cd290e5bcae71fc74558cb7042936e9f29da77bfa777"
     },
     "modular/gasly-prd-to-uiux/references/gates.md": {
-      "bytes": 17826,
-      "sha256": "d40be354386821cb91600af41204b1924fb1e95d900353ece57601aadd13963a"
+      "bytes": 20418,
+      "sha256": "62112d62c0c70bb91055c6bbba892d6e454509152c48f14a8c8dd522ca048611"
     },
     "modular/gasly-prd-to-uiux/references/hardening-gates-p0.md": {
-      "bytes": 3886,
-      "sha256": "ab4b994b73f8072186d84c72395ebb05e930806a474cc9483802fc822fed9633"
+      "bytes": 3915,
+      "sha256": "b8199488c474464f749ecc8cb78171ba46ae5d0651c6e606a0f59b320f57f4a5"
     },
     "modular/gasly-prd-to-uiux/references/monetization-and-tiers.md": {
-      "bytes": 7492,
-      "sha256": "71aec4ef4794bbeaeed58d888a76905d46af44b2ccfd8b090024875d9fa30145"
+      "bytes": 7556,
+      "sha256": "9433adf1b3b323f61cf2f5052e4519d571f47ad3721021736de2c99b433b8446"
     },
     "modular/gasly-prd-to-uiux/references/presets.md": {
-      "bytes": 4285,
-      "sha256": "0346483b251490da66e3cac477a4f18221b8565d9acc513b16a6853ccc5c0bed"
+      "bytes": 4341,
+      "sha256": "1f9b2a99018bc82fabc1792f2363a3078bf1c63e7bda8e8e4918a3cea92d8499"
     },
     "modular/gasly-prd-to-uiux/references/presets/aura.tokens.json": {
       "bytes": 4262,
@@ -236,229 +236,213 @@
       "bytes": 4266,
       "sha256": "9f8ed6a1fd212142a6fb0075ddbf1fa64894af91196b8b41173063a65b8f3ff5"
     },
+    "modular/gasly-prd-to-uiux/references/saas-craft.md": {
+      "bytes": 10529,
+      "sha256": "9f4a250e08e6f07ca645f10b42b0704b678610753336e15830615511f3ba8c8d"
+    },
     "modular/gasly-prd-to-uiux/references/tokens.schema.json": {
       "bytes": 5361,
       "sha256": "182a57a43d2266b9986963a39f977ae5a15e813727b9c827d09a1a8ae76ca7a2"
     },
     "modular/gasly-prd-to-uiux/references/visual-analysis.md": {
-      "bytes": 2460,
-      "sha256": "208554c1831cdf3373b3d16da84b57af418276068a594fa25ca6009436eaa9ec"
+      "bytes": 2499,
+      "sha256": "e93be7f9cf8d43b0747943c06f194ab62850bb0675a7de3e7f45c10a7622974e"
     },
     "modular/gasly-prd-to-uiux/references/voice-and-brevity.md": {
-      "bytes": 1624,
-      "sha256": "14e770cbb8fec93beb1d180bf7f2c57f93fcedec2ba42591c86efcac388aa7da"
+      "bytes": 1639,
+      "sha256": "112366b36afdd02e9d7c80e7b28ecfd26cc7eaff6504b5c78c6a54a793770fd8"
     },
     "modular/gasly-prd-to-uiux/templates/pratinjau-gaya.html": {
-      "bytes": 8130,
-      "sha256": "32557debef18b50fdc9a1cc5de7b938384321bde3887c4dcabb8bb69e0144940"
+      "bytes": 8251,
+      "sha256": "69228d888e84d6f14a6de473fc07cbebef3a231056e631213b034ee0d3ed4a78"
     },
     "modular/gasly-prd/SKILL.md": {
-      "bytes": 22544,
-      "sha256": "a76ef4327596ef91319bca8f51e2cae5b2d12aadedae537e65973a0d619ee4c4"
+      "bytes": 23229,
+      "sha256": "65d1fb992acab084aa22777edde2673aff3d1ae7a323e25e1093faaea10bdf23"
     },
     "modular/gasly-prd/references/access-profiles.md": {
-      "bytes": 7966,
-      "sha256": "5fd55f1be9634a7a4b8f5a5e284cf20795de5fb437d2fed3eba80d3ec1bdd40a"
+      "bytes": 8062,
+      "sha256": "30d6e8ee04e9578438027e617ad06bef9266dc856bfe07a85c69349601247fbb"
     },
     "modular/gasly-prd/references/contract.md": {
-      "bytes": 15248,
-      "sha256": "fc5f581c07c7f63f18607ba928454b6d6d68bf4dea8ef3ffb96d0defa0dcc0c2"
+      "bytes": 15937,
+      "sha256": "c68686738b57b36187b65effde5a986646ef6b0fe144972868847263ade243e8"
     },
     "modular/gasly-prd/references/dials.md": {
-      "bytes": 4500,
-      "sha256": "43d1279d64110dc1693688b41692abf43881edceb727a2ea1238915d2bc76a4f"
+      "bytes": 4548,
+      "sha256": "cdccfaf7e4527bedabf3a6b7ee633e208d7b19d351890dad57a8db119afe53a0"
     },
     "modular/gasly-prd/references/facts.md": {
-      "bytes": 4718,
-      "sha256": "57f852212d3a24ffcca4ecd4bad737241df8c8033833c288a8da5c44a4a59d29"
+      "bytes": 6820,
+      "sha256": "1061cd6e9ce60b2dbc196128470351b96e408432f0f1ab5e48d98105eed564f0"
     },
     "modular/gasly-prd/references/gasly-contract.schema.json": {
-      "bytes": 5686,
-      "sha256": "f123086e4ddb8397eaf08b60980849fe5f002fe04dc6b0ff4f8020dd7da1390c"
+      "bytes": 5811,
+      "sha256": "b83e16f558a7a1e80732cd290e5bcae71fc74558cb7042936e9f29da77bfa777"
     },
     "modular/gasly-prd/references/gates.md": {
-      "bytes": 17826,
-      "sha256": "d40be354386821cb91600af41204b1924fb1e95d900353ece57601aadd13963a"
+      "bytes": 20418,
+      "sha256": "62112d62c0c70bb91055c6bbba892d6e454509152c48f14a8c8dd522ca048611"
     },
     "modular/gasly-prd/references/hardening-gates-p0.md": {
-      "bytes": 3886,
-      "sha256": "ab4b994b73f8072186d84c72395ebb05e930806a474cc9483802fc822fed9633"
+      "bytes": 3915,
+      "sha256": "b8199488c474464f749ecc8cb78171ba46ae5d0651c6e606a0f59b320f57f4a5"
     },
     "modular/gasly-prd/references/monetization-and-tiers.md": {
-      "bytes": 7492,
-      "sha256": "71aec4ef4794bbeaeed58d888a76905d46af44b2ccfd8b090024875d9fa30145"
+      "bytes": 7556,
+      "sha256": "9433adf1b3b323f61cf2f5052e4519d571f47ad3721021736de2c99b433b8446"
     },
     "modular/gasly-prd/references/presets.md": {
-      "bytes": 4285,
-      "sha256": "0346483b251490da66e3cac477a4f18221b8565d9acc513b16a6853ccc5c0bed"
+      "bytes": 4341,
+      "sha256": "1f9b2a99018bc82fabc1792f2363a3078bf1c63e7bda8e8e4918a3cea92d8499"
+    },
+    "modular/gasly-prd/references/saas-craft.md": {
+      "bytes": 10529,
+      "sha256": "9f4a250e08e6f07ca645f10b42b0704b678610753336e15830615511f3ba8c8d"
     },
     "modular/gasly-prd/references/spec-digest.md": {
-      "bytes": 23392,
-      "sha256": "23870b60dcffb600c51ba97b24fd0e1f8b5024178bb7677dee1ed928e6b05618"
+      "bytes": 23641,
+      "sha256": "829f01afaa232229298a1cdef077c859d0a783440ecc50515b6e5189ad76660c"
     },
     "modular/gasly-prd/references/voice-and-brevity.md": {
-      "bytes": 1624,
-      "sha256": "14e770cbb8fec93beb1d180bf7f2c57f93fcedec2ba42591c86efcac388aa7da"
+      "bytes": 1639,
+      "sha256": "112366b36afdd02e9d7c80e7b28ecfd26cc7eaff6504b5c78c6a54a793770fd8"
     },
     "modular/gasly-prd/templates/TEMPLATE_PRD.md": {
-      "bytes": 7994,
-      "sha256": "d3ed0857b17a7cf20dc3b2ed75b0b8cede2753e893d58992d822ce17e783c170"
+      "bytes": 8200,
+      "sha256": "716253c6e224529653ba6aec112539a45c3082f207c224ad9cbe3ab45536ebaa"
     },
     "modular/gasly-pro-api/SKILL.md": {
-      "bytes": 3945,
-      "sha256": "0530c6bb7bb1b012cf42d5786afe3d7eff6321f620b15abb282749ea2453e476"
-    },
-    "modular/gasly-pro-api/references/INHERIT.md": {
-      "bytes": 4327,
-      "sha256": "fee5ae7814ba6a3a850a20aae44923c4a82c60aff106a150bc48689ea621bb1c"
-    },
-    "modular/gasly-pro-api/references/PLANNED.md": {
-      "bytes": 4379,
-      "sha256": "514c1d29c0d42c755fbc49a7f8e2e1ae357552d0ce8eb598c838ef515f0f36e5"
+      "bytes": 4296,
+      "sha256": "4ae4528ca2afaa6d17abf25bbcd43a7beeb4ec664a6c5a2087dbdf279053e3ee"
     },
     "modular/gasly-pro-api/references/access-profiles.md": {
-      "bytes": 7966,
-      "sha256": "5fd55f1be9634a7a4b8f5a5e284cf20795de5fb437d2fed3eba80d3ec1bdd40a"
-    },
-    "modular/gasly-pro-api/references/config.md": {
-      "bytes": 16219,
-      "sha256": "c55f3150b10dbb2f620d312ca024a836444011e687dfb5ba730b1c6f13907d9e"
+      "bytes": 8062,
+      "sha256": "30d6e8ee04e9578438027e617ad06bef9266dc856bfe07a85c69349601247fbb"
     },
     "modular/gasly-pro-api/references/contract.md": {
-      "bytes": 15248,
-      "sha256": "fc5f581c07c7f63f18607ba928454b6d6d68bf4dea8ef3ffb96d0defa0dcc0c2"
+      "bytes": 15937,
+      "sha256": "c68686738b57b36187b65effde5a986646ef6b0fe144972868847263ade243e8"
     },
     "modular/gasly-pro-api/references/dials.md": {
-      "bytes": 4500,
-      "sha256": "43d1279d64110dc1693688b41692abf43881edceb727a2ea1238915d2bc76a4f"
+      "bytes": 4548,
+      "sha256": "cdccfaf7e4527bedabf3a6b7ee633e208d7b19d351890dad57a8db119afe53a0"
     },
     "modular/gasly-pro-api/references/facts.md": {
-      "bytes": 4718,
-      "sha256": "57f852212d3a24ffcca4ecd4bad737241df8c8033833c288a8da5c44a4a59d29"
+      "bytes": 6820,
+      "sha256": "1061cd6e9ce60b2dbc196128470351b96e408432f0f1ab5e48d98105eed564f0"
     },
     "modular/gasly-pro-api/references/gasly-contract.schema.json": {
-      "bytes": 5686,
-      "sha256": "f123086e4ddb8397eaf08b60980849fe5f002fe04dc6b0ff4f8020dd7da1390c"
+      "bytes": 5811,
+      "sha256": "b83e16f558a7a1e80732cd290e5bcae71fc74558cb7042936e9f29da77bfa777"
     },
     "modular/gasly-pro-api/references/gates.md": {
-      "bytes": 17826,
-      "sha256": "d40be354386821cb91600af41204b1924fb1e95d900353ece57601aadd13963a"
+      "bytes": 20418,
+      "sha256": "62112d62c0c70bb91055c6bbba892d6e454509152c48f14a8c8dd522ca048611"
     },
     "modular/gasly-pro-api/references/hardening-gates-p0.md": {
-      "bytes": 3886,
-      "sha256": "ab4b994b73f8072186d84c72395ebb05e930806a474cc9483802fc822fed9633"
-    },
-    "modular/gasly-pro-api/references/integrations.md": {
-      "bytes": 16449,
-      "sha256": "eb911fcf285fdaeed6561882121a32d2d34408ceef7f2fba03203a893703c747"
+      "bytes": 3915,
+      "sha256": "b8199488c474464f749ecc8cb78171ba46ae5d0651c6e606a0f59b320f57f4a5"
     },
     "modular/gasly-pro-api/references/monetization-and-tiers.md": {
-      "bytes": 7492,
-      "sha256": "71aec4ef4794bbeaeed58d888a76905d46af44b2ccfd8b090024875d9fa30145"
+      "bytes": 7556,
+      "sha256": "9433adf1b3b323f61cf2f5052e4519d571f47ad3721021736de2c99b433b8446"
     },
     "modular/gasly-pro-api/references/presets.md": {
-      "bytes": 4285,
-      "sha256": "0346483b251490da66e3cac477a4f18221b8565d9acc513b16a6853ccc5c0bed"
+      "bytes": 4341,
+      "sha256": "1f9b2a99018bc82fabc1792f2363a3078bf1c63e7bda8e8e4918a3cea92d8499"
+    },
+    "modular/gasly-pro-api/references/saas-craft.md": {
+      "bytes": 10529,
+      "sha256": "9f4a250e08e6f07ca645f10b42b0704b678610753336e15830615511f3ba8c8d"
     },
     "modular/gasly-pro-api/references/tokens.schema.json": {
       "bytes": 5361,
       "sha256": "182a57a43d2266b9986963a39f977ae5a15e813727b9c827d09a1a8ae76ca7a2"
     },
     "modular/gasly-pro-api/references/voice-and-brevity.md": {
-      "bytes": 1624,
-      "sha256": "14e770cbb8fec93beb1d180bf7f2c57f93fcedec2ba42591c86efcac388aa7da"
+      "bytes": 1639,
+      "sha256": "112366b36afdd02e9d7c80e7b28ecfd26cc7eaff6504b5c78c6a54a793770fd8"
     },
     "modular/gasly-pro/SKILL.md": {
-      "bytes": 13853,
-      "sha256": "4f559010512a47b58749e8646635b52ad97e30604383c342e6017779d90d989f"
+      "bytes": 13950,
+      "sha256": "7fd8e1cc6a52d133ccae27f5ca020c7f7caa4367817521f506e39ba0048187ba"
     },
     "modular/gasly-pro/references/app-ux.md": {
-      "bytes": 3508,
-      "sha256": "ed5955b46c54a8ead612e8c6622098baba3fdb76f2c16486846b95541babd6f6"
+      "bytes": 3557,
+      "sha256": "04e5ec1d8afb6604546afde8cb46262eab4b7906fa5ab11219b1e1024b3d52e0"
     },
     "modular/gasly-pro/references/aura-design.md": {
-      "bytes": 6917,
-      "sha256": "1abd448972bf4cae13a35ea3e4922f5bf9e6b38c222c10089cf4d046b6334956"
+      "bytes": 7015,
+      "sha256": "fc5d7d40102c2d99ff205fa4bc05e1e8111fd9dc869cfd13e8472573d3d740cf"
     },
     "modular/gasly-pro/references/boilerplates.md": {
-      "bytes": 39544,
-      "sha256": "515e3e4aba92042b5ab4a3a6031be78c9889f77e29fdc2d4069acb32c018498e"
+      "bytes": 41317,
+      "sha256": "3b0fca02445575d28dd7ce0846ba14b6ebd1eade1bea51f80891378cc1f7f27d"
     },
     "modular/gasly-pro/references/gas-backend.md": {
-      "bytes": 9343,
-      "sha256": "7a8daeded13338ed64d5f461809a29c40eb16eabf7919c1ee318de0aba0f307a"
+      "bytes": 9428,
+      "sha256": "a25fe7ddfb301a569912ee941903295ddf56ef2a2cfcda8f96f46f2e130f207e"
     },
     "modular/gasly-pro/references/interaction-primitives.md": {
-      "bytes": 4835,
-      "sha256": "afa6a4f94ddca078d01ab6cfd4056cd9f2277e3cac0fd7b04ad49398e0293c8b"
+      "bytes": 4894,
+      "sha256": "9547ed566d957247053191ec468bfce885b04b4ae0a11af85de4849a3b9d1bf3"
     },
     "modular/gasly-pro/references/landing-conversion.md": {
-      "bytes": 5106,
-      "sha256": "b6d61ab771686aec455e1bdb3c02a445e7937d5996f2719715ef91699b864d0c"
+      "bytes": 5164,
+      "sha256": "81fb507e7cf5e513e05fb200b59729bbeff4d6c822b8543e70b94961c57aeb02"
     },
     "modular/gasly-prompt/SKILL.md": {
-      "bytes": 391,
-      "sha256": "519bd4873eb5f76321ea26dd5469d572a08f9a7273a22e3b53a1ab571e5c2a68"
+      "bytes": 402,
+      "sha256": "e82d6be6b9c53c27dd9833aef2023da680282666195863929b1724937124df43"
     },
     "modular/gasly-start/SKILL.md": {
-      "bytes": 3540,
-      "sha256": "7c2ee3fc3755a5a085ab4c5dcf2829e2c3a35628ffd9def4cc6949170f3d8a6c"
+      "bytes": 3584,
+      "sha256": "501b908cd2b4a117eddbf21e33bd7e59a5151f18c4a0d3c0b65806831afe60aa"
     },
     "modular/gasly-start/references/access-profiles.md": {
-      "bytes": 7966,
-      "sha256": "5fd55f1be9634a7a4b8f5a5e284cf20795de5fb437d2fed3eba80d3ec1bdd40a"
+      "bytes": 8062,
+      "sha256": "30d6e8ee04e9578438027e617ad06bef9266dc856bfe07a85c69349601247fbb"
     },
     "modular/gasly-start/references/contract.md": {
-      "bytes": 15248,
-      "sha256": "fc5f581c07c7f63f18607ba928454b6d6d68bf4dea8ef3ffb96d0defa0dcc0c2"
+      "bytes": 15937,
+      "sha256": "c68686738b57b36187b65effde5a986646ef6b0fe144972868847263ade243e8"
     },
     "modular/gasly-start/references/facts.md": {
-      "bytes": 4718,
-      "sha256": "57f852212d3a24ffcca4ecd4bad737241df8c8033833c288a8da5c44a4a59d29"
+      "bytes": 6820,
+      "sha256": "1061cd6e9ce60b2dbc196128470351b96e408432f0f1ab5e48d98105eed564f0"
     },
     "modular/gasly-start/references/gasly-contract.schema.json": {
-      "bytes": 5686,
-      "sha256": "f123086e4ddb8397eaf08b60980849fe5f002fe04dc6b0ff4f8020dd7da1390c"
+      "bytes": 5811,
+      "sha256": "b83e16f558a7a1e80732cd290e5bcae71fc74558cb7042936e9f29da77bfa777"
     },
     "modular/gasly-start/references/gates.md": {
-      "bytes": 17826,
-      "sha256": "d40be354386821cb91600af41204b1924fb1e95d900353ece57601aadd13963a"
+      "bytes": 20418,
+      "sha256": "62112d62c0c70bb91055c6bbba892d6e454509152c48f14a8c8dd522ca048611"
     },
     "modular/gasly-start/references/hardening-gates-p0.md": {
-      "bytes": 3886,
-      "sha256": "ab4b994b73f8072186d84c72395ebb05e930806a474cc9483802fc822fed9633"
+      "bytes": 3915,
+      "sha256": "b8199488c474464f749ecc8cb78171ba46ae5d0651c6e606a0f59b320f57f4a5"
     },
     "modular/gasly-start/references/monetization-and-tiers.md": {
-      "bytes": 7492,
-      "sha256": "71aec4ef4794bbeaeed58d888a76905d46af44b2ccfd8b090024875d9fa30145"
+      "bytes": 7556,
+      "sha256": "9433adf1b3b323f61cf2f5052e4519d571f47ad3721021736de2c99b433b8446"
     },
     "modular/gasly-start/references/voice-and-brevity.md": {
-      "bytes": 1624,
-      "sha256": "14e770cbb8fec93beb1d180bf7f2c57f93fcedec2ba42591c86efcac388aa7da"
+      "bytes": 1639,
+      "sha256": "112366b36afdd02e9d7c80e7b28ecfd26cc7eaff6504b5c78c6a54a793770fd8"
     },
     "modular/gasly-ui/SKILL.md": {
-      "bytes": 7934,
-      "sha256": "70eabc019bc0a3394ded244f805720bf35938221cdd07e415c34cd8ca8cc7d93"
-    },
-    "modular/gasly-ui/references/INHERIT.md": {
-      "bytes": 4327,
-      "sha256": "fee5ae7814ba6a3a850a20aae44923c4a82c60aff106a150bc48689ea621bb1c"
-    },
-    "modular/gasly-ui/references/PLANNED.md": {
-      "bytes": 4379,
-      "sha256": "514c1d29c0d42c755fbc49a7f8e2e1ae357552d0ce8eb598c838ef515f0f36e5"
+      "bytes": 9534,
+      "sha256": "dd1f48abe9edc7cae73db25aeaed2aa009beb901d5cde7091c6f915e3578e689"
     },
     "modular/gasly-ui/references/access-profiles.md": {
-      "bytes": 7966,
-      "sha256": "5fd55f1be9634a7a4b8f5a5e284cf20795de5fb437d2fed3eba80d3ec1bdd40a"
-    },
-    "modular/gasly-ui/references/astro.md": {
-      "bytes": 18301,
-      "sha256": "5f754125bd15f55365607b85bc3dc16549ec657d314fc406a65525a4bb4c35a2"
+      "bytes": 8062,
+      "sha256": "30d6e8ee04e9578438027e617ad06bef9266dc856bfe07a85c69349601247fbb"
     },
     "modular/gasly-ui/references/contract.md": {
-      "bytes": 15248,
-      "sha256": "fc5f581c07c7f63f18607ba928454b6d6d68bf4dea8ef3ffb96d0defa0dcc0c2"
+      "bytes": 15937,
+      "sha256": "c68686738b57b36187b65effde5a986646ef6b0fe144972868847263ade243e8"
     },
     "modular/gasly-ui/references/css/aura.css": {
       "bytes": 2405,
@@ -477,40 +461,36 @@
       "sha256": "6cc195de75443e143fd1b6c309f8b1252596d9b0a903d611282350b5a27be891"
     },
     "modular/gasly-ui/references/dials.md": {
-      "bytes": 4500,
-      "sha256": "43d1279d64110dc1693688b41692abf43881edceb727a2ea1238915d2bc76a4f"
+      "bytes": 4548,
+      "sha256": "cdccfaf7e4527bedabf3a6b7ee633e208d7b19d351890dad57a8db119afe53a0"
     },
     "modular/gasly-ui/references/facts.md": {
-      "bytes": 4718,
-      "sha256": "57f852212d3a24ffcca4ecd4bad737241df8c8033833c288a8da5c44a4a59d29"
+      "bytes": 6820,
+      "sha256": "1061cd6e9ce60b2dbc196128470351b96e408432f0f1ab5e48d98105eed564f0"
     },
     "modular/gasly-ui/references/gasly-contract.schema.json": {
-      "bytes": 5686,
-      "sha256": "f123086e4ddb8397eaf08b60980849fe5f002fe04dc6b0ff4f8020dd7da1390c"
+      "bytes": 5811,
+      "sha256": "b83e16f558a7a1e80732cd290e5bcae71fc74558cb7042936e9f29da77bfa777"
     },
     "modular/gasly-ui/references/gates.md": {
-      "bytes": 17826,
-      "sha256": "d40be354386821cb91600af41204b1924fb1e95d900353ece57601aadd13963a"
+      "bytes": 20418,
+      "sha256": "62112d62c0c70bb91055c6bbba892d6e454509152c48f14a8c8dd522ca048611"
     },
     "modular/gasly-ui/references/hardening-gates-p0.md": {
-      "bytes": 3886,
-      "sha256": "ab4b994b73f8072186d84c72395ebb05e930806a474cc9483802fc822fed9633"
+      "bytes": 3915,
+      "sha256": "b8199488c474464f749ecc8cb78171ba46ae5d0651c6e606a0f59b320f57f4a5"
     },
     "modular/gasly-ui/references/html-tailwind.md": {
-      "bytes": 31306,
-      "sha256": "bb4d80b59e8507addad7e5685e4ffd8b20902e6702db3de5b93b2de51655733a"
+      "bytes": 44442,
+      "sha256": "13a95d3aaf99f5cce6a4587a7b827eff35371a4d03fbbb1589d667e9236b6c6b"
     },
     "modular/gasly-ui/references/monetization-and-tiers.md": {
-      "bytes": 7492,
-      "sha256": "71aec4ef4794bbeaeed58d888a76905d46af44b2ccfd8b090024875d9fa30145"
-    },
-    "modular/gasly-ui/references/nextjs-shadcn.md": {
-      "bytes": 33222,
-      "sha256": "904dbcf4d6f0131498e8c77a8c075fb909afecc6145271c5e87aee583c85be07"
+      "bytes": 7556,
+      "sha256": "9433adf1b3b323f61cf2f5052e4519d571f47ad3721021736de2c99b433b8446"
     },
     "modular/gasly-ui/references/presets.md": {
-      "bytes": 4285,
-      "sha256": "0346483b251490da66e3cac477a4f18221b8565d9acc513b16a6853ccc5c0bed"
+      "bytes": 4341,
+      "sha256": "1f9b2a99018bc82fabc1792f2363a3078bf1c63e7bda8e8e4918a3cea92d8499"
     },
     "modular/gasly-ui/references/presets/aura.tokens.json": {
       "bytes": 4262,
@@ -528,93 +508,101 @@
       "bytes": 4266,
       "sha256": "9f8ed6a1fd212142a6fb0075ddbf1fa64894af91196b8b41173063a65b8f3ff5"
     },
+    "modular/gasly-ui/references/react-vite.md": {
+      "bytes": 44352,
+      "sha256": "213a5a56d70a54dc967981d5b369c0b3db3fcb23b8549911521535b08bd7a308"
+    },
+    "modular/gasly-ui/references/saas-craft.md": {
+      "bytes": 10529,
+      "sha256": "9f4a250e08e6f07ca645f10b42b0704b678610753336e15830615511f3ba8c8d"
+    },
     "modular/gasly-ui/references/tokens.schema.json": {
       "bytes": 5361,
       "sha256": "182a57a43d2266b9986963a39f977ae5a15e813727b9c827d09a1a8ae76ca7a2"
     },
     "modular/gasly-ui/references/voice-and-brevity.md": {
-      "bytes": 1624,
-      "sha256": "14e770cbb8fec93beb1d180bf7f2c57f93fcedec2ba42591c86efcac388aa7da"
+      "bytes": 1639,
+      "sha256": "112366b36afdd02e9d7c80e7b28ecfd26cc7eaff6504b5c78c6a54a793770fd8"
     },
     "web-bundles/gasly-all-in-one/01-GASLY-ROUTER-AND-CORE.md": {
-      "bytes": 66572,
-      "sha256": "296f071bc3fef22af78729cfd37e6af182cfaa9361b33dd6ef036140a20e4c49"
+      "bytes": 72585,
+      "sha256": "501b1ec1bbfd6bd2effd311d33ff824066d97e050d1292ba8f3990cc72237d84"
     },
     "web-bundles/gasly-all-in-one/02-GASLY-PRD-AND-UIUX.md": {
-      "bytes": 54834,
-      "sha256": "b7d6fc1b7a2b4a771b426bfe2b4553bb00ff5e9e59bcf8d77f4c4408cb2d1713"
+      "bytes": 67035,
+      "sha256": "1bdaa9b1146cf1b13eef67fe767a11532beea20b2973199e97accee4ec6de09d"
     },
     "web-bundles/gasly-all-in-one/03-GASLY-BACKEND-GAS.md": {
-      "bytes": 147647,
-      "sha256": "98eafd302919690de2bdc4c839fabf1cdef18e94e35ee76af19cb6a5973993ef"
+      "bytes": 156651,
+      "sha256": "50a9eff80261b79e95ae5e1ef159796b93ed57a315fb23ddfc5909bb77ff2b6c"
     },
     "web-bundles/gasly-all-in-one/04-GASLY-FRONTEND-AND-DEPLOY.md": {
-      "bytes": 121300,
-      "sha256": "055bbc813cc52813fd18ab102ee9effc6471218c1633becc51a035402449e277"
+      "bytes": 121049,
+      "sha256": "3c00f8665e419b4c14c1c3042e148e279e3ab9305047e1633abf4aece4da5bb4"
     },
     "web-bundles/gasly-data/SKILL.md": {
-      "bytes": 12919,
-      "sha256": "8ee27a79604a1b5418f4f112bc16eccdcac9970537c8ac5c7b01fd8395a15e49"
+      "bytes": 13327,
+      "sha256": "61398d67a51d57c0664f765b8a88fac78c0d6846f2b79a848fd1b7ddd140f7a3"
     },
     "web-bundles/gasly-data/gasly-data-knowledge.md": {
-      "bytes": 199496,
-      "sha256": "091be010a2857404a8d6b25b9693da54ff9382e5c1d9033cfd70c23c0221af00"
+      "bytes": 214036,
+      "sha256": "cf25ca795af685b1d37e3825ab49a8af7a48f95504eddbce61679c596d4dafa5"
     },
     "web-bundles/gasly-deploy-guide/SKILL.md": {
-      "bytes": 10627,
-      "sha256": "2f68a039c4a341315f8ce1a76d5b84862dc23ea7cf08e1769f727aecf29b2c27"
+      "bytes": 11521,
+      "sha256": "a428f6be4e199f1415ec580c56b5cd3de8d69a9f24d691d7446a532e53b9a8a9"
     },
     "web-bundles/gasly-deploy-guide/gasly-deploy-guide-knowledge.md": {
-      "bytes": 135383,
-      "sha256": "396ddfad56c346c678eb87c42539a0396b461124bb70c40d83dc798332c562fc"
+      "bytes": 164164,
+      "sha256": "c7119a4877086448eea3a15b9dbc4b995d6b2efe371bef6def75358ae2ca86b6"
     },
     "web-bundles/gasly-prd-to-uiux/SKILL.md": {
-      "bytes": 6048,
-      "sha256": "dfbdb316da61ea226c41ce5000e4f5162273512116f4727bfc0b3401a19b357e"
+      "bytes": 6455,
+      "sha256": "e323ce68a92424414c39076a8b8e4af9cdaab968590b3ed5df06bc7cb2a110cc"
     },
     "web-bundles/gasly-prd-to-uiux/gasly-prd-to-uiux-knowledge.md": {
-      "bytes": 117065,
-      "sha256": "4f9cad06a32e115703eee0d25bf39337a5f13e7230ac102ad4f7982f1e6722ec"
+      "bytes": 134806,
+      "sha256": "396bc8293d37a524918acdf639899b8b8be4053af0ac05c5e315ea8afdf8fb36"
     },
     "web-bundles/gasly-prd/SKILL.md": {
-      "bytes": 22544,
-      "sha256": "a76ef4327596ef91319bca8f51e2cae5b2d12aadedae537e65973a0d619ee4c4"
+      "bytes": 23229,
+      "sha256": "65d1fb992acab084aa22777edde2673aff3d1ae7a323e25e1093faaea10bdf23"
     },
     "web-bundles/gasly-prd/gasly-prd-knowledge.md": {
-      "bytes": 105102,
-      "sha256": "4330d071f140cae18ef8ef09c006e2b2b467372d27f31b70a50047ceda42858d"
+      "bytes": 122201,
+      "sha256": "b576aef61c55ec46e3322a39e8a9185fe56ee97255a87a8c0012b2cbff6127da"
     },
     "web-bundles/gasly-pro-api/SKILL.md": {
-      "bytes": 3945,
-      "sha256": "0530c6bb7bb1b012cf42d5786afe3d7eff6321f620b15abb282749ea2453e476"
+      "bytes": 4296,
+      "sha256": "4ae4528ca2afaa6d17abf25bbcd43a7beeb4ec664a6c5a2087dbdf279053e3ee"
     },
     "web-bundles/gasly-pro-api/gasly-pro-api-knowledge.md": {
-      "bytes": 120603,
-      "sha256": "e4bd938d7b8ceec58d70bb8cf6d5be60db6e706ff105a997114056564d87a400"
+      "bytes": 95854,
+      "sha256": "896de2a544efd9a87c3a03b3ddd164eb079a336a96ea539637efe795362162a0"
     },
     "web-bundles/gasly-pro/SKILL.md": {
-      "bytes": 13853,
-      "sha256": "4f559010512a47b58749e8646635b52ad97e30604383c342e6017779d90d989f"
+      "bytes": 13950,
+      "sha256": "7fd8e1cc6a52d133ccae27f5ca020c7f7caa4367817521f506e39ba0048187ba"
     },
     "web-bundles/gasly-pro/gasly-pro-knowledge.md": {
-      "bytes": 69621,
-      "sha256": "41839bcd2715d48ea0fa3631d0c165787650d07f7031a3ecbe882e6a71615888"
+      "bytes": 71774,
+      "sha256": "d2266eb51ae0654c02e7377d8e32ec714bb9845953828782315b66547d55e29b"
     },
     "web-bundles/gasly-start/SKILL.md": {
-      "bytes": 3540,
-      "sha256": "7c2ee3fc3755a5a085ab4c5dcf2829e2c3a35628ffd9def4cc6949170f3d8a6c"
+      "bytes": 3584,
+      "sha256": "501b908cd2b4a117eddbf21e33bd7e59a5151f18c4a0d3c0b65806831afe60aa"
     },
     "web-bundles/gasly-start/gasly-start-knowledge.md": {
-      "bytes": 64751,
-      "sha256": "e723a6060e8e19a3ff5b66b911051df96f7981c88c6bb7d7250b0e2dc6fd3662"
+      "bytes": 70690,
+      "sha256": "290d82b7e0c7ce768fba3d002ae2335e4b8faf835b60599de1ee4b3e8470f5cc"
     },
     "web-bundles/gasly-ui/SKILL.md": {
-      "bytes": 7934,
-      "sha256": "70eabc019bc0a3394ded244f805720bf35938221cdd07e415c34cd8ca8cc7d93"
+      "bytes": 9534,
+      "sha256": "dd1f48abe9edc7cae73db25aeaed2aa009beb901d5cde7091c6f915e3578e689"
     },
     "web-bundles/gasly-ui/gasly-ui-knowledge.md": {
-      "bytes": 198115,
-      "sha256": "8bbb3c49c08e2fb5e45f6c104cae2d4d727f94863e21a031a3968db1489386ad"
+      "bytes": 212820,
+      "sha256": "7c7867af31aeb3b8ede02e3e5aa05d713a615d4d8ce5f433ac7abd750cafe886"
     }
   },
   "kbVersion": "2.1.0",

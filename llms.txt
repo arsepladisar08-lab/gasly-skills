@@ -27,10 +27,7 @@
 
 ## Stack and Runtime
 - [HTML + Tailwind](src/stacks/html-tailwind.md)
-- [Next.js + shadcn](src/stacks/nextjs-shadcn.md)
-- [Astro](src/stacks/astro.md)
-- [Inherited Stacks](src/stacks/INHERIT.md)
-- [Planned Stack Work](src/stacks/PLANNED.md)
+- [React (Vite + TypeScript + Tailwind)](src/stacks/react-vite.md)
 - [GAS integrations](src/gas/integrations.md)
 
 ## Governance and Verification

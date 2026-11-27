@@ -516,12 +516,129 @@ function setupAdminCredentials() {
     props.deleteProperty('ADMIN_PIN_INIT');
   }
 }
+
+/**
+ * Entrypoint 1-Klik di dropdown "Run" toolbar Apps Script Editor.
+ * Menjalankan: (1) initialSetupDatabase(), (2) setupAdminCredentials() bila properti init tersedia,
+ * (3) pemeriksaan kesiapan ScriptProperties & Drive, serta (4) diagnostik skema tanpa membocorkan secret.
+ */
+function setupAppEnvironment(fromClient) {
+  if (fromClient !== undefined) {
+    throw new Error('setupAppEnvironment() hanya boleh dijalankan dari toolbar Apps Script atau menu Spreadsheet.');
+  }
+
+  var setupResult = initialSetupDatabase();
+  var props = PropertiesService.getScriptProperties();
+  var actionsRequired = [];
+
+  var hasInitPass = Boolean(props.getProperty('ADMIN_PASSPHRASE_INIT'));
+  var hasInitPin = Boolean(props.getProperty('ADMIN_PIN_INIT'));
+  var credStatus = 'SKIPPED';
+
+  if (hasInitPass || hasInitPin) {
+    setupAdminCredentials();
+    credStatus = 'CONFIGURED_AND_CLEANED';
+  }
+
+  var hasAdminPassHash = Boolean(props.getProperty('ADMIN_PASSPHRASE_HASH'));
+  var hasAdminPinHash = Boolean(props.getProperty('ADMIN_PIN_HASH'));
+
+  if (!hasAdminPassHash) {
+    actionsRequired.push(
+      'ADMIN_PASSPHRASE_HASH belum diatur. Jalankan menu "Gasly Setup > 2. Atur Passphrase & PIN Admin" di Spreadsheet, ' +
+      'atau isi sementara ADMIN_PASSPHRASE_INIT (>=12 karakter) di Project Settings > Script Properties lalu jalankan setupAppEnvironment() lagi.'
+    );
+  }
+  if (!hasAdminPinHash) {
+    actionsRequired.push(
+      'ADMIN_PIN_HASH belum diatur. Atur PIN 6 digit via menu Spreadsheet atau isi sementara ADMIN_PIN_INIT di Script Properties lalu jalankan setupAppEnvironment() lagi.'
+    );
+  }
+
+  var diagnostics = typeof buildDiagnosticsReport_ === 'function'
+    ? buildDiagnosticsReport_()
+    : { ok: true, schemaVersion: setupResult.schemaVersion };
+
+  var summary = {
+    status: actionsRequired.length === 0 && diagnostics.ok ? 'READY_TO_DEPLOY' : 'PARTIAL_SETUP',
+    schemaVersion: setupResult.schemaVersion,
+    accessProfile: props.getProperty('ACCESS_PROFILE') || ACCESS_PROFILE,
+    credentialsStep: credStatus,
+    checks: {
+      hmacSecretReady: Boolean(props.getProperty('AUTH_HMAC_SECRET')),
+      pepperReady: Boolean(props.getProperty('AUTH_PEPPER')),
+      adminPassphraseReady: hasAdminPassHash,
+      adminPinReady: hasAdminPinHash,
+      driveRootReady: Boolean(props.getProperty('DRIVE_ROOT_FOLDER_ID')),
+      googleClientIdSet: Boolean(props.getProperty('GOOGLE_CLIENT_ID')),
+      sheetsHealthy: Boolean(diagnostics.ok)
+    },
+    actionsRequired: actionsRequired
+  };
+
+  console.log('=== GASLY SETUP APP ENVIRONMENT REPORT ===\n' + JSON.stringify(summary, null, 2));
+  return summary;
+}
+
+/**
+ * Memasang menu "Gasly Setup" secara otomatis di toolbar Google Sheets saat Spreadsheet dibuka.
+ */
+function onOpen() {
+  try {
+    if (typeof SpreadsheetApp.getUi !== 'function') return;
+    SpreadsheetApp.getUi()
+      .createMenu('Gasly Setup')
+      .addItem('1. Setup App Environment (Init DB & Cek)', 'setupAppEnvironment')
+      .addItem('2. Atur Passphrase & PIN Admin (Dialog Aman)', 'setupAdminCredentialsFromUi')
+      .addSeparator()
+      .addItem('3. Jalankan Diagnostik Sistem', 'runDiagnostics')
+      .addToUi();
+  } catch (e) {
+    // Abaikan bila dipanggil pada konteks tanpa UI (headless/trigger)
+  }
+}
+
+/**
+ * Dialog interaktif aman dari toolbar Google Sheets untuk menyimpan hash passphrase & PIN admin
+ * ke ScriptProperties tanpa pernah menulis plaintext di kode .gs atau di sel Spreadsheet.
+ */
+function setupAdminCredentialsFromUi(fromClient) {
+  if (fromClient !== undefined) {
+    throw new Error('setupAdminCredentialsFromUi() hanya boleh dijalankan dari menu Google Sheets.');
+  }
+  var ui = SpreadsheetApp.getUi();
+  var passPrompt = ui.prompt(
+    'Atur Passphrase Admin',
+    'Masukkan passphrase admin minimal 12 karakter (disimpan sebagai hash di ScriptProperties, tidak masuk Sheet):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (passPrompt.getSelectedButton() !== ui.Button.OK) return;
+
+  var pinPrompt = ui.prompt(
+    'Atur PIN Step-Up Admin',
+    'Masukkan tepat 6 digit angka PIN untuk konfirmasi aksi sensitif (hapus/purge):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (pinPrompt.getSelectedButton() !== ui.Button.OK) return;
+
+  try {
+    configureAdminPassphrase_(passPrompt.getResponseText());
+    configureAdminPin_(pinPrompt.getResponseText());
+    ui.alert('Berhasil', 'Hash passphrase dan PIN admin tersimpan aman di Script Properties.', ui.ButtonSet.OK);
+  } catch (err) {
+    ui.alert('Gagal Validasi', err.message || 'Pastikan passphrase >= 12 karakter dan PIN 6 digit angka.', ui.ButtonSet.OK);
+  }
+}
+
 ```
 
 ---
 
-## 3. Prosedur Pembaruan Deployment Tanpa Mengubah URL `/exec`
+## 3. Prosedur Setup 1-Klik & Pembaruan Deployment Tanpa Mengubah URL `/exec`
 
+0. **Inisialisasi 1-Klik (`setupAppEnvironment`):**
+   - Di toolbar editor Apps Script, pilih **`setupAppEnvironment`** pada dropdown fungsi lalu klik **Run** (atau muat ulang Spreadsheet lalu gunakan menu **Gasly Setup > 1. Setup App Environment** dan **2. Atur Passphrase & PIN Admin**).
+   - Pastikan Execution Log menampilkan `status: "READY_TO_DEPLOY"` sebelum men-deploy Web App.
 1. **Deployment Pertama Kali:**
    - Di editor Google Apps Script, klik **Deploy > New deployment**.
    - Pilih jenis **Web app**.
@@ -611,7 +728,7 @@ Body HTTP `POST` adalah string JSON yang valid dengan struktur berikut:
 ```
 
 ### B. Format Query Parameter `GET` (Khusus Operasi Baca)
-Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya saat *build-time* atau *ISR revalidation* di Next.js/Astro) dengan parameter query:
+Operasi baca publik/idempoten (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` dengan parameter query:
 `?action=domain.verb&v=1&auth=<opsional>&payload=<encodeURIComponent(JSON.stringify(payload))>`
 
 ### C. Konvensi Penamaan `action` dan Allowlist Registry
@@ -620,16 +737,18 @@ Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya sa
   - Otentikasi: `auth.login`, `auth.google`, `auth.logout`, `auth.setCredentials`, `auth.verifyPin`
   - Entitas Data: `<entity>.list`, `<entity>.get`, `<entity>.create`, `<entity>.update`, `<entity>.delete`
   - Unggahan File Drive: `file.ticket`, `file.upload`, `file.replace`, `file.delete`
-  - **Kontrak Step-Up PIN (`stepUpToken`):** Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
+  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
+  - Integrasi Eksternal & Monetisasi: `webhook.receive`, `mail.send`, `notify.whatsapp`, `ai.generate`, `plans.list`, `subscription.get`, `payment.createCheckout`
+- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
+
+**Kontrak Step-Up PIN (`stepUpToken`):**
+- Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
 
 **Kontrak Upload Publik:**
 - Respons `items.create` memberikan `data.uploadNonce` sekali kepada pemanggil. Nilai ini disimpan di kolom internal `upload_nonce` dan wajib disembunyikan dari `items.list`/`items.get`.
 - `file.ticket` harus menerima `payload: { entity, entityId, uploadNonce }`. Server hanya menerbitkan tiket untuk record baru (maksimal 15 menit) yang nonce-nya cocok, belum diarsipkan, dan belum memiliki `file_id/file_url`.
 - Tiket berlaku 5 menit dan terikat pada `entity`, `entityId`, serta nonce. `file.upload` memverifikasi scope dan mengonsumsi tiket sekali pakai di dalam lock.
 - Upload publik ditolak bila attachment sudah ada. Hanya sesi bertanda tangan ber-role `ADMIN` atau `STAFF` yang boleh mengganti attachment.
-  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
-  - Integrasi Eksternal: `webhook.receive`
-- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
 
 ---
 
@@ -703,11 +822,12 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
    - `INTERNAL_APP`: Langsung menuju layar login & workspace operasional padat data (tanpa landing page pemasaran).
    - `PUBLIC_SERVICE`: Papan informasi/antrean/formulir layanan publik + panel petugas terproteksi.
    - `MARKETPLACE` / `SAAS_PLATFORM`: *Dual-Surface* terpisah (Landing Page akuisisi publik pada rute utama `/` dan Dashboard terotentikasi pada rute/view `/app`).
-2. **Pemilihan Tangga Arsitektur & Lisensi Hosting:**
-   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS untuk alat sederhana satu pintu.
-   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis/SSR di **Cloudflare Pages** (diizinkan untuk komersial gratis) + Backend GAS `/exec`. *(Catatan: GitHub Pages dan Vercel Hobby hanya boleh direkomendasikan untuk prototipe/demo non-komersial).*
-   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy Cloudflare Worker / Vercel Function (`/api/gas`) dengan tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* untuk Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
-   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dan **Vercel Pro**, sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
+2. **Pemilihan Tangga Arsitektur, Stack Minimalis & Lisensi Hosting (`facts.md`):**
+   - **Tiga Stack Kanonik:** `html-tailwind` (decoupled ringan), `react` (React + Vite SPA), dan `gas-htmlservice` (legacy monolitik `gasly-pro`).
+   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS tanpa hosting eksternal untuk alat sederhana satu pintu.
+   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis (`html-tailwind` atau `react` Vite) di **Cloudflare Pages** (default komersial gratis), atau alternatif komersial **Sevalla**, **Netlify**, **Firebase Hosting**, maupun **Vercel Pro** + Backend GAS `/exec`. *(Catatan: **GitHub Pages** dan **Vercel Hobby** hanya boleh direkomendasikan untuk demo/portofolio/personal non-komersial).*
+   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy serverless tipis (Cloudflare Worker / Netlify Function / Vercel Function sesuai paket) untuk tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
+   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dengan hosting komersial (**Cloudflare Pages** / **Sevalla** / **Vercel Pro**), sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
 
 ## 9. Batas Kepercayaan Input Eksternal (Trust Boundary)
 
@@ -733,7 +853,7 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
 <!-- FILE: references/facts.md -->
 # Gasly Verified Technical & Commercial Facts (`facts.md`)
 
-- **Last Verified Date:** `2026-11-16`
+- **Last Verified Date:** `2026-11-25`
 - **Rule:** Seluruh angka kuota, batas waktu runtime, dan ketentuan lisensi komersial pada rekomendasi arsitektur wajib mengacu pada dokumen ini.
 
 ## 1. Kuota & Batas Runtime Google Apps Script (GAS)
@@ -749,11 +869,15 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
 - **Perilaku HTTP `/exec`:** Selalu membalas `POST` dengan **HTTP 302 Redirect** ke `script.googleusercontent.com` dan tidak mendukung preflight `OPTIONS` maupun pembacaan alamat IP klien.
 
 ## 2. Ketentuan Lisensi Komersial Hosting Frontend
-| Layanan Hosting | Status Lisensi Komersial (Tier Gratis) | Posisi Resmi di Tangga Arsitektur Gasly |
-| :--- | :--- | :--- |
-| **Cloudflare Pages** | **Diizinkan** untuk penggunaan komersial (batas 500 build/bulan pada Free plan) | **Default Tier 1 & Tier 2** untuk produksi komersial hemat biaya |
-| **Vercel (Hobby Plan)** | **Dilarang untuk komersial** (*Personal / Non-Commercial Only*). Penggunaan komersial wajib **Vercel Pro ($20/bulan)** | Gunakan Hobby hanya untuk Dev/Preview; gunakan **Vercel Pro** untuk SaaS komersial berbasis Next.js SSR |
-| **GitHub Pages** | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (sesuai GitHub Terms of Service) | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial** |
+| Layanan Hosting | Status Lisensi Komersial (Tier Gratis) | Batas Kuota Gratis & Catatan Penting | Posisi Resmi di Tangga Arsitektur Gasly |
+| :--- | :--- | :--- | :--- |
+| **Cloudflare Pages** (`cloudflare_pages`) | **Diizinkan** untuk penggunaan komersial | Batas 500 build/bulan pada Free plan, bandwidth statis tidak dibatasi (tunduk pada Fair Use). | **Default utama Tier 1 & Tier 2** untuk `html-tailwind` & `react` (Vite) komersial hemat biaya. |
+| **Sevalla Static Sites** (`sevalla`) | **Diizinkan** untuk penggunaan komersial (tunduk pada Fair Use Policy) | Gratis biaya bulanan dengan alokasi gratis 100 GB bandwidth/bulan & 600 menit build/bulan pada 260+ edge locations (kelebihan ditagih sesuai pemakaian). | **Alternatif produksi Tier 1 & Tier 2** untuk static site `html-tailwind` / `react` (Vite) dan mudah diperluas ke Docker/DB bila naik tier. |
+| **Netlify** (`netlify`) | **Diizinkan** untuk proyek komersial (dilarang *resell* hosting) | Free plan menggunakan batas keras (*hard cap*) 300 kredit/bulan (dipakai bersama oleh deploy & bandwidth); situs dijeda bila kredit habis hingga siklus berikutnya atau upgrade ke Pro ($20/bulan). | **Alternatif produksi Tier 1** untuk aplikasi statis trafik ringan–menengah; pantau pemakaian kredit bila trafik komersial aktif. |
+| **Firebase Hosting** (`firebase_hosting`) | **Diizinkan** untuk bisnis & komersial (Spark Plan) | Kuota gratis Spark Plan meliputi penyimpanan & transfer terbatas (berhenti melayani bila kuota terlampaui sampai upgrade ke Blaze *pay-as-you-go*). | **Alternatif produksi Tier 1** terutama untuk tim yang sudah berada di ekosistem Google Cloud / Workspace. |
+| **Vercel** (`vercel_hobby_noncommercial` / `vercel_pro`) | **Hobby Plan DILARANG untuk komersial** (*Personal / Non-Commercial Only*). Komersial wajib **Vercel Pro ($20/bulan)** | Hobby memberi 100 GB transfer/bulan hanya untuk proyek personal/non-komersial. | Gunakan Hobby **hanya** untuk Dev/Preview/Personal; gunakan **Vercel Pro** untuk deployment komersial di Vercel. |
+| **GitHub Pages** (`github_pages_demo`) | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (GitHub ToS) | Ukuran publikasi maks. 1 GB, soft limit 100 GB bandwidth/bulan. | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial**. |
+| **Google Apps Script (`HtmlService`)** (`gas_htmlservice`) | Tunduk pada kuota akun Google / Google Workspace | Berjalan di dalam iframe Google tanpa hosting eksternal. | **Khusus Mode Legacy (`gasly-pro`)** bila pengguna meminta 100% di dalam GAS. |
 
 ## 3. Referensi Dokumentasi & Status Verifikasi Langkah Antarmuka Pihak Ketiga (`gasly-deploy-guide`)
 - **Aturan Provenance (`Gate I-05`):** Setiap langkah antarmuka pihak ketiga di dalam `gasly-deploy-guide` wajib mencantumkan URL dokumentasi resmi dan status verifikasi. Karena antarmuka web pihak ketiga dapat berubah tanpa pemberitahuan di luar repositori statis, langkah klik menu spesifik ditandai `UNVERIFIED` dan dicatat pada `VERIFY.md` (`A-12`).
@@ -766,10 +890,13 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
 - **Google Cloud Console — OAuth 2.0 Client ID (`auth.google`):**
   - Dokumentasi Resmi: `https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
   - Syarat wajib: konfigurasi OAuth Consent Screen (mewajibkan URL kebijakan privasi `/privacy` publik sesuai `src/core/monetization-and-tiers.md`) dan pembuatan Web Application Client ID dengan *Authorized JavaScript origins* berisi domain frontend.
-- **Hosting Frontend (Cloudflare Pages / Vercel / GitHub Pages):**
-  - Dokumentasi Resmi Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
-  - Dokumentasi Resmi Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
-  - Dokumentasi Resmi GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+- **Hosting Frontend yang Didukung:**
+  - Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Sevalla Static Site Hosting: `https://docs.sevalla.com/static-site-hosting/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Netlify: `https://docs.netlify.com/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Firebase Hosting: `https://firebase.google.com/docs/hosting` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
 
 
 ---
@@ -838,11 +965,20 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
         },
         "frontend_stack": {
           "type": "string",
-          "enum": ["html-tailwind", "nextjs+shadcn", "astro", "react-vite", "flutter", "inherit"]
+          "enum": ["html-tailwind", "react", "gas-htmlservice"]
         },
         "hosting_target": {
           "type": "string",
-          "enum": ["gas_htmlservice", "cloudflare_pages", "vercel_pro", "vercel_hobby_noncommercial", "github_pages_demo"]
+          "enum": [
+            "cloudflare_pages",
+            "netlify",
+            "firebase_hosting",
+            "sevalla",
+            "vercel_pro",
+            "vercel_hobby_noncommercial",
+            "github_pages_demo",
+            "gas_htmlservice"
+          ]
         },
         "auth_primary": {
           "type": "string",
@@ -983,7 +1119,7 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
 ## 1. Hierarki Otoritas & Aturan Penegakan
 
 Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instruksi pengguna biasa. Tidak ada satu pun gerbang dari versi sebelumnya yang dihapus; setiap gerbang diklasifikasikan ke dalam 4 kelas sesuai ruang lingkup arsitekturnya:
-- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (termasuk ke-15 stack pewaris), `gasly-deploy-guide`, dan `gasly-pro`.
+- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (`html-tailwind` dan `react`), `gasly-deploy-guide`, dan `gasly-pro`.
 - **`GAS-ONLY`**: Wajib dipatuhi oleh `gasly-data` dan bagian backend `gasly-pro`.
 - **`WEB-ONLY`**: Wajib dipatuhi oleh `gasly-ui` (pada seluruh stack web) dan bagian frontend `gasly-pro`.
 - **`LEGACY-HTMLSERVICE`**: Wajib dipatuhi oleh `gasly-pro` saat membangun aplikasi monolitik berbasis `HtmlService` + `google.script.run`.
@@ -998,6 +1134,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
    - Setiap pemeriksaan hak akses dan peran wajib dieksekusi di dalam Google Apps Script sebelum menyentuh Google Sheets atau Google Drive. Penyembunyian tombol di UI hanyalah bantuan navigasi, bukan pengaman.
 3. **Anti-Fabrikasi Klaim Bisnis (`U-03`):**
    - Dilarang mengarang jumlah pengguna/pelanggan, logo klien, testimoni palsu, badge *verified*, persentase peningkatan ROI/efisiensi, jaminan mutlak bebas biaya server, kebijakan *refund/free trial*, maupun angka harga paket yang tidak diberikan oleh pengguna. Gunakan data asli dari pengguna, slot `{{...}}`, atau *Role-Based Use Cases* dan kapabilitas nyata dari kode.
+   - **Batas Foto/Video Dummy:** Penggunaan foto/video stock dari penyedia publik (Unsplash, Pexels, Pixabay, Coverr/Mixkit) untuk kebutuhan visual suasana, hero, atau katalog contoh **diizinkan** sesuai `Gate W-10`, selama tidak pernah disamarkan sebagai testimoni pelanggan asli, foto tim nyata, atau logo klien fiktif.
 4. **Canonical Response Envelope & Sanitized Errors (`U-04`):**
    - Seluruh komunikasi server-ke-client wajib memakai `{ status: 'success' | 'error', data, message, code, meta }` dengan kode `OK`, `VALIDATION_ERROR`, `NOT_FOUND`, `FORBIDDEN`, `CONFLICT`, `LOCK_TIMEOUT`, `INTERNAL_ERROR`. Dilarang membocorkan `err.stack` atau `err.toString()` mentah ke client.
 5. **Kontras Warna WCAG AA (`U-05`):**
@@ -1038,7 +1175,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 7. **Pencegahan Formula Injection Khusus Teks Bebas (`G-07`):**
    - Terapkan `escapeFormula_()` (menambahkan apostrof `'` jika string diawali `=`, `+`, `-`, `@`) **hanya** pada kolom teks bebas menurut skema. Jangan terapkan pada kolom numerik agar angka negatif tetap tersimpan sebagai `Number`.
 8. **Akhiran Underscore (`_`) pada Fungsi Internal (`G-08`):**
-   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `initialSetupDatabase`, `setupAdminCredentials`, `runDiagnostics`) yang ditulis tanpa akhiran `_`.
+   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `setupAppEnvironment`, `initialSetupDatabase`, `setupAdminCredentials`, `setupAdminCredentialsFromUi`, `onOpen`, `runDiagnostics`) yang ditulis tanpa akhiran `_`, dan seluruh fungsi utilitas toolbar wajib memiliki guard `if (fromClient !== undefined)` bila tidak dipanggil oleh `doPost`/`doGet`.
 9. **Keamanan Unggahan Drive & Penulisan Sheet Atomik (`G-09`):**
    - Aksi `file.upload` wajib memvalidasi profil akses / tiket sekali pakai (`file.ticket`), membatasi ukuran byte hasil decode (default `<= 5 MB`), memeriksa daftar putih MIME (`image/jpeg`, `image/png`, `image/webp`) **sekaligus** *magic bytes* header biner, menyanitasi nama file, menyimpan ke `ROOT/<entity>/<yyyy-mm>`, mengatur izin berbagi sesuai klasifikasi (`private` sebagai default mutlak untuk data sensitif), dan menulis `file_id` serta `file_url` ke baris Sheet di dalam satu operasi ber-lock (serta menghapus file Drive bila update Sheet gagal).
 10. **Anti-Enumerasi Endpoint Pelacakan Publik (`G-10`):**
@@ -1074,6 +1211,15 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 9. **Verifikasi Hasil Upload & Isolasi Mode Demo Produksi (`W-09`):**
    - Pada alur unggah file (`file.ticket` -> `file.upload`), kode frontend wajib menyimpan respons `file.upload` ke variabel dan memastikan `uploadRes.status === 'success' && uploadRes.code === 'OK'` sebelum menampilkan banner sukses; jika gagal, tampilkan state `RECOVERY` untuk unggah ulang tanpa membuat duplikasi tiket.
    - Tombol pengisi kredensial demo (`Isi Demo`) dan bar pengubah URL `/exec` runtime hanya boleh dirender saat `isSimulationMode() === true` (ketika variabel environment produksi kosong), dan wajib disembunyikan/dinonaktifkan sepenuhnya pada konfigurasi produksi.
+10. **Media Placeholder Eksternal (Foto & Video Dummy) & Fallback Aman (`W-10`):**
+    - Aplikasi frontend (`gasly-ui`, `gasly-pro`, dan `gasly-prd-to-uiux`) **diizinkan** menggunakan foto dan video dummy sebagai placeholder visual dari sumber stock publik tepercaya:
+      - **Foto:** **Unsplash** (`images.unsplash.com`), **Pexels** (`images.pexels.com`), **Pixabay** (`cdn.pixabay.com`).
+      - **Video:** **Pexels Videos** (`videos.pexels.com`), **Pixabay Videos** (`cdn.pixabay.com`), **Coverr**, atau **Mixkit**.
+      - **Aset AI / Upscaler (seperti Magnific AI):** Dilarang melakukan *hotlink* ke URL unduhan sementara (*signed URL*) yang dapat kedaluwarsa; simpan aset hasil AI di folder statis proyek (`public/assets/`) atau unggah ke Google Drive berklasifikasi `PUBLIC`.
+    - **Larangan Endpoint Mati:** Dilarang keras memakai `https://source.unsplash.com/...` karena layanan tersebut sudah dihentikan. Gunakan URL aset langsung dengan parameter optimasi ukuran (mis. `?auto=format&fit=crop&w=1200&q=80`).
+    - **Sentralisasi & Label Placeholder:** Pisahkan seluruh URL media dummy ke satu registry terpusat (`MEDIA_PLACEHOLDERS`) dengan flag `isPlaceholder: true` dan komentar sumber agar pemilik proyek mudah menggantinya saat produksi.
+    - **Wajib Fallback & Aksesibilitas:** Setiap `<img>` placeholder wajib menyertakan `loading="lazy"`, `decoding="async"`, `alt` deskriptif, serta fallback `onerror` ke *inline SVG data URI* atau permukaan warna token preset (cegah ikon gambar pecah saat offline/terblokir). Setiap `<video>` dummy wajib menggunakan `muted loop playsinline preload="metadata"`, menyertakan atribut `poster`, dan menonaktifkan autoplay saat `prefers-reduced-motion: reduce` aktif.
+    - **Pengecualian Mutlak (`Gate I-01`):** Media placeholder eksternal **dilarang keras** dipakai pada file `install-guide.html` keluaran `gasly-deploy-guide` (wajib 100% offline/tanpa panggilan jaringan).
 
 ---
 
@@ -1113,7 +1259,7 @@ Gerbang berikut wajib dipatuhi oleh skill `gasly-deploy-guide` saat menghasilkan
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panduan Instalasi &amp; Deployment Gasly</title>
+  <title>Panduan Instalasi &amp; Deployment End-to-End — Gasly</title>
   <style>
     /* Gasly Design Tokens — Preset: dense-dashboard (KB v2.1.0) */
     :root,
@@ -1131,418 +1277,769 @@ Gerbang berikut wajib dipatuhi oleh skill `gasly-deploy-guide` saat menghasilkan
       --accent-text-on-solid: #FFFFFF;
       --success-solid: #047857;
       --success-text-on-solid: #FFFFFF;
-      --success-soft-bg: #DCFCE7;
-      --success-soft-text: #14532D;
       --warning-solid: #B45309;
       --warning-text-on-solid: #FFFFFF;
-      --warning-soft-bg: #FEF3C7;
-      --warning-soft-text: #78350F;
       --danger-solid: #B91C1C;
       --danger-text-on-solid: #FFFFFF;
-      --danger-soft-bg: #FFE4E6;
-      --danger-soft-text: #881337;
-      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
       --radius-sm: 4px;
       --radius-md: 6px;
       --radius-lg: 10px;
-    }
-
-    [data-theme="dark"] {
-      --bg-base: #0B0F19;
-      --bg-surface: #111827;
-      --bg-interactive: #1E293B;
-      --text-primary: #F8FAFC;
-      --text-secondary: #CBD5E1;
-      --text-helper: #94A3B8;
-      --text-disabled: #64748B;
-      --border-subtle: #1E293B;
-      --border-focus: #3B82F6;
-      --accent-solid: #2563EB;
-      --accent-text-on-solid: #FFFFFF;
-      --success-solid: #047857;
-      --success-text-on-solid: #FFFFFF;
-      --success-soft-bg: #052E16;
-      --success-soft-text: #86EFAC;
-      --warning-solid: #F59E0B;
-      --warning-text-on-solid: #0B0F19;
-      --warning-soft-bg: #451A03;
-      --warning-soft-text: #FCD34D;
-      --danger-solid: #DC2626;
-      --danger-text-on-solid: #FFFFFF;
-      --danger-soft-bg: #4C0519;
-      --danger-soft-text: #FDA4AF;
-      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.03);
     }
 
     @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
+      :root {
         --bg-base: #0B0F19;
         --bg-surface: #111827;
         --bg-interactive: #1E293B;
         --text-primary: #F8FAFC;
         --text-secondary: #CBD5E1;
         --text-helper: #94A3B8;
+        --text-disabled: #64748B;
         --border-subtle: #1E293B;
         --border-focus: #3B82F6;
         --accent-solid: #2563EB;
-        --success-soft-bg: #052E16;
-        --success-soft-text: #86EFAC;
-        --warning-soft-bg: #451A03;
-        --warning-soft-text: #FCD34D;
-        --danger-soft-bg: #4C0519;
-        --danger-soft-text: #FDA4AF;
+        --accent-text-on-solid: #FFFFFF;
+        --success-solid: #047857;
+        --success-text-on-solid: #FFFFFF;
+        --warning-solid: #F59E0B;
+        --warning-text-on-solid: #0B0F19;
+        --danger-solid: #DC2626;
+        --danger-text-on-solid: #FFFFFF;
+        --shadow-card: none;
       }
     }
 
     * { box-sizing: border-box; }
-    body { margin: 0; background-color: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; line-height: 1.6; }
-    .sticky-top {
-      position: sticky; top: 0; z-index: 20;
-      background-color: var(--bg-surface);
-      border-bottom: 1px solid var(--border-subtle);
-      box-shadow: var(--shadow-sm);
+    body {
+      margin: 0;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.6;
     }
-    .sticky-inner { max-width: 960px; margin: 0 auto; padding: 12px 16px; }
-    .container { max-width: 960px; margin: 0 auto; padding: 20px 16px 64px; }
+    a { color: var(--border-focus); font-weight: 600; }
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 16px 64px;
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+    .sidebar {
+      position: sticky;
+      top: 16px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+    }
     .card {
       background-color: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
       padding: 20px;
       margin-bottom: 16px;
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--shadow-card);
     }
-    .header-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
-    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    h1, h2, h3 { margin: 0 0 6px 0; font-family: var(--font-display); color: var(--text-primary); }
-    h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-    h2 { font-size: 17px; font-weight: 600; }
+    .header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    h1, h2, h3 {
+      margin: 0 0 6px 0;
+      font-family: var(--font-display);
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+    h1 { font-size: 22px; font-weight: 700; }
+    h2 { font-size: 17px; font-weight: 700; }
     h3 { font-size: 15px; font-weight: 600; }
     p { margin: 0 0 8px 0; color: var(--text-secondary); }
     .helper { font-size: 12px; color: var(--text-helper); }
-    .field-msg { font-size: 11px; min-height: 16px; margin-top: 4px; color: var(--text-helper); }
-    .field-msg.err { color: var(--danger-soft-text); font-weight: 600; }
-    .field-msg.ok { color: var(--success-soft-text); font-weight: 600; }
     .tabular-nums { font-variant-numeric: tabular-nums; }
-    .badge { display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: var(--radius-sm); background-color: var(--bg-interactive); color: var(--text-primary); }
-    .badge-warn { background-color: var(--warning-soft-bg); color: var(--warning-soft-text); }
-    .badge-ok { background-color: var(--success-soft-bg); color: var(--success-soft-text); }
-    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 999px;
+      background-color: var(--bg-interactive);
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .badge-ok { background-color: var(--success-solid); color: var(--success-text-on-solid); }
+    .badge-warn { background-color: var(--warning-solid); color: var(--warning-text-on-solid); }
+    .badge-accent { background-color: var(--accent-solid); color: var(--accent-text-on-solid); }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background-color: var(--bg-interactive);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 10px 0 12px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background-color: var(--success-solid);
+      transition: width 180ms ease;
+    }
+
+    .nav-list {
+      list-style: none;
+      margin: 12px 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      min-height: 40px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      background-color: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .nav-btn:hover { background-color: var(--bg-interactive); color: var(--text-primary); }
+    .nav-btn[aria-current="step"] {
+      background-color: var(--bg-interactive);
+      border-color: var(--border-focus);
+      color: var(--text-primary);
+    }
+    .nav-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background-color: var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .nav-btn[data-done="true"] .nav-status-dot { background-color: var(--success-solid); }
+
+    .sidebar-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .grid-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
     input[type="text"], input[type="url"] {
-      width: 100%; min-height: 40px; padding: 8px 10px;
-      border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
-      background-color: var(--bg-base); color: var(--text-primary);
-      font-family: var(--font-mono); font-size: 12px;
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 10px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 12px;
     }
     button {
-      min-height: 40px; min-width: 40px; padding: 8px 14px;
-      border-radius: var(--radius-md); border: 1px solid var(--border-subtle);
-      background-color: var(--bg-interactive); color: var(--text-primary);
-      font-weight: 600; font-size: 12px; cursor: pointer;
+      min-height: 40px;
+      min-width: 40px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background-color: var(--bg-interactive);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
-    button.btn-primary { background-color: var(--accent-solid); color: var(--accent-text-on-solid); border-color: var(--accent-solid); }
-    .os-tabs { display: inline-flex; gap: 6px; margin-bottom: 8px; }
-    .os-tabs button[aria-selected="true"] { background-color: var(--accent-solid); color: var(--accent-text-on-solid); border-color: var(--accent-solid); }
-    .progress-track { width: 100%; height: 8px; background-color: var(--bg-interactive); border-radius: 999px; overflow: hidden; margin-top: 8px; }
-    .progress-fill { height: 100%; width: 0%; background-color: var(--success-solid); transition: width 160ms ease; }
-    .code-wrap { margin-top: 8px; }
-    .code-head { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+    button.btn-primary {
+      background-color: var(--accent-solid);
+      color: var(--accent-text-on-solid);
+      border-color: var(--accent-solid);
+    }
+    button.tab-btn {
+      background-color: var(--bg-base);
+      color: var(--text-secondary);
+    }
+    button.tab-btn[aria-selected="true"] {
+      background-color: var(--accent-solid);
+      color: var(--accent-text-on-solid);
+      border-color: var(--accent-solid);
+    }
+    .tabs-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0 12px;
+    }
+
+    .code-wrap { margin-top: 10px; }
+    .code-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
     pre {
-      margin: 0; padding: 12px; border-radius: var(--radius-md);
-      background-color: var(--bg-base); border: 1px solid var(--border-subtle);
-      color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;
-      overflow-x: auto; white-space: pre-wrap; word-break: break-all;
+      margin: 0;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
-    .step-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-    .step-check-label { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-primary); }
-    .step-check-label input[type="checkbox"] { width: 20px; height: 20px; }
-    .meta-grid { display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12px; padding: 10px 12px; border-radius: var(--radius-md); background-color: var(--bg-base); margin-bottom: 8px; }
-    .hidden { display: none; }
-    details { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 8px; background-color: var(--bg-base); }
-    summary { cursor: pointer; font-weight: 600; min-height: 40px; display: flex; align-items: center; }
-    *:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+    .step-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .step-check-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .step-check-label input[type="checkbox"] { width: 18px; height: 18px; }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      font-size: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 10px;
+    }
+    .prop-table-wrap { overflow-x: auto; margin-top: 10px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+    th { color: var(--text-helper); font-weight: 600; text-transform: uppercase; font-size: 11px; }
+
+    .callout {
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--border-focus);
+      background-color: var(--bg-base);
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 10px 0;
+    }
+    details {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      background-color: var(--bg-base);
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+    }
+    .hidden { display: none !important; }
+
+    *:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-    }
-    @media print {
-      .sticky-top .toolbar, button { display: none !important; }
-      body { background: #FFFFFF; color: #000000; }
-      .card { box-shadow: none; break-inside: avoid; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="sticky-top">
-    <div class="sticky-inner">
-      <div class="header-bar">
-        <div>
-          <h1>Panduan Instalasi &amp; Deployment Gasly</h1>
-          <p class="helper" style="margin:0;">Mandiri 100% (Offline) • Tanpa Panggilan Jaringan • KB v2.1.0</p>
-        </div>
-        <div class="toolbar tabular-nums">
-          <span class="badge" id="progress-badge">0 / 7 Langkah Selesai (0%)</span>
-          <button type="button" id="btn-theme-toggle" aria-label="Ganti mode warna">Mode Gelap</button>
-          <button type="button" id="btn-reset-progress">Reset Progres</button>
-          <button type="button" id="btn-print-guide">Cetak / PDF</button>
-        </div>
+  <div class="shell">
+    <!-- Sidebar Stepper & Progres -->
+    <aside class="sidebar" aria-label="Navigasi Langkah Instalasi">
+      <div>
+        <span class="badge badge-accent">GASLY DEPLOY COMPANION</span>
+        <h2 style="margin-top:8px;">Progres Deployment</h2>
+        <p class="helper tabular-nums" id="progress-badge">0 / 7 Langkah Selesai (0%)</p>
       </div>
-      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-Wrap">
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-wrap">
         <div class="progress-fill" id="progress-bar-fill"></div>
       </div>
-    </div>
-  </header>
 
-  <main class="container">
-    <!-- Panel Konfigurasi Live Placeholder Replacement -->
-    <section class="card" aria-labelledby="cfg-heading">
-      <h2 id="cfg-heading">1. Parameter Konfigurasi Proyek (Live Snippet Filler)</h2>
-      <p class="helper">Nilai di bawah ini hanya mengganti placeholder di halaman secara langsung melalui <code>textContent</code> dan TIDAK PERNAH disimpan ke <code>localStorage</code> atau dikirim ke jaringan.</p>
-      <div class="grid-form">
-        <div>
-          <label for="cfg-spreadsheet-id">Spreadsheet ID (<code>{{SPREADSHEET_ID}}</code>)</label>
-          <input id="cfg-spreadsheet-id" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
-          <div id="msg-spreadsheet-id" class="field-msg" aria-live="polite"></div>
-        </div>
-        <div>
-          <label for="cfg-gas-url">URL Web App /exec (<code>{{GAS_EXEC_URL}}</code>)</label>
-          <input id="cfg-gas-url" type="url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
-          <div id="msg-gas-url" class="field-msg" aria-live="polite"></div>
-        </div>
-        <div>
-          <label for="cfg-google-client-id">Google Client ID (<code>{{GOOGLE_CLIENT_ID}}</code>)</label>
-          <input id="cfg-google-client-id" type="text" placeholder="1234567890-abc.apps.googleusercontent.com">
-          <div id="msg-google-client-id" class="field-msg" aria-live="polite"></div>
-        </div>
-        <div>
-          <label for="cfg-pages-domain">Domain Frontend (<code>{{PAGES_DOMAIN}}</code>)</label>
-          <input id="cfg-pages-domain" type="text" placeholder="https://app.contoh.id">
-          <div id="msg-pages-domain" class="field-msg" aria-live="polite"></div>
-        </div>
+      <ul class="nav-list" id="step-nav-list">
+        <li><button type="button" class="nav-btn" data-jump-step="step-1"><span>1. Spreadsheet &amp; Kode .gs</span><span class="nav-status-dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-2"><span>2. Setup 1-Klik Environment</span><span class="nav-status-dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-3"><span>3. ScriptProperties &amp; Secret</span><span class="nav-status-dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-4"><span>4. Deploy Web App /exec</span><span class="nav-status-dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-5"><span>5. Google OAuth &amp; /privacy</span><span class="nav-status-dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-6"><span>6. Build &amp; Deploy Frontend</span><span class="nav-status-dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-7"><span>7. Uji Koneksi &amp; Go-Live</span><span class="nav-status-dot"></span></button></li>
+      </ul>
+
+      <div class="sidebar-actions">
+        <button type="button" id="btn-toggle-pending">Filter: Hanya Belum Selesai</button>
+        <button type="button" id="btn-reset-progress">Reset Progres Checklist</button>
       </div>
-      <p id="cfg-validation-msg" class="helper" role="status" aria-live="polite" style="margin-top:8px;">Masukkan nilai konfigurasi untuk memperbarui seluruh snippet di bawah secara otomatis.</p>
-    </section>
+    </aside>
 
-    <!-- Panel Generator Secret Lokal -->
-    <section class="card" aria-labelledby="sec-heading">
-      <h2 id="sec-heading">2. Pembuat Secret Acak Lokal (Khusus Properti Manual)</h2>
-      <p class="helper">Catatan: <code>AUTH_HMAC_SECRET</code> dan <code>AUTH_PEPPER</code> dibuat otomatis oleh <code>initialSetupDatabase()</code>. Gunakan generator CSPRNG (<code>crypto.getRandomValues</code>) ini HANYA untuk properti manual seperti <code>WEBHOOK_SHARED_SECRET</code> atau nilai awal <code>ADMIN_PASSPHRASE_INIT</code>.</p>
-      <div class="header-bar" style="margin-top:8px;">
-        <div class="toolbar">
-          <button type="button" class="btn-primary" id="btn-gen-secret">Buat Secret Acak 32-Karakter</button>
-          <button type="button" id="btn-copy-secret" data-copy-target="generated-secret-output">Salin Secret</button>
+    <!-- Konten Utama -->
+    <main>
+      <header class="card">
+        <div class="header-bar">
+          <div>
+            <h1>Panduan Instalasi &amp; Deployment End-to-End</h1>
+            <p class="helper">Mandiri 100% (Offline-Capable) • Nol Panggilan Jaringan • Kontrak KB v2.1.0</p>
+          </div>
+          <span class="badge badge-ok">OFFLINE SAFE</span>
         </div>
-      </div>
-      <pre id="generated-secret-output" style="margin-top:8px;">[Klik "Buat Secret Acak 32-Karakter" — nilai hanya tampil di memori halaman]</pre>
-      <p class="helper" style="margin-top:6px;"><span class="badge badge-warn">PERINGATAN</span> Salin sekarang ke Script Properties — nilai ini tidak disimpan dan akan hilang saat halaman dimuat ulang.</p>
-    </section>
 
-    <!-- Daftar Langkah Instalasi -->
-    <section id="steps-container">
-      <section class="card install-step" data-install-step="step-1"
-        data-step-purpose="Membuat Google Spreadsheet database dan menyalin file backend .gs ke editor Apps Script."
-        data-step-action="Buat Spreadsheet baru, catat SPREADSHEET_ID, buka Extensions > Apps Script, lalu tempel setup.gs dan code.gs."
-        data-step-expected="Kedua file setup.gs dan code.gs tersimpan di proyek Apps Script tanpa syntax error."
+        <!-- Panel Konfigurasi Live Placeholder Replacement -->
+        <h2 style="margin-top:8px;">Parameter Konfigurasi Proyek (Live Snippet Filler)</h2>
+        <p class="helper">Isi parameter di bawah untuk memperbarui seluruh blok perintah dan file konfigurasi secara instan via <code>textContent</code>. Nilai ini <strong>tidak pernah</strong> disimpan ke <code>localStorage</code> atau dikirim ke jaringan.</p>
+        <div class="grid-form">
+          <div>
+            <label for="cfg-spreadsheet-id">Spreadsheet ID (<code>{{SPREADSHEET_ID}}</code>)</label>
+            <input id="cfg-spreadsheet-id" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+          </div>
+          <div>
+            <label for="cfg-gas-url">URL Web App /exec (<code>{{GAS_EXEC_URL}}</code>)</label>
+            <input id="cfg-gas-url" type="url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+          </div>
+          <div>
+            <label for="cfg-google-client-id">Google Client ID (<code>{{GOOGLE_CLIENT_ID}}</code>)</label>
+            <input id="cfg-google-client-id" type="text" placeholder="1234567890-abc.apps.googleusercontent.com">
+          </div>
+          <div>
+            <label for="cfg-pages-domain">Domain Frontend (<code>{{PAGES_DOMAIN}}</code>)</label>
+            <input id="cfg-pages-domain" type="text" placeholder="https://app.contoh.id">
+          </div>
+        </div>
+        <p id="cfg-validation-msg" class="helper" role="status" aria-live="polite" style="margin-top:8px;">Masukkan parameter proyek untuk mengisi otomatis seluruh snippet di bawah.</p>
+      </header>
+
+      <!-- Langkah 1 -->
+      <section class="card install-step" id="step-1" data-install-step="step-1"
+        data-step-purpose="Membuat Google Spreadsheet database dan menyalin seluruh file backend .gs ke proyek Apps Script."
+        data-step-action="Buat Google Spreadsheet baru, catat SPREADSHEET_ID, buka Extensions > Apps Script, lalu tempel setup.gs dan code.gs."
+        data-step-expected="Seluruh file .gs tersimpan di proyek Apps Script tanpa syntax error."
         data-step-source="src/core/facts.md &amp; https://developers.google.com/apps-script/guides/bound"
         data-step-verified="UNVERIFIED">
         <div class="step-header">
-          <h3>Langkah 1 — Persiapan Spreadsheet &amp; Kode Backend (.gs)</h3>
-          <label class="step-check-label">
-            <input type="checkbox" data-step-checkbox="step-1"> Tandai Selesai
-          </label>
+          <h3>Langkah 1 — Persiapan Google Spreadsheet &amp; Kode Backend (.gs)</h3>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-1"> Selesai</label>
         </div>
         <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Membuat Google Spreadsheet database dan menyalin file backend <code>setup.gs</code> &amp; <code>code.gs</code>.</div>
-          <div><strong>Aksi:</strong> Buka <code>https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit</code>, pilih menu <strong>Extensions &gt; Apps Script</strong>, lalu salin kode backend proyek.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Proyek Apps Script tersimpan dan terikat ke Spreadsheet <code>{{SPREADSHEET_ID}}</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/bound" target="_blank" rel="noopener noreferrer">Google Apps Script Bound Scripts</a> (<span class="badge badge-warn">UNVERIFIED</span> — dicatat di <code>VERIFY.md</code> A-12)</div>
+          <div><strong>Tujuan:</strong> Menyiapkan Google Spreadsheet sebagai database dan menanam kode backend V8.</div>
+          <div><strong>Aksi:</strong> Buat Spreadsheet baru, salin ID dari URL ke kolom <code>{{SPREADSHEET_ID}}</code> di atas, buka <strong>Extensions &gt; Apps Script</strong>, buat file <code>setup.gs</code> &amp; <code>code.gs</code>, lalu simpan (<code>Ctrl+S</code> / <code>Cmd+S</code>).</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Proyek Apps Script terikat pada Spreadsheet <code>{{SPREADSHEET_ID}}</code> dan siap diinisialisasi.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/bound" target="_blank" rel="noopener noreferrer">Apps Script Bound Scripts</a> <span class="badge badge-warn">UNVERIFIED</span></div>
         </div>
         <div class="code-wrap">
-          <div class="code-head"><button type="button" data-copy-target="snippet-step-1">Salin URL</button></div>
+          <div class="code-toolbar">
+            <span class="helper">Tautan Spreadsheet Proyek Anda</span>
+            <button type="button" data-copy-target="snippet-step-1">Salin URL</button>
+          </div>
           <pre id="snippet-step-1" data-template="https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit">https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit</pre>
         </div>
       </section>
 
-      <section class="card install-step" data-install-step="step-2"
-        data-step-purpose="Menginisialisasi skema sheet, 16 baris seed objek, zona waktu, AUTH_HMAC_SECRET, AUTH_PEPPER, dan folder Drive."
-        data-step-action="Pilih fungsi initialSetupDatabase pada dropdown toolbar editor Apps Script lalu klik Run."
-        data-step-expected="Log eksekusi menampilkan status success pada SCHEMA_VERSION 1.1.0 dan seluruh sheet terbentuk."
-        data-step-source="src/gas/config.md (Seksi 1 &amp; 2)"
+      <!-- Langkah 2 -->
+      <section class="card install-step" id="step-2" data-install-step="step-2"
+        data-step-purpose="Menjalankan setupAppEnvironment() 1-klik untuk membuat skema sheet, seed objek, folder Drive, AUTH_HMAC_SECRET, dan AUTH_PEPPER."
+        data-step-action="Pilih setupAppEnvironment pada dropdown tombol Run di toolbar Apps Script Editor (atau menu Gasly Setup di Spreadsheet) lalu jalankan."
+        data-step-expected="Seluruh tab sheet, 16 baris SEED, folder Drive, dan secret internal terbentuk otomatis dengan laporan status di Execution Log."
+        data-step-source="src/gas/config.md (Seksi 2 &amp; 3)"
         data-step-verified="UNVERIFIED">
         <div class="step-header">
-          <h3>Langkah 2 — Jalankan <code>initialSetupDatabase()</code></h3>
-          <label class="step-check-label">
-            <input type="checkbox" data-step-checkbox="step-2"> Tandai Selesai
-          </label>
+          <h3>Langkah 2 — Jalankan Aksi 1-Klik <code>setupAppEnvironment()</code></h3>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-2"> Selesai</label>
         </div>
         <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Menginisialisasi tabel sheet, 16 baris seed objek, serta membuat <code>AUTH_HMAC_SECRET</code> dan <code>AUTH_PEPPER</code> secara otomatis.</div>
-          <div><strong>Aksi:</strong> Di toolbar editor Apps Script, pilih <code>initialSetupDatabase</code> lalu klik <strong>Run</strong>. Setujui dialog izin akses Google.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Log menampilkan <code>{ status: 'success', schemaVersion: '1.1.0' }</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/gas/config.md</code> (<span class="badge badge-warn">UNVERIFIED</span> — UI toolbar dicatat di <code>VERIFY.md</code>)</div>
+          <div><strong>Tujuan:</strong> Menginisialisasi seluruh database, zona waktu, folder Drive, serta membuat <code>AUTH_HMAC_SECRET</code> &amp; <code>AUTH_PEPPER</code> secara otomatis.</div>
+          <div><strong>Aksi:</strong> Di toolbar Editor Apps Script, pilih fungsi <strong><code>setupAppEnvironment</code></strong> pada dropdown lalu klik <strong>Run</strong> (setujui dialog izin Google). Alternatif: muat ulang Google Sheets dan klik menu <strong>Gasly Setup &gt; 1. Setup App Environment</strong>.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Execution Log mencetak <code>GASLY SETUP APP ENVIRONMENT REPORT</code> dengan <code>sheetsHealthy: true</code> dan <code>hmacSecretReady: true</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/gas/config.md</code> <span class="badge badge-warn">UNVERIFIED</span></div>
+        </div>
+        <div class="callout">
+          <strong>Jangan buat manual:</strong> <code>AUTH_HMAC_SECRET</code>, <code>AUTH_PEPPER</code>, dan <code>DRIVE_ROOT_FOLDER_ID</code> sudah dibuat otomatis oleh <code>setupAppEnvironment()</code>.
         </div>
       </section>
 
-      <section class="card install-step" data-install-step="step-3"
-        data-step-purpose="Mengatur hash passphrase dan PIN step-up admin di ScriptProperties tanpa menulis plaintext di kode."
-        data-step-action="Isi ADMIN_PASSPHRASE_INIT (>=12 karakter) dan ADMIN_PIN_INIT (6 digit) di Project Settings > Script Properties, lalu jalankan setupAdminCredentials()."
-        data-step-expected="ADMIN_PASSPHRASE_HASH dan ADMIN_PIN_HASH tersimpan, sedangkan ADMIN_PASSPHRASE_INIT dan ADMIN_PIN_INIT otomatis terhapus."
+      <!-- Langkah 3 -->
+      <section class="card install-step" id="step-3" data-install-step="step-3"
+        data-step-purpose="Mengatur hash passphrase admin, PIN 6 digit step-up, dan properti opsional di ScriptProperties tanpa plaintext di kode."
+        data-step-action="Gunakan menu Gasly Setup > 2. Atur Passphrase & PIN Admin di Spreadsheet, atau isi ADMIN_PASSPHRASE_INIT & ADMIN_PIN_INIT di Script Properties lalu jalankan setupAppEnvironment()."
+        data-step-expected="ADMIN_PASSPHRASE_HASH & ADMIN_PIN_HASH tersimpan, properti sementara terhapus otomatis, dan laporan menampilkan READY_TO_DEPLOY."
         data-step-source="src/gas/config.md &amp; https://developers.google.com/apps-script/guides/properties"
         data-step-verified="UNVERIFIED">
         <div class="step-header">
-          <h3>Langkah 3 — Konfigurasi <code>ScriptProperties</code> &amp; <code>setupAdminCredentials()</code></h3>
-          <label class="step-check-label">
-            <input type="checkbox" data-step-checkbox="step-3"> Tandai Selesai
-          </label>
+          <h3>Langkah 3 — Kredensial Admin, <code>ScriptProperties</code> Matrix &amp; Generator Secret</h3>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-3"> Selesai</label>
         </div>
         <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Menyimpan hash kredensial admin di <code>ScriptProperties</code> tanpa pernah menulis plaintext di file <code>.gs</code>.</div>
-          <div><strong>Aksi:</strong> Buka <strong>Project Settings &gt; Script Properties</strong>, tambahkan properti di bawah ini, simpan, lalu jalankan fungsi publik <code>setupAdminCredentials</code> dari toolbar editor.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Properti sementara <code>ADMIN_PASSPHRASE_INIT</code> dan <code>ADMIN_PIN_INIT</code> terhapus otomatis setelah hash tersimpan.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/properties" target="_blank" rel="noopener noreferrer">Apps Script Properties Service</a> (<span class="badge badge-warn">UNVERIFIED</span>)</div>
+          <div><strong>Tujuan:</strong> Menyimpan kredensial admin sebagai hash kriptografis di <code>ScriptProperties</code> tanpa pernah menulis plaintext di file <code>.gs</code>.</div>
+          <div><strong>Aksi (Cara Termudah):</strong> Di Google Sheets, klik <strong>Gasly Setup &gt; 2. Atur Passphrase &amp; PIN Admin</strong>. <strong>Alternatif (Headless):</strong> Buka <strong>Project Settings &gt; Script Properties</strong>, tambahkan <code>ADMIN_PASSPHRASE_INIT</code> (&ge;12 karakter) &amp; <code>ADMIN_PIN_INIT</code> (6 digit), lalu klik Run <code>setupAppEnvironment</code> lagi.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Execution Log menampilkan <code>status: "READY_TO_DEPLOY"</code> dan properti sementara <code>*_INIT</code> otomatis terhapus.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/properties" target="_blank" rel="noopener noreferrer">Apps Script Properties Service</a> <span class="badge badge-warn">UNVERIFIED</span></div>
         </div>
+
+        <div class="prop-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kunci ScriptProperties</th>
+                <th>Tipe</th>
+                <th>Cara Pengisian</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>AUTH_HMAC_SECRET</code>, <code>AUTH_PEPPER</code>, <code>DRIVE_ROOT_FOLDER_ID</code></td>
+                <td><span class="badge badge-ok">OTOMATIS</span></td>
+                <td>Dibuat otomatis oleh <code>setupAppEnvironment()</code>. Jangan ditimpa manual.</td>
+              </tr>
+              <tr>
+                <td><code>ADMIN_PASSPHRASE_INIT</code>, <code>ADMIN_PIN_INIT</code></td>
+                <td><span class="badge badge-warn">SEMENTARA</span></td>
+                <td>Isi sementara lalu jalankan <code>setupAppEnvironment()</code> (otomatis di-hash &amp; dihapus).</td>
+              </tr>
+              <tr>
+                <td><code>ACCESS_PROFILE</code>, <code>GOOGLE_CLIENT_ID</code>, <code>WEBHOOK_SHARED_SECRET</code></td>
+                <td><span class="badge">MANUAL</span></td>
+                <td>Setel di <strong>Project Settings &gt; Script Properties</strong> sesuai kontrak proyek.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <div class="code-wrap">
-          <div class="code-head"><button type="button" data-copy-target="snippet-step-3">Salin Daftar Kunci</button></div>
-          <pre id="snippet-step-3" data-template="ACCESS_PROFILE=P4&#10;GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}&#10;ADMIN_PASSPHRASE_INIT=&lt;isi_passphrase_minimal_12_karakter_lalu_jalankan_setupAdminCredentials&gt;&#10;ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;">ACCESS_PROFILE=P4
+          <div class="code-toolbar">
+            <span class="helper">Pembuat Secret Acak Lokal CSPRNG (<code>crypto.getRandomValues</code> — khusus properti manual)</span>
+            <div>
+              <button type="button" class="btn-primary" id="btn-gen-secret">Buat Secret 32-Kar</button>
+              <button type="button" data-copy-target="generated-secret-output">Salin</button>
+            </div>
+          </div>
+          <pre id="generated-secret-output">[Klik "Buat Secret 32-Kar" — hanya tampil di memori, hilang saat reload]</pre>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-toolbar">
+            <span class="helper">Ringkasan Kunci Script Properties Manual</span>
+            <button type="button" data-copy-target="snippet-step-3">Salin Daftar</button>
+          </div>
+          <pre id="snippet-step-3" data-template="ACCESS_PROFILE=P3&#10;GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}&#10;ADMIN_PASSPHRASE_INIT=&lt;minimal_12_karakter_lalu_run_setupAppEnvironment&gt;&#10;ADMIN_PIN_INIT=&lt;6_digit_angka_lalu_run_setupAppEnvironment&gt;">ACCESS_PROFILE=P3
 GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}
-ADMIN_PASSPHRASE_INIT=&lt;isi_passphrase_minimal_12_karakter_lalu_jalankan_setupAdminCredentials&gt;
-ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pre>
+ADMIN_PASSPHRASE_INIT=&lt;minimal_12_karakter_lalu_run_setupAppEnvironment&gt;
+ADMIN_PIN_INIT=&lt;6_digit_angka_lalu_run_setupAppEnvironment&gt;</pre>
         </div>
       </section>
 
-      <section class="card install-step" data-install-step="step-4"
-        data-step-purpose="Menerbitkan endpoint Web App .../exec tunggal dengan akses lintas domain."
-        data-step-action="Klik Deploy > New deployment, pilih Web app, Execute as: Me, Who has access: Anyone, lalu salin URL /exec ke form konfigurasi."
-        data-step-expected="Diperoleh URL https://script.google.com/macros/.../exec yang aktif."
+      <!-- Langkah 4 -->
+      <section class="card install-step" id="step-4" data-install-step="step-4"
+        data-step-purpose="Menerbitkan satu URL Web App .../exec dan memahami cara update rilis tanpa mengubah URL."
+        data-step-action="Klik Deploy > New deployment > Web app (Execute as: Me, Who has access: Anyone), lalu tempel URL /exec ke form parameter di atas."
+        data-step-expected="URL https://script.google.com/macros/.../exec aktif dan merespons JSON."
         data-step-source="src/core/contract.md (Seksi 7) &amp; https://developers.google.com/apps-script/guides/web"
         data-step-verified="UNVERIFIED">
         <div class="step-header">
-          <h3>Langkah 4 — Deploy Web App (<code>.../exec</code>)</h3>
-          <label class="step-check-label">
-            <input type="checkbox" data-step-checkbox="step-4"> Tandai Selesai
-          </label>
+          <h3>Langkah 4 — Deploy Web App (<code>.../exec</code>) &amp; Aturan Zero-Downtime Update</h3>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-4"> Selesai</label>
         </div>
         <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Menerbitkan endpoint HTTP <code>/exec</code> tunggal.</div>
-          <div><strong>Aksi:</strong> Klik <strong>Deploy &gt; New deployment</strong> (jenis: <strong>Web app</strong>, <strong>Execute as: Me</strong>, <strong>Who has access: Anyone</strong>). Tempel URL yang didapat pada input <code>{{GAS_EXEC_URL}}</code> di bagian atas halaman ini.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Endpoint <code>{{GAS_EXEC_URL}}</code> siap menerima request <code>POST text/plain;charset=utf-8</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/web" target="_blank" rel="noopener noreferrer">Apps Script Web Apps Guide</a> (<span class="badge badge-warn">UNVERIFIED</span>)</div>
+          <div><strong>Tujuan:</strong> Membuka endpoint headless API tunggal untuk diakses frontend lintas domain.</div>
+          <div><strong>Aksi:</strong> Klik <strong>Deploy &gt; New deployment</strong> &rarr; jenis <strong>Web app</strong> &rarr; <strong>Execute as: Me</strong> &rarr; <strong>Who has access: Anyone</strong> &rarr; <strong>Deploy</strong>. Salin URL ke input <code>{{GAS_EXEC_URL}}</code> di atas.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Endpoint <code>{{GAS_EXEC_URL}}</code> siap melayani request <code>POST text/plain;charset=utf-8</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/web" target="_blank" rel="noopener noreferrer">Apps Script Web Apps</a> <span class="badge badge-warn">UNVERIFIED</span></div>
+        </div>
+        <div class="callout">
+          <strong>Aturan Update Kode di Masa Depan (URL Tetap):</strong> Jangan klik <em>New deployment</em> saat revisi kode. Selalu buka <strong>Deploy &gt; Manage deployments &gt; Edit (ikon pensil) &gt; Version: New version &gt; Deploy</strong> agar URL <code>{{GAS_EXEC_URL}}</code> tidak berubah.
         </div>
       </section>
 
-      <section class="card install-step" data-install-step="step-5"
-        data-step-purpose="Mengonfigurasi Google OAuth 2.0 Web Client ID untuk fitur login auth.google."
-        data-step-action="Buat OAuth Web Client ID di Google Cloud Console dengan Authorized JavaScript origins berisi {{PAGES_DOMAIN}}."
-        data-step-expected="Nilai GOOGLE_CLIENT_ID cocok antara frontend dan ScriptProperties."
-        data-step-source="src/core/access-profiles.md (Seksi 3) &amp; https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid"
+      <!-- Langkah 5 -->
+      <section class="card install-step" id="step-5" data-install-step="step-5"
+        data-step-purpose="Mengonfigurasi Google OAuth 2.0 Web Client ID (bila auth.google aktif) dan memastikan rute publik /privacy tersedia."
+        data-step-action="Tambahkan {{PAGES_DOMAIN}} pada Authorized JavaScript origins di Google Cloud Console dan publikasikan {{PAGES_DOMAIN}}/privacy."
+        data-step-expected="Login Google ID Token diverifikasi dengan aud === GOOGLE_CLIENT_ID tanpa memakai kuota MailApp."
+        data-step-source="src/core/access-profiles.md &amp; https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid"
         data-step-verified="UNVERIFIED">
         <div class="step-header">
-          <h3>Langkah 5 — Konfigurasi Google Sign-In (<code>auth.google</code>) &amp; Halaman <code>/privacy</code></h3>
-          <label class="step-check-label">
-            <input type="checkbox" data-step-checkbox="step-5"> Tandai Selesai
-          </label>
+          <h3>Langkah 5 — Google Sign-In OAuth (<code>auth.google</code>) &amp; Halaman <code>/privacy</code></h3>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-5"> Selesai</label>
         </div>
         <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Mengaktifkan login Google ID Token (0 kuota email <code>MailApp</code>) dan memenuhi syarat publikasi OAuth Consent Screen.</div>
-          <div><strong>Aksi:</strong> Pastikan <code>{{PAGES_DOMAIN}}/privacy</code> tersedia publik, tambahkan <code>{{PAGES_DOMAIN}}</code> sebagai <em>Authorized JavaScript origins</em> pada Google Cloud Console, dan pasang <code>{{GOOGLE_CLIENT_ID}}</code>.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Action <code>auth.google</code> memverifikasi token dengan klaim <code>aud === GOOGLE_CLIENT_ID</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid" target="_blank" rel="noopener noreferrer">Google Identity Services Setup</a> (<span class="badge badge-warn">UNVERIFIED</span>)</div>
+          <div><strong>Tujuan:</strong> Mengaktifkan login akun Google (0 kuota email) dan memenuhi syarat OAuth Consent Screen Google. *(Lewati langkah ini jika <code>auth_google_enabled: false</code>).*</div>
+          <div><strong>Aksi:</strong> Di Google Cloud Console, buat <strong>OAuth 2.0 Web Client ID</strong>, masukkan <code>{{PAGES_DOMAIN}}</code> ke <em>Authorized JavaScript origins</em>, pastikan halaman <code>{{PAGES_DOMAIN}}/privacy</code> publik, lalu tempel Client ID ke <code>{{GOOGLE_CLIENT_ID}}</code>.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Action <code>auth.google</code> menerima payload <code>{ idToken }</code> dan menerbitkan token sesi HMAC.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid" target="_blank" rel="noopener noreferrer">Google Identity Services Setup</a> <span class="badge badge-warn">UNVERIFIED</span></div>
         </div>
       </section>
 
-      <section class="card install-step" data-install-step="step-6"
-        data-step-purpose="Menghubungkan frontend ke URL /exec dan men-deploy ke Cloudflare Pages."
-        data-step-action="Salin konfigurasi environment di bawah ini ke proyek frontend, kompilasi CSS produksi, lalu deploy ke Cloudflare Pages."
-        data-step-expected="Aplikasi frontend aktif di {{PAGES_DOMAIN}} dan terhubung ke {{GAS_EXEC_URL}}."
-        data-step-source="src/core/facts.md (Seksi 2) &amp; src/stacks/html-tailwind.md"
-        data-step-verified="2026-11-16">
+      <!-- Langkah 6: Interactive Stack + Hosting Platform Switcher -->
+      <section class="card install-step" id="step-6" data-install-step="step-6"
+        data-step-purpose="Menghubungkan frontend (html-tailwind atau react) ke URL /exec dan men-deploy ke platform hosting pilihan sesuai lisensi komersial."
+        data-step-action="Pilih stack frontend dan platform hosting target di bawah, salin file konfigurasi, lalu jalankan perintah build & deploy."
+        data-step-expected="Aplikasi frontend aktif di {{PAGES_DOMAIN}}, mode demo nonaktif otomatis, dan terhubung ke {{GAS_EXEC_URL}}."
+        data-step-source="src/core/facts.md (Seksi 2), src/stacks/html-tailwind.md &amp; src/stacks/react-vite.md"
+        data-step-verified="2026-11-25">
         <div class="step-header">
-          <h3>Langkah 6 — Konfigurasi Environment &amp; Deploy Frontend</h3>
-          <label class="step-check-label">
-            <input type="checkbox" data-step-checkbox="step-6"> Tandai Selesai
-          </label>
+          <h3>Langkah 6 — Konfigurasi Stack &amp; Deploy Frontend (Interactive Switcher)</h3>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-6"> Selesai</label>
         </div>
         <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Mengisi satu-satunya konfigurasi URL backend (<code>{{GAS_EXEC_URL}}</code>) pada frontend dan men-deploy ke <strong>Cloudflare Pages</strong> (diizinkan untuk komersial pada tier gratis sesuai <code>facts.md</code>).</div>
-          <div><strong>Aksi:</strong> Salin blok konfigurasi di bawah ke <code>src/config.js</code> atau <code>.env</code> proyek Anda.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Mode simulasi otomatis nonaktif dan frontend memanggil <code>{{GAS_EXEC_URL}}</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/facts.md</code> (<span class="badge badge-ok">2026-11-16</span>)</div>
+          <div><strong>Tujuan:</strong> Menyalin konfigurasi environment sesuai stack dan men-deploy ke target hosting yang sesuai ketentuan lisensi komersial.</div>
+          <div><strong>Aksi:</strong> Pilih tab <strong>Stack</strong> dan tab <strong>Hosting</strong> di bawah untuk melihat snippet konfigurasi &amp; perintah deployment spesifik.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Frontend tayang di <code>{{PAGES_DOMAIN}}</code> dan seluruh mutasi menuju <code>{{GAS_EXEC_URL}}</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/facts.md</code> <span class="badge badge-ok">2026-11-25</span></div>
         </div>
-        <div class="code-wrap">
-          <div class="code-head"><button type="button" data-copy-target="snippet-step-6">Salin Konfigurasi</button></div>
-          <pre id="snippet-step-6" data-template="window.GASLY_CONFIG = {&#10;  EXEC_URL: '{{GAS_EXEC_URL}}',&#10;  GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}',&#10;  PUBLIC_ORIGIN: '{{PAGES_DOMAIN}}',&#10;  REQUEST_TIMEOUT_MS: 20000,&#10;  ALLOW_SESSION_STORAGE: false&#10;};">window.GASLY_CONFIG = {
+
+        <p class="helper" style="margin-bottom:4px;"><strong>A. Pilih Stack Frontend:</strong></p>
+        <div class="tabs-row" role="tablist" aria-label="Pilih Stack Frontend">
+          <button type="button" class="tab-btn" role="tab" aria-selected="true" data-stack-tab="html">HTML + Tailwind</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-stack-tab="react">React (Vite + TS)</button>
+        </div>
+
+        <div id="stack-panel-html" class="code-wrap">
+          <div class="code-toolbar">
+            <span class="helper">File: <code>src/config.js</code> (lalu jalankan <code>npm run build:css</code> untuk produksi)</span>
+            <button type="button" data-copy-target="snippet-stack-html">Salin config.js</button>
+          </div>
+          <pre id="snippet-stack-html" data-template="window.GASLY_CONFIG = {&#10;  EXEC_URL: '{{GAS_EXEC_URL}}',&#10;  GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}',&#10;  ENTITY_IS_PRIVATE: true,&#10;  REQUEST_TIMEOUT_MS: 20000,&#10;  ALLOW_SESSION_STORAGE: false&#10;};">window.GASLY_CONFIG = {
   EXEC_URL: '{{GAS_EXEC_URL}}',
   GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}',
-  PUBLIC_ORIGIN: '{{PAGES_DOMAIN}}',
+  ENTITY_IS_PRIVATE: true,
   REQUEST_TIMEOUT_MS: 20000,
   ALLOW_SESSION_STORAGE: false
 };</pre>
         </div>
+
+        <div id="stack-panel-react" class="code-wrap hidden">
+          <div class="code-toolbar">
+            <span class="helper">File: <code>.env</code> (lalu jalankan <code>npm run build</code> &rarr; output folder <code>dist/</code>)</span>
+            <button type="button" data-copy-target="snippet-stack-react">Salin .env</button>
+          </div>
+          <pre id="snippet-stack-react" data-template="VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}&#10;VITE_GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}">VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}
+VITE_GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}</pre>
+        </div>
+
+        <p class="helper" style="margin-top:14px;margin-bottom:4px;"><strong>B. Pilih Platform Hosting Target:</strong></p>
+        <div class="tabs-row" role="tablist" aria-label="Pilih Platform Hosting">
+          <button type="button" class="tab-btn" role="tab" aria-selected="true" data-host-tab="cloudflare">Cloudflare Pages</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="sevalla">Sevalla</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="netlify">Netlify</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="firebase">Firebase Hosting</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="vercel">Vercel</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="ghpages">GitHub Pages</button>
+        </div>
+
+        <div id="host-panel-cloudflare" class="code-wrap">
+          <div class="callout"><strong>Lisensi:</strong> Diizinkan komersial gratis (default Gasly, 500 build/bln). Docs: <a href="https://developers.cloudflare.com/pages/" target="_blank" rel="noopener noreferrer">Cloudflare Pages</a></div>
+          <div class="code-toolbar"><span class="helper">Deploy via CLI atau Git (Build: <code>npm run build</code>, Output: <code>dist</code>)</span><button type="button" data-copy-target="snippet-host-cf">Salin Perintah</button></div>
+          <pre id="snippet-host-cf" data-template="# React (Vite):&#10;npm run build &amp;&amp; npx wrangler pages deploy dist --project-name gasly-app&#10;# HTML+Tailwind (setelah npm run build:css):&#10;npx wrangler pages deploy . --project-name gasly-app&#10;# Domain target: {{PAGES_DOMAIN}}"># React (Vite):
+npm run build &amp;&amp; npx wrangler pages deploy dist --project-name gasly-app
+# HTML+Tailwind (setelah npm run build:css):
+npx wrangler pages deploy . --project-name gasly-app
+# Domain target: {{PAGES_DOMAIN}}</pre>
+        </div>
+
+        <div id="host-panel-sevalla" class="code-wrap hidden">
+          <div class="callout"><strong>Lisensi:</strong> Diizinkan komersial (gratis s/d 100 GB bandwidth &amp; 600 mnt build/bln, tunduk Fair Use). Docs: <a href="https://docs.sevalla.com/static-site-hosting/" target="_blank" rel="noopener noreferrer">Sevalla Static Sites</a></div>
+          <div class="code-toolbar"><span class="helper">Pengaturan Dashboard Sevalla Static Site</span><button type="button" data-copy-target="snippet-host-sevalla">Salin Pengaturan</button></div>
+          <pre id="snippet-host-sevalla" data-template="Build command: npm run build (React) atau npm run build:css (HTML+Tailwind)&#10;Publish directory: dist (React) atau . (HTML+Tailwind)&#10;SPA Index fallback: index.html&#10;Environment Variable (React): VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}&#10;Custom Domain: {{PAGES_DOMAIN}}">Build command: npm run build (React) atau npm run build:css (HTML+Tailwind)
+Publish directory: dist (React) atau . (HTML+Tailwind)
+SPA Index fallback: index.html
+Environment Variable (React): VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}
+Custom Domain: {{PAGES_DOMAIN}}</pre>
+        </div>
+
+        <div id="host-panel-netlify" class="code-wrap hidden">
+          <div class="callout"><strong>Lisensi:</strong> Diizinkan komersial (Free plan kuota kredit/bln; situs dijeda jika kredit habis). Docs: <a href="https://docs.netlify.com/" target="_blank" rel="noopener noreferrer">Netlify Docs</a></div>
+          <div class="code-toolbar"><span class="helper">File <code>netlify.toml</code> &amp; perintah deploy</span><button type="button" data-copy-target="snippet-host-netlify">Salin netlify.toml</button></div>
+          <pre id="snippet-host-netlify" data-template="[build]&#10;  command = &quot;npm run build&quot;&#10;  publish = &quot;dist&quot;&#10;[[redirects]]&#10;  from = &quot;/*&quot;&#10;  to = &quot;/index.html&quot;&#10;  status = 200&#10;# Setel VITE_GAS_EXEC_URL={{GAS_EXEC_URL}} di Site configuration &gt; Environment variables">[build]
+  command = "npm run build"
+  publish = "dist"
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+# Setel VITE_GAS_EXEC_URL={{GAS_EXEC_URL}} di Site configuration &gt; Environment variables</pre>
+        </div>
+
+        <div id="host-panel-firebase" class="code-wrap hidden">
+          <div class="callout"><strong>Lisensi:</strong> Diizinkan komersial (Spark Plan gratis s/d kuota, atau Blaze pay-as-you-go). Docs: <a href="https://firebase.google.com/docs/hosting" target="_blank" rel="noopener noreferrer">Firebase Hosting</a></div>
+          <div class="code-toolbar"><span class="helper">File <code>firebase.json</code> &amp; perintah deploy</span><button type="button" data-copy-target="snippet-host-firebase">Salin firebase.json</button></div>
+          <pre id="snippet-host-firebase" data-template="{&#10;  &quot;hosting&quot;: {&#10;    &quot;public&quot;: &quot;dist&quot;,&#10;    &quot;ignore&quot;: [&quot;firebase.json&quot;, &quot;**/.*&quot;, &quot;**/node_modules/**&quot;],&#10;    &quot;rewrites&quot;: [{ &quot;source&quot;: &quot;**&quot;, &quot;destination&quot;: &quot;/index.html&quot; }]&#10;  }&#10;}&#10;# Deploy: npm run build &amp;&amp; npx firebase deploy --only hosting&#10;# Target Domain: {{PAGES_DOMAIN}}">{
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+  }
+}
+# Deploy: npm run build &amp;&amp; npx firebase deploy --only hosting
+# Target Domain: {{PAGES_DOMAIN}}</pre>
+        </div>
+
+        <div id="host-panel-vercel" class="code-wrap hidden">
+          <div class="callout"><strong>Lisensi Penting:</strong> <strong>Vercel Hobby DILARANG untuk komersial</strong> (hanya personal/dev). Gunakan <strong>Vercel Pro ($20/bln)</strong> untuk proyek komersial. Docs: <a href="https://vercel.com/docs/projects/environment-variables" target="_blank" rel="noopener noreferrer">Vercel Docs</a></div>
+          <div class="code-toolbar"><span class="helper">Perintah Vercel CLI &amp; Environment</span><button type="button" data-copy-target="snippet-host-vercel">Salin Perintah</button></div>
+          <pre id="snippet-host-vercel" data-template="# Tambahkan env di Vercel Project Settings:&#10;# VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}&#10;npx vercel --prod&#10;# Target Domain: {{PAGES_DOMAIN}}"># Tambahkan env di Vercel Project Settings:
+# VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}
+npx vercel --prod
+# Target Domain: {{PAGES_DOMAIN}}</pre>
+        </div>
+
+        <div id="host-panel-ghpages" class="code-wrap hidden">
+          <div class="callout"><strong>Lisensi Penting:</strong> <strong>GitHub Pages DILARANG untuk bisnis/SaaS komersial</strong> (GitHub ToS). Khusus dokumentasi, portofolio, atau demo prototipe non-komersial. Docs: <a href="https://docs.github.com/en/pages" target="_blank" rel="noopener noreferrer">GitHub Pages</a></div>
+          <div class="code-toolbar"><span class="helper">Catatan Build GitHub Pages</span><button type="button" data-copy-target="snippet-host-ghpages">Salin Catatan</button></div>
+          <pre id="snippet-host-ghpages" data-template="# Khusus demo non-komersial:&#10;# Untuk React (Vite), setel base: '/nama-repo/' pada vite.config.ts&#10;# Publikasikan folder dist/ ke branch gh-pages&#10;# Target URL: {{PAGES_DOMAIN}}"># Khusus demo non-komersial:
+# Untuk React (Vite), setel base: '/nama-repo/' pada vite.config.ts
+# Publikasikan folder dist/ ke branch gh-pages
+# Target URL: {{PAGES_DOMAIN}}</pre>
+        </div>
       </section>
 
-      <section class="card install-step" data-install-step="step-7"
-        data-step-purpose="Menguji endpoint /exec dengan perintah curl atau PowerShell tanpa memicu CORS preflight."
-        data-step-action="Pilih tab OS Anda, salin perintah di bawah, lalu jalankan di terminal lokal."
-        data-step-expected="Server mengembalikan JSON Response Envelope kanonik ({ status: 'success' | 'error', code: ... })."
+      <!-- Langkah 7: Multi-OS Copyable Test Snippets -->
+      <section class="card install-step" id="step-7" data-install-step="step-7"
+        data-step-purpose="Memverifikasi respons JSON Envelope Kanonik dari endpoint /exec menggunakan terminal atau Browser Console."
+        data-step-action="Pilih OS/alat uji (cURL, PowerShell, atau Browser Console), salin perintah, lalu jalankan di perangkat Anda."
+        data-step-expected="Server mengembalikan JSON { status: 'success' | 'error', code: 'OK' | 'FORBIDDEN', meta: { schemaVersion } }."
         data-step-source="src/core/contract.md (Seksi 2 &amp; 4)"
-        data-step-verified="2026-11-16">
+        data-step-verified="2026-11-25">
         <div class="step-header">
-          <h3>Langkah 7 — Snippet Uji Koneksi (Salin &amp; Jalankan di Terminal)</h3>
-          <label class="step-check-label">
-            <input type="checkbox" data-step-checkbox="step-7"> Tandai Selesai
-          </label>
+          <h3>Langkah 7 — Uji Koneksi End-to-End (Multi-OS Copyable Snippets)</h3>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-7"> Selesai</label>
         </div>
         <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Memverifikasi bahwa endpoint <code>{{GAS_EXEC_URL}}</code> merespons dengan JSON Envelope Kanonik setelah mengikuti pengalihan <code>HTTP 302</code>.</div>
-          <div><strong>Aksi:</strong> Salin perintah sesuai OS Anda ke terminal lokal (halaman ini tidak melakukan panggilan jaringan).</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Menerima JSON dengan kunci <code>status</code> (<code>"success"</code> atau <code>"error"</code>) dan <code>meta.schemaVersion</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/contract.md</code> (<span class="badge badge-ok">2026-11-16</span>)</div>
+          <div><strong>Tujuan:</strong> Memastikan endpoint <code>{{GAS_EXEC_URL}}</code> aktif, mengikuti redirect <code>HTTP 302</code>, dan mengembalikan JSON Envelope Kanonik.</div>
+          <div><strong>Aksi:</strong> Pilih tab alat uji di bawah, klik salin, lalu jalankan dari terminal atau DevTools Console Anda (halaman ini tidak mengeksekusi panggilan jaringan).</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Respons JSON valid dengan <code>status</code> huruf kecil (<code>"success"</code> atau <code>"error"</code>) — pada profil <code>P4</code>, <code>items.list</code> tanpa token harus mengembalikan <code>code: "FORBIDDEN"</code>.</div>
+          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/contract.md</code> <span class="badge badge-ok">2026-11-25</span></div>
         </div>
-        <div class="os-tabs" role="tablist" aria-label="Pilih OS terminal">
-          <button type="button" role="tab" aria-selected="true" data-os-tab="unix">macOS / Linux (curl)</button>
-          <button type="button" role="tab" aria-selected="false" data-os-tab="win">Windows (PowerShell)</button>
+
+        <div class="tabs-row" role="tablist" aria-label="Pilih Alat Uji Koneksi">
+          <button type="button" class="tab-btn" role="tab" aria-selected="true" data-test-tab="curl">cURL (Mac / Linux)</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-test-tab="ps">PowerShell (Windows)</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-test-tab="console">Browser Console (JS)</button>
         </div>
-        <div class="code-wrap" data-os-panel="unix">
-          <div class="code-head"><button type="button" data-copy-target="snippet-step-7-unix">Salin Perintah curl</button></div>
-          <pre id="snippet-step-7-unix" data-template="curl -sL -X POST '{{GAS_EXEC_URL}}' \&#10;  -H 'Content-Type: text/plain;charset=utf-8' \&#10;  -d '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">curl -sL -X POST '{{GAS_EXEC_URL}}' \
+
+        <div id="test-panel-curl" class="code-wrap">
+          <div class="code-toolbar"><span class="helper">Jalankan di Terminal Mac/Linux/Git Bash</span><button type="button" data-copy-target="snippet-test-curl">Salin cURL</button></div>
+          <pre id="snippet-test-curl" data-template="curl -sL -X POST '{{GAS_EXEC_URL}}' \&#10;  -H 'Content-Type: text/plain;charset=utf-8' \&#10;  -d '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">curl -sL -X POST '{{GAS_EXEC_URL}}' \
   -H 'Content-Type: text/plain;charset=utf-8' \
   -d '{"action":"items.list","v":1,"auth":null,"idem":null,"payload":{}}'</pre>
         </div>
-        <div class="code-wrap hidden" data-os-panel="win">
-          <div class="code-head"><button type="button" data-copy-target="snippet-step-7-win">Salin Perintah PowerShell</button></div>
-          <pre id="snippet-step-7-win" data-template="Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;charset=utf-8' -Body '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;charset=utf-8' -Body '{"action":"items.list","v":1,"auth":null,"idem":null,"payload":{}}'</pre>
+
+        <div id="test-panel-ps" class="code-wrap hidden">
+          <div class="code-toolbar"><span class="helper">Jalankan di Windows PowerShell</span><button type="button" data-copy-target="snippet-test-ps">Salin PowerShell</button></div>
+          <pre id="snippet-test-ps" data-template="$body = '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'&#10;Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;charset=utf-8' -Body $body">$body = '{"action":"items.list","v":1,"auth":null,"idem":null,"payload":{}}'
+Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;charset=utf-8' -Body $body</pre>
+        </div>
+
+        <div id="test-panel-console" class="code-wrap hidden">
+          <div class="code-toolbar"><span class="helper">Tempel ke DevTools Console di domain {{PAGES_DOMAIN}}</span><button type="button" data-copy-target="snippet-test-console">Salin JS</button></div>
+          <pre id="snippet-test-console" data-template="fetch('{{GAS_EXEC_URL}}', {&#10;  method: 'POST',&#10;  headers: { 'Content-Type': 'text/plain;charset=utf-8' },&#10;  redirect: 'follow',&#10;  body: JSON.stringify({ action: 'items.list', v: 1, auth: null, idem: null, payload: {} })&#10;}).then(r =&gt; r.json()).then(console.log);">fetch('{{GAS_EXEC_URL}}', {
+  method: 'POST',
+  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+  redirect: 'follow',
+  body: JSON.stringify({ action: 'items.list', v: 1, auth: null, idem: null, payload: {} })
+}).then(r =&gt; r.json()).then(console.log);</pre>
         </div>
       </section>
-    </section>
 
-    <!-- Akordeon Troubleshooting -->
-    <section class="card" aria-labelledby="ts-heading">
-      <h2 id="ts-heading">3. Troubleshooting &amp; Pertanyaan Umum</h2>
-      <details>
-        <summary>1. Mengapa request POST ke /exec mengembalikan HTTP 302 Redirect?</summary>
-        <p>Endpoint Google Apps Script <code>.../exec</code> secara arsitektural selalu membalas dengan pengalihan <code>HTTP 302</code> ke <code>script.googleusercontent.com</code> (Sumber: <code>src/core/facts.md</code>, terverifikasi <code>2026-11-16</code>). Pastikan klien HTTP menggunakan <code>curl -L</code> atau opsi <code>redirect: "follow"</code>.</p>
-      </details>
-      <details>
-        <summary>2. Mengapa muncul error CORS / preflight OPTIONS gagal di browser?</summary>
-        <p>Apps Script tidak melayani permintaan preflight <code>HTTP OPTIONS</code>. Jangan mengirim header <code>Content-Type: application/json</code> atau header kustom <code>Authorization</code>; wajib gunakan <code>Content-Type: text/plain;charset=utf-8</code> dan kirim token <code>auth</code> di dalam body JSON (Sumber: <code>src/core/contract.md</code>, terverifikasi <code>2026-11-16</code>).</p>
-      </details>
-      <details>
-        <summary>3. Mengapa muncul halaman HTML "Authorization required" atau "Script function not found"?</summary>
-        <p>Pastikan saat men-deploy Web App Anda memilih <strong>Execute as: Me</strong> dan <strong>Who has access: Anyone</strong>, serta sudah menjalankan <code>initialSetupDatabase()</code> minimal satu kali dari editor (Sumber: <code>src/gas/config.md</code> Seksi 3, status UI: <code>UNVERIFIED</code>).</p>
-      </details>
-      <details>
-        <summary>4. Berapa batas kuota waktu eksekusi, konkurensi, dan pengiriman email harian?</summary>
-        <p>Waktu eksekusi maksimal <strong>6 menit/eksekusi</strong>, batas simultan <strong>30 eksekusi</strong> per akun, dan kuota <code>MailApp</code> adalah <strong>100 penerima/hari</strong> (akun konsumen) atau <strong>1.500 penerima/hari</strong> (Workspace) (Sumber: <code>src/core/facts.md</code>, terverifikasi <code>2026-11-16</code>).</p>
-      </details>
-      <details>
-        <summary>5. Bagaimana cara memperbarui kode .gs tanpa mengubah URL /exec?</summary>
-        <p>Jangan klik <em>New deployment</em>. Buka <strong>Deploy &gt; Manage deployments &gt; Edit (ikon pensil) &gt; Version: New version &gt; Deploy</strong> agar URL <code>{{GAS_EXEC_URL}}</code> tetap sama (Sumber: <code>src/gas/config.md</code> Seksi 3, status UI: <code>UNVERIFIED</code>).</p>
-      </details>
-    </section>
-  </main>
+      <!-- Akordeon Troubleshooting -->
+      <section class="card" aria-labelledby="ts-heading">
+        <h2 id="ts-heading">Troubleshooting &amp; Pertanyaan Umum</h2>
+        <details>
+          <summary>1. Mengapa POST ke /exec membalas HTTP 302 Redirect?</summary>
+          <p>Apps Script Web App selalu mengalihkan respons ke <code>script.googleusercontent.com</code> (<code>src/core/facts.md</code>, terverifikasi <code>2026-11-25</code>). Pastikan klien menggunakan <code>curl -L</code> atau <code>redirect: "follow"</code>.</p>
+        </details>
+        <details>
+          <summary>2. Mengapa muncul error CORS / preflight OPTIONS gagal?</summary>
+          <p>GAS tidak melayani preflight <code>OPTIONS</code>. Jangan gunakan <code>application/json</code> atau header kustom <code>Authorization</code>; wajib <code>Content-Type: text/plain;charset=utf-8</code> dan letakkan <code>auth</code> di dalam body JSON (<code>src/core/contract.md</code>).</p>
+        </details>
+        <details>
+          <summary>3. Mengapa file.ticket gagal VALIDATION_ERROR saat unggah foto publik?</summary>
+          <p>Pastikan frontend meneruskan <code>{ entity, entityId, uploadNonce }</code> yang diterima dari respons <code>items.create</code> ke aksi <code>file.ticket</code> dalam waktu maksimal 15 menit sejak record dibuat.</p>
+        </details>
+        <details>
+          <summary>4. Mengapa aksi hapus (items.delete) ditolak FORBIDDEN meski sudah login Admin?</summary>
+          <p>Aksi destruktif dilindungi Step-Up PIN 6 digit. Panggil <code>auth.verifyPin</code> (<code>{ pin, targetAction: "items.delete" }</code>) lalu sertakan <code>stepUpToken</code> pada payload <code>items.delete</code>.</p>
+        </details>
+        <details>
+          <summary>5. Bagaimana cara memperbarui kode .gs tanpa mengubah URL /exec?</summary>
+          <p>Buka <strong>Deploy &gt; Manage deployments &gt; Edit (pensil) &gt; Version: New version &gt; Deploy</strong>. Jangan klik <em>New deployment</em> (<code>src/gas/config.md</code> Seksi 3).</p>
+        </details>
+        <details>
+          <summary>6. Berapa batas kuota runtime, konkurensi, dan email GAS?</summary>
+          <p>Maksimal <strong>6 menit/eksekusi</strong>, <strong>30 eksekusi simultan</strong> per akun, dan kuota <code>MailApp</code> <strong>100/hari</strong> (konsumen) atau <strong>1.500/hari</strong> (Google Workspace) (<code>src/core/facts.md</code>, <code>2026-11-25</code>).</p>
+        </details>
+      </section>
+    </main>
+  </div>
 
   <script>
     (function(globalScope) {
@@ -1624,8 +2121,7 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         Object.keys(normalized).forEach(function(k) {
           var rawVal = normalized[k];
           if (rawVal !== undefined && rawVal !== null && String(rawVal) !== '') {
-            var strVal = String(rawVal);
-            if (FORBIDDEN_CHARS_RE.test(strVal)) {
+            if (FORBIDDEN_CHARS_RE.test(String(rawVal))) {
               throw new Error('Forbidden characters detected in placeholder ' + k);
             }
           }
@@ -1685,12 +2181,34 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         } catch (e) {}
       }
 
+      function bindTabGroup_(doc, attrName, panelPrefix) {
+        var buttons = doc.querySelectorAll('[' + attrName + ']');
+        for (var i = 0; i < buttons.length; i++) {
+          (function(btn) {
+            btn.addEventListener('click', function() {
+              var chosen = btn.getAttribute(attrName);
+              for (var j = 0; j < buttons.length; j++) {
+                var b = buttons[j];
+                var key = b.getAttribute(attrName);
+                var active = key === chosen;
+                b.setAttribute('aria-selected', active ? 'true' : 'false');
+                var panel = doc.getElementById(panelPrefix + key);
+                if (panel) {
+                  if (active) panel.classList.remove('hidden');
+                  else panel.classList.add('hidden');
+                }
+              }
+            });
+          })(buttons[i]);
+        }
+      }
+
       function copyTextSafe_(text, buttonEl) {
         var origLabel = buttonEl ? buttonEl.textContent : '';
         function markCopied() {
           if (!buttonEl) return;
           buttonEl.textContent = 'Tersalin!';
-          setTimeout(function() { buttonEl.textContent = origLabel; }, 1500);
+          setTimeout(function() { buttonEl.textContent = origLabel; }, 1400);
         }
         if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
           navigator.clipboard.writeText(text).then(markCopied).catch(markCopied);
@@ -1709,13 +2227,6 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         var inputDomain = doc.getElementById('cfg-pages-domain');
         var msgEl = doc.getElementById('cfg-validation-msg');
 
-        var fieldMsgs = {
-          SPREADSHEET_ID: doc.getElementById('msg-spreadsheet-id'),
-          GAS_EXEC_URL: doc.getElementById('msg-gas-url'),
-          GOOGLE_CLIENT_ID: doc.getElementById('msg-google-client-id'),
-          PAGES_DOMAIN: doc.getElementById('msg-pages-domain')
-        };
-
         function refreshSnippets() {
           var currentValues = {
             SPREADSHEET_ID: inputSheet ? inputSheet.value.trim() : '',
@@ -1723,34 +2234,17 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
             GOOGLE_CLIENT_ID: inputClient ? inputClient.value.trim() : '',
             PAGES_DOMAIN: inputDomain ? inputDomain.value.trim() : ''
           };
-
           var validation = validateConfig(currentValues);
-          Object.keys(fieldMsgs).forEach(function(key) {
-            var el = fieldMsgs[key];
-            if (!el) return;
-            if (validation.errors[key]) {
-              el.className = 'field-msg err';
-              el.textContent = validation.errors[key];
-            } else if (currentValues[key]) {
-              el.className = 'field-msg ok';
-              el.textContent = 'Valid';
-            } else {
-              el.className = 'field-msg';
-              el.textContent = '';
-            }
-          });
-
           if (!validation.valid) {
             var errKeys = Object.keys(validation.errors);
             if (msgEl) msgEl.textContent = 'Input ditolak: ' + validation.errors[errKeys[0]];
             return;
           }
-
-          if (msgEl) msgEl.textContent = 'Konfigurasi valid. Seluruh snippet diperbarui aman via textContent.';
-          var snippetNodes = doc.querySelectorAll('[data-template]');
-          for (var i = 0; i < snippetNodes.length; i++) {
-            var node = snippetNodes[i];
-            node.textContent = fillPlaceholders(node.getAttribute('data-template') || '', currentValues);
+          if (msgEl) msgEl.textContent = 'Konfigurasi valid. Seluruh snippet telah diperbarui via textContent.';
+          var nodes = doc.querySelectorAll('[data-template]');
+          for (var i = 0; i < nodes.length; i++) {
+            var tpl = nodes[i].getAttribute('data-template') || '';
+            nodes[i].textContent = fillPlaceholders(tpl, currentValues);
           }
         }
 
@@ -1761,77 +2255,51 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
         var btnGen = doc.getElementById('btn-gen-secret');
         var secretOut = doc.getElementById('generated-secret-output');
         if (btnGen && secretOut) {
-          btnGen.addEventListener('click', function() { secretOut.textContent = generateSecret(32); });
-        }
-
-        var copyButtons = doc.querySelectorAll('[data-copy-target]');
-        for (var c = 0; c < copyButtons.length; c++) {
-          (function(btn) {
-            btn.addEventListener('click', function() {
-              var targetEl = doc.getElementById(btn.getAttribute('data-copy-target'));
-              if (targetEl) copyTextSafe_(targetEl.textContent || '', btn);
-            });
-          })(copyButtons[c]);
-        }
-
-        var osTabs = doc.querySelectorAll('[data-os-tab]');
-        var osPanels = doc.querySelectorAll('[data-os-panel]');
-        for (var t = 0; t < osTabs.length; t++) {
-          (function(tab) {
-            tab.addEventListener('click', function() {
-              var selectedOs = tab.getAttribute('data-os-tab');
-              for (var j = 0; j < osTabs.length; j++) {
-                osTabs[j].setAttribute('aria-selected', osTabs[j] === tab ? 'true' : 'false');
-              }
-              for (var p = 0; p < osPanels.length; p++) {
-                var match = osPanels[p].getAttribute('data-os-panel') === selectedOs;
-                osPanels[p].className = match ? 'code-wrap' : 'code-wrap hidden';
-              }
-            });
-          })(osTabs[t]);
-        }
-
-        var btnTheme = doc.getElementById('btn-theme-toggle');
-        if (btnTheme) {
-          btnTheme.addEventListener('click', function() {
-            var rootEl = doc.documentElement;
-            var next = rootEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            rootEl.setAttribute('data-theme', next);
-            btnTheme.textContent = next === 'dark' ? 'Mode Terang' : 'Mode Gelap';
+          btnGen.addEventListener('click', function() {
+            secretOut.textContent = generateSecret(32);
           });
         }
 
-        var btnPrint = doc.getElementById('btn-print-guide');
-        if (btnPrint && typeof globalScope.print === 'function') {
-          btnPrint.addEventListener('click', function() { globalScope.print(); });
+        var copyBtns = doc.querySelectorAll('[data-copy-target]');
+        for (var c = 0; c < copyBtns.length; c++) {
+          (function(btn) {
+            btn.addEventListener('click', function() {
+              var target = doc.getElementById(btn.getAttribute('data-copy-target'));
+              if (target) copyTextSafe_(target.textContent || '', btn);
+            });
+          })(copyBtns[c]);
         }
+
+        bindTabGroup_(doc, 'data-stack-tab', 'stack-panel-');
+        bindTabGroup_(doc, 'data-host-tab', 'host-panel-');
+        bindTabGroup_(doc, 'data-test-tab', 'test-panel-');
 
         var checkboxes = doc.querySelectorAll('[data-step-checkbox]');
         var checkState = loadChecklistState_();
+        var showOnlyPending = false;
 
         function updateProgressUi() {
           var total = checkboxes.length;
           var done = 0;
           for (var i = 0; i < checkboxes.length; i++) {
-            if (checkboxes[i].checked) done++;
+            var stepKey = checkboxes[i].getAttribute('data-step-checkbox');
+            var isDone = Boolean(checkboxes[i].checked);
+            if (isDone) done++;
+            var navBtn = doc.querySelector('[data-jump-step="' + stepKey + '"]');
+            if (navBtn) navBtn.setAttribute('data-done', isDone ? 'true' : 'false');
+            var section = doc.getElementById(stepKey);
+            if (section) {
+              if (showOnlyPending && isDone) section.classList.add('hidden');
+              else section.classList.remove('hidden');
+            }
           }
           var pct = total > 0 ? Math.round((done / total) * 100) : 0;
           var badge = doc.getElementById('progress-badge');
           var fill = doc.getElementById('progress-bar-fill');
-          var wrap = doc.getElementById('progress-bar-Wrap');
+          var wrap = doc.getElementById('progress-bar-wrap');
           if (badge) badge.textContent = done + ' / ' + total + ' Langkah Selesai (' + pct + '%)';
           if (fill) fill.style.width = pct + '%';
           if (wrap) wrap.setAttribute('aria-valuenow', String(pct));
-        }
-
-        var btnReset = doc.getElementById('btn-reset-progress');
-        if (btnReset) {
-          btnReset.addEventListener('click', function() {
-            checkState = {};
-            saveChecklistState_(checkState);
-            for (var r = 0; r < checkboxes.length; r++) checkboxes[r].checked = false;
-            updateProgressUi();
-          });
         }
 
         for (var k = 0; k < checkboxes.length; k++) {
@@ -1845,6 +2313,44 @@ ADMIN_PIN_INIT=&lt;isi_6_digit_angka_lalu_jalankan_setupAdminCredentials&gt;</pr
             });
           })(checkboxes[k]);
         }
+
+        var navBtns = doc.querySelectorAll('[data-jump-step]');
+        for (var n = 0; n < navBtns.length; n++) {
+          (function(btn) {
+            btn.addEventListener('click', function() {
+              var stepId = btn.getAttribute('data-jump-step');
+              for (var m = 0; m < navBtns.length; m++) {
+                navBtns[m].removeAttribute('aria-current');
+              }
+              btn.setAttribute('aria-current', 'step');
+              var targetSection = doc.getElementById(stepId);
+              if (targetSection) {
+                targetSection.classList.remove('hidden');
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            });
+          })(navBtns[n]);
+        }
+
+        var toggleBtn = doc.getElementById('btn-toggle-pending');
+        if (toggleBtn) {
+          toggleBtn.addEventListener('click', function() {
+            showOnlyPending = !showOnlyPending;
+            toggleBtn.textContent = showOnlyPending ? 'Filter: Tampilkan Semua' : 'Filter: Hanya Belum Selesai';
+            updateProgressUi();
+          });
+        }
+
+        var resetBtn = doc.getElementById('btn-reset-progress');
+        if (resetBtn) {
+          resetBtn.addEventListener('click', function() {
+            checkState = {};
+            for (var i = 0; i < checkboxes.length; i++) checkboxes[i].checked = false;
+            saveChecklistState_(checkState);
+            updateProgressUi();
+          });
+        }
+
         updateProgressUi();
       }
 
@@ -1966,9 +2472,9 @@ Setiap langkah di dalam panduan HTML (`<section data-install-step ...>`) wajib m
 
 ### Langkah 7 — Konfigurasi Environment & Deployment Frontend (`SELALU AKTIF`)
 - **Tujuan:** Menghubungkan kode frontend dengan URL `/exec` dan men-deploy ke layanan hosting yang sesuai dengan lisensi komersial (`src/core/facts.md`).
-- **Aksi:** Salin blok konfigurasi yang telah terisi `{{GAS_EXEC_URL}}` (dan `{{GOOGLE_CLIENT_ID}}` bila aktif) ke file konfigurasi proyek (`src/config.js` untuk `html-tailwind`, `.env.local` dengan `NEXT_PUBLIC_GAS_EXEC_URL` untuk `nextjs+shadcn`, atau `.env` dengan `PUBLIC_GAS_EXEC_URL` untuk `astro`), bangun aset produksi, lalu unggah/deploy ke target hosting (`cloudflare_pages` sebagai default komersial gratis; `github_pages_demo` / `vercel_hobby_noncommercial` khusus non-komersial; `vercel_pro` untuk SSR komersial).
+- **Aksi:** Salin blok konfigurasi yang telah terisi `{{GAS_EXEC_URL}}` (dan `{{GOOGLE_CLIENT_ID}}` bila aktif) ke file konfigurasi proyek (`src/config.js` untuk `html-tailwind`, atau `.env` dengan `VITE_GAS_EXEC_URL` untuk `react`), bangun aset produksi, lalu unggah/deploy ke target hosting (`cloudflare_pages` default komersial gratis; alternatif komersial `sevalla`, `netlify`, `firebase_hosting`, `vercel_pro`; atau `github_pages_demo` / `vercel_hobby_noncommercial` khusus demo/personal non-komersial).
 - **Hasil yang Diharapkan:** Aplikasi frontend tayang di `{{PAGES_DOMAIN}}` dengan mode simulasi/demo otomatis nonaktif (`Gate W-09`).
-- **Sumber:** `src/core/facts.md` (Seksi 2) & `src/stacks/html-tailwind.md` / `nextjs-shadcn.md` / `astro.md`
+- **Sumber:** `src/core/facts.md` (Seksi 2) & `src/stacks/html-tailwind.md` / `src/stacks/react-vite.md`
 - **Last Verified:** `2026-11-16`
 
 ### Langkah 8 — Konfigurasi Edge Relay / Webhook Proxy (`KONDISIONAL: TIER_2_EDGE_GATEWAY / TIER_3_HYBRID_SAAS`)

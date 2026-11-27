@@ -38,7 +38,7 @@ Aturan pada bagian ini adalah gerbang keras (*hard gates*) yang berada **di atas
      - Pada **Mutasi Timpa Mutlak (*Overwrite*)** seperti `*.update`, `*.delete`, koreksi opname `ADJUST`, atau keputusan approval (`concurrency_mode: "OPTIMISTIC_VERSION"`), wajib memeriksa kecocokan `expected_updated_at` / `updated_at` (`CONFLICT` bila berbeda).
      - Pada **Mutasi Tambah/Kurang (*Delta*)** seperti mutasi stok masuk/keluar (`IN`/`OUT`) atau kuota antrean di jam sibuk (`concurrency_mode: "DELTA_LOCK_ONLY"`), baca saldo terbaru di dalam `LockService`, hitung `saldo_akhir = saldo_sekarang + delta`, dan validasi `saldo_akhir >= 0` (`VALIDATION_ERROR` bila saldo tidak cukup) **tanpa** memblokir transaksi dengan error `CONFLICT` akibat perubahan `updated_at` oleh staf lain beberapa milidetik sebelumnya.
    - **Seed Berbasis Objek & Cek Kolom Ekuivalen (`Gate G-12`):** Di dalam `setup.gs`, 16 baris data awal (`SEED-YYYYMMDD-XXXX`) wajib ditulis sebagai *Array of Objects* yang dipetakan melalui `buildRowFromObject_(activeHeaders, obj)` (dilarang keras menulis array posisi 2D mentah `[['SEED-...', ...]]`). Saat menerima permintaan penambahan kolom baru, periksa `DB_SCHEMAS` terlebih dahulu: jika sudah ada kolom dengan fungsi ekuivalen (mis. `storage_rack` vs `lokasi_rak`), gunakan kolom yang ada tanpa menduplikasi kolom.
-   - Fungsi baca (`readSheetObjects_`) dilarang memanggil `initialSetupDatabase()` secara otomatis dan wajib menyembunyikan kolom internal (`upload_nonce`, `tracking_token`). Seluruh fungsi helper internal wajib berakhiran `_`, sedangkan `initialSetupDatabase` dan `runDiagnostics` tetap tanpa `_`.
+   - Fungsi baca (`readSheetObjects_`) dilarang memanggil `initialSetupDatabase()` secara otomatis dan wajib menyembunyikan kolom internal (`upload_nonce`, `tracking_token`). Seluruh fungsi helper internal wajib berakhiran `_`, sedangkan entrypoint toolbar resmi (`setupAppEnvironment`, `initialSetupDatabase`, `setupAdminCredentials`, `setupAdminCredentialsFromUi`, `onOpen`, `runDiagnostics`) tetap tanpa `_`.
 
 4. **Gerbang Upload Foto ke Google Drive & Privasi Dokumen Sensitif (`G-09`, `U-10`):**
    - **Default Mutlak `private` untuk Data Sensitif (`Gate U-10`):** Setiap entitas berklasifikasi `CONFIDENTIAL` atau `SENSITIVE_PII` (dokumen pajak NPWP/SPT/SP2DK/omzet, surat rujukan/rekam medis, identitas KTP/KK, struk/bukti keuangan) **wajib mutlak disetel `visibility: 'private'`** (`DriveApp.Access.PRIVATE, DriveApp.Permission.NONE`). Dilarang keras memakai `ANYONE_WITH_LINK` (`public`) untuk dokumen pelanggan/pasien. Pengaturan `public` hanya diizinkan untuk katalog/poster/avatar publik (`dataClassification: 'PUBLIC'`).
@@ -79,7 +79,7 @@ Buka dan terapkan file referensi berikut saat menyusun kode backend:
    - Baca `MASTER INSTRUCTIONAL PROMPT` dan blok `GASLY_CONTRACT_JSON` (Seksi 9) untuk mengunci daftar Sheet, header, `data_classification`, `concurrency_mode`, dan daftar `actions`.
    - Jika pengguna meminta penambahan kolom/fitur pada kode yang sudah dibuat di percakapan yang sama (*Change Request*), periksa ekuivalensi kolom (`Gate G-12`) dan tulis ulang secara utuh **file `.gs` yang mengalami perubahan** (dilarang memberikan potongan kode tambalan/`...` yang rawan salah tempel).
 2. **Struktur File Apps Script Modular (100% Utuh Tanpa Placeholder):**
-   - `setup.gs` — `SCHEMA_VERSION`, `DB_SCHEMAS`, `ENTITY_UPLOAD_CONFIG_` (default `private` untuk data sensitif), `initialSetupDatabase()` dengan seed berbasis objek (`buildRowFromObject_`), `configureAdminPassphrase_()`, dan `runDiagnostics()`.
+   - `setup.gs` — `SCHEMA_VERSION`, `DB_SCHEMAS`, `ENTITY_UPLOAD_CONFIG_` (default `private` untuk data sensitif), `setupAppEnvironment()` (entrypoint 1-klik di dropdown Run toolbar Apps Script), `onOpen()` & `setupAdminCredentialsFromUi()` (menu aman toolbar Google Sheets), `initialSetupDatabase()` dengan seed berbasis objek (`buildRowFromObject_`), `setupAdminCredentials()`, `configureAdminPassphrase_()`, `configureAdminPin_()`, dan `runDiagnostics()`.
    - `code.gs` — Entrypoint `doPost(e)` dan `doGet(e)`, *Central Action Registry*, helper envelope (`status: 'success' | 'error'`), modul Auth & Rate Limit, modul Sheets Repository (termasuk konkurensi delta / anti-enum track bila digunakan), serta modul Drive Upload.
 3. **Panduan Deployment & Verifikasi:**
    - Sertakan tabel **Action Registry Manifest** dan langkah update deployment (**Deploy > Manage deployments > Edit > New version**) agar URL `/exec` tetap sama.
@@ -499,12 +499,129 @@ function setupAdminCredentials() {
     props.deleteProperty('ADMIN_PIN_INIT');
   }
 }
+
+/**
+ * Entrypoint 1-Klik di dropdown "Run" toolbar Apps Script Editor.
+ * Menjalankan: (1) initialSetupDatabase(), (2) setupAdminCredentials() bila properti init tersedia,
+ * (3) pemeriksaan kesiapan ScriptProperties & Drive, serta (4) diagnostik skema tanpa membocorkan secret.
+ */
+function setupAppEnvironment(fromClient) {
+  if (fromClient !== undefined) {
+    throw new Error('setupAppEnvironment() hanya boleh dijalankan dari toolbar Apps Script atau menu Spreadsheet.');
+  }
+
+  var setupResult = initialSetupDatabase();
+  var props = PropertiesService.getScriptProperties();
+  var actionsRequired = [];
+
+  var hasInitPass = Boolean(props.getProperty('ADMIN_PASSPHRASE_INIT'));
+  var hasInitPin = Boolean(props.getProperty('ADMIN_PIN_INIT'));
+  var credStatus = 'SKIPPED';
+
+  if (hasInitPass || hasInitPin) {
+    setupAdminCredentials();
+    credStatus = 'CONFIGURED_AND_CLEANED';
+  }
+
+  var hasAdminPassHash = Boolean(props.getProperty('ADMIN_PASSPHRASE_HASH'));
+  var hasAdminPinHash = Boolean(props.getProperty('ADMIN_PIN_HASH'));
+
+  if (!hasAdminPassHash) {
+    actionsRequired.push(
+      'ADMIN_PASSPHRASE_HASH belum diatur. Jalankan menu "Gasly Setup > 2. Atur Passphrase & PIN Admin" di Spreadsheet, ' +
+      'atau isi sementara ADMIN_PASSPHRASE_INIT (>=12 karakter) di Project Settings > Script Properties lalu jalankan setupAppEnvironment() lagi.'
+    );
+  }
+  if (!hasAdminPinHash) {
+    actionsRequired.push(
+      'ADMIN_PIN_HASH belum diatur. Atur PIN 6 digit via menu Spreadsheet atau isi sementara ADMIN_PIN_INIT di Script Properties lalu jalankan setupAppEnvironment() lagi.'
+    );
+  }
+
+  var diagnostics = typeof buildDiagnosticsReport_ === 'function'
+    ? buildDiagnosticsReport_()
+    : { ok: true, schemaVersion: setupResult.schemaVersion };
+
+  var summary = {
+    status: actionsRequired.length === 0 && diagnostics.ok ? 'READY_TO_DEPLOY' : 'PARTIAL_SETUP',
+    schemaVersion: setupResult.schemaVersion,
+    accessProfile: props.getProperty('ACCESS_PROFILE') || ACCESS_PROFILE,
+    credentialsStep: credStatus,
+    checks: {
+      hmacSecretReady: Boolean(props.getProperty('AUTH_HMAC_SECRET')),
+      pepperReady: Boolean(props.getProperty('AUTH_PEPPER')),
+      adminPassphraseReady: hasAdminPassHash,
+      adminPinReady: hasAdminPinHash,
+      driveRootReady: Boolean(props.getProperty('DRIVE_ROOT_FOLDER_ID')),
+      googleClientIdSet: Boolean(props.getProperty('GOOGLE_CLIENT_ID')),
+      sheetsHealthy: Boolean(diagnostics.ok)
+    },
+    actionsRequired: actionsRequired
+  };
+
+  console.log('=== GASLY SETUP APP ENVIRONMENT REPORT ===\n' + JSON.stringify(summary, null, 2));
+  return summary;
+}
+
+/**
+ * Memasang menu "Gasly Setup" secara otomatis di toolbar Google Sheets saat Spreadsheet dibuka.
+ */
+function onOpen() {
+  try {
+    if (typeof SpreadsheetApp.getUi !== 'function') return;
+    SpreadsheetApp.getUi()
+      .createMenu('Gasly Setup')
+      .addItem('1. Setup App Environment (Init DB & Cek)', 'setupAppEnvironment')
+      .addItem('2. Atur Passphrase & PIN Admin (Dialog Aman)', 'setupAdminCredentialsFromUi')
+      .addSeparator()
+      .addItem('3. Jalankan Diagnostik Sistem', 'runDiagnostics')
+      .addToUi();
+  } catch (e) {
+    // Abaikan bila dipanggil pada konteks tanpa UI (headless/trigger)
+  }
+}
+
+/**
+ * Dialog interaktif aman dari toolbar Google Sheets untuk menyimpan hash passphrase & PIN admin
+ * ke ScriptProperties tanpa pernah menulis plaintext di kode .gs atau di sel Spreadsheet.
+ */
+function setupAdminCredentialsFromUi(fromClient) {
+  if (fromClient !== undefined) {
+    throw new Error('setupAdminCredentialsFromUi() hanya boleh dijalankan dari menu Google Sheets.');
+  }
+  var ui = SpreadsheetApp.getUi();
+  var passPrompt = ui.prompt(
+    'Atur Passphrase Admin',
+    'Masukkan passphrase admin minimal 12 karakter (disimpan sebagai hash di ScriptProperties, tidak masuk Sheet):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (passPrompt.getSelectedButton() !== ui.Button.OK) return;
+
+  var pinPrompt = ui.prompt(
+    'Atur PIN Step-Up Admin',
+    'Masukkan tepat 6 digit angka PIN untuk konfirmasi aksi sensitif (hapus/purge):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (pinPrompt.getSelectedButton() !== ui.Button.OK) return;
+
+  try {
+    configureAdminPassphrase_(passPrompt.getResponseText());
+    configureAdminPin_(pinPrompt.getResponseText());
+    ui.alert('Berhasil', 'Hash passphrase dan PIN admin tersimpan aman di Script Properties.', ui.ButtonSet.OK);
+  } catch (err) {
+    ui.alert('Gagal Validasi', err.message || 'Pastikan passphrase >= 12 karakter dan PIN 6 digit angka.', ui.ButtonSet.OK);
+  }
+}
+
 ```
 
 ---
 
-## 3. Prosedur Pembaruan Deployment Tanpa Mengubah URL `/exec`
+## 3. Prosedur Setup 1-Klik & Pembaruan Deployment Tanpa Mengubah URL `/exec`
 
+0. **Inisialisasi 1-Klik (`setupAppEnvironment`):**
+   - Di toolbar editor Apps Script, pilih **`setupAppEnvironment`** pada dropdown fungsi lalu klik **Run** (atau muat ulang Spreadsheet lalu gunakan menu **Gasly Setup > 1. Setup App Environment** dan **2. Atur Passphrase & PIN Admin**).
+   - Pastikan Execution Log menampilkan `status: "READY_TO_DEPLOY"` sebelum men-deploy Web App.
 1. **Deployment Pertama Kali:**
    - Di editor Google Apps Script, klik **Deploy > New deployment**.
    - Pilih jenis **Web app**.

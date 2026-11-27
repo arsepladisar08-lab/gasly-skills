@@ -12,6 +12,26 @@ def read(path: str) -> str:
 
 
 class TestRepositoryQuality(unittest.TestCase):
+    def test_saas_craft_design_doc_integrated(self) -> None:
+        saas_craft = read("src/design/saas-craft.md")
+        self.assertIn("<!-- KB_VERSION:", saas_craft)
+        self.assertIn("Nol Emoji", saas_craft)
+        self.assertIn("Slide-Over Drawer", saas_craft)
+        self.assertIn("Mobile Card View", saas_craft)
+        self.assertIn("references/saas-craft.md", read("src/skills/gasly-ui/SKILL.md"))
+        self.assertIn("saas-craft.md", read("build_skills.py"))
+    def test_setup_app_environment_toolbar_entrypoint(self) -> None:
+        config = read("src/gas/config.md")
+        for token in (
+            "function setupAppEnvironment(fromClient)",
+            "if (fromClient !== undefined)",
+            "initialSetupDatabase();",
+            "setupAdminCredentials();",
+            "READY_TO_DEPLOY",
+            "function onOpen()",
+            "function setupAdminCredentialsFromUi(fromClient)",
+        ):
+            self.assertIn(token, config, f"Missing expected setupAppEnvironment token: {token}")
     def test_readme_local_links_resolve(self) -> None:
         readme = read("README.md")
         links = re.findall(r"\[[^\]]+\]\(([^)]+)\)", readme)
@@ -194,6 +214,26 @@ class TestRepositoryQuality(unittest.TestCase):
         self.assertIn("GATE-I-01", bad_guide.stdout)
         self.assertIn("GATE-I-02", bad_guide.stdout)
         self.assertIn("GATE-I-03", bad_guide.stdout)
+    def test_no_duplicate_configure_admin_pin_in_config(self) -> None:
+        config = read("src/gas/config.md")
+        matches = re.findall(r"function\s+configureAdminPin_\s*\(", config)
+        self.assertEqual(len(matches), 1, f"Expected 1 configureAdminPin_ definition, found {len(matches)}")
+
+    def test_minimal_stacks_contract_and_media_gate(self) -> None:
+        stack_files = sorted(p.name for p in (ROOT / "src" / "stacks").glob("*.md"))
+        self.assertEqual(stack_files, ["html-tailwind.md", "react-vite.md"])
+
+        for fname in stack_files:
+            text = read(f"src/stacks/{fname}")
+            self.assertIn("uploadNonce", text, f"{fname} must pass uploadNonce to file.ticket")
+            self.assertIn("idToken", text, f"{fname} must use camelCase idToken for auth.google")
+            self.assertIn("auth.verifyPin", text, f"{fname} must enforce step-up PIN via auth.verifyPin")
+            self.assertIn("MEDIA_PLACEHOLDERS", text, f"{fname} must expose Gate W-10 MEDIA_PLACEHOLDERS")
+            self.assertNotIn("source.unsplash.com", text, f"{fname} must never use deprecated source.unsplash.com")
+
+        schema = read("schemas/gasly-contract.schema.json")
+        for host in ("cloudflare_pages", "netlify", "firebase_hosting", "sevalla", "vercel_pro"):
+            self.assertIn(f'"{host}"', schema, f"Missing hosting_target {host} in schema")
 
 
 if __name__ == "__main__":

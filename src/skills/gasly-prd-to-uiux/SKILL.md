@@ -25,6 +25,7 @@ Skill ini menerjemahkan kebutuhan produk menjadi arahan desain yang dapat diekse
 | `references/dials.md` | Mengkalibrasi DESIGN_VARIANCE, MOTION_INTENSITY, VISUAL_DENSITY |
 | `references/tokens.schema.json` | Menjaga struktur token tetap kompatibel |
 | `references/visual-analysis.md` | Checklist audit gambar dan missing information |
+| `references/saas-craft.md` | Standar visual craft SaaS $49/bulan (App Shell, Bento KPI, ikon SVG, mobile card view) |
 
 Gunakan preset kanonik `editorial-light`, `dense-dashboard`, `warm-friendly`, atau `aura` sesuai `presets.md`; jangan membuat palet pastel atau Soft Neo-Brutalist menjadi default universal. Gaya khusus deployment guide tetap menjadi keputusan milik `gasly-deploy-guide`, bukan aturan bagi semua aplikasi.
 
@@ -53,7 +54,7 @@ Output opsional: artifact HTML `Pratinjau-Gaya.html` yang membandingkan arah vis
 ## 6. Anti-Slop Berbasis Konteks
 - Hindari layout, komponen, dan copy generik yang tidak punya dasar di PRD.
 - Jangan melarang gradient, glass, ilustrasi, animasi, atau pola layout secara mutlak bila gaya yang disetujui memang memerlukannya; ukurannya harus konsisten dengan art direction, aksesibilitas, performa, dan konteks produk.
-- Jangan membuat logo klien, testimoni, angka penggunaan, rating, foto, maupun klaim bisnis fiktif.
+- Jangan membuat logo klien, testimoni, angka penggunaan, rating, maupun klaim bisnis fiktif. Foto/video suasana atau katalog contoh dari stock publik (Unsplash, Pexels, Pixabay, Coverr/Mixkit) diperbolehkan sesuai `Gate W-10` selama diberi label placeholder yang jelas dan tidak disamarkan sebagai bukti pelanggan nyata.
 - Gunakan konten konkret yang tersedia di PRD. Untuk konten yang belum diketahui, gunakan label data contoh yang jelas atau minta input.
 
 ## 7. Definition of Done

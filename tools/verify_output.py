@@ -79,19 +79,29 @@ def check_public_lookup_anti_enum(contract: dict, backend_text: str, failures: l
 
 def check_upload_result_verification(frontend_text: str, failures: list[str]) -> None:
     """
-    Tes #3 (Kasus Regresi @gasly-pro PajakRapi): Setiap panggilan 'file.upload' di frontend
-    WAJIB memeriksa status/code hasil upload sebelum menampilkan banner sukses.
+    Tes #3 (Gate W-09 & Kontrak file.ticket):
+    - Setiap panggilan 'file.upload' di frontend WAJIB disimpan ke variabel dan diperiksa status/code-nya.
+    - Panggilan 'file.ticket' tidak boleh mengirim objek kosong '{}' tanpa 'uploadNonce'.
     """
-    upload_calls = list(re.finditer(r"callGasAction[^;]*?['\"]file\.upload['\"].*?\);", frontend_text, re.DOTALL))
+    client_fn = r"(?:(?:window\.)?GaslyClient\.request|gasClient\.request|GASLY_API\.request|callGasAction|gasRequest|callApi)"
+    upload_calls = list(
+        re.finditer(rf"{client_fn}\s*(?:<[^>]+>)?\s*\([^;]*?['\"]file\.upload['\"].*?\);", frontend_text, re.DOTALL)
+    )
     for match in upload_calls:
         stmt = match.group(0)
         start_pos = match.start()
-        preceding = frontend_text[max(0, start_pos - 60) : start_pos + len(stmt)]
-        if not re.search(r"(const|let|var)\s+\w+\s*=\s*await\s+callGasAction", preceding):
+        preceding = frontend_text[max(0, start_pos - 80) : start_pos + len(stmt)]
+        if not re.search(rf"(?:const|let|var)\s+\w+\s*=\s*await\s+{client_fn}", preceding):
             failures.append(
-                "GATE-UPLOAD-INTEGRITY: Panggilan 'file.upload' di frontend tidak disimpan ke variabel "
-                "dan tidak diperiksa status keberhasilannya sebelum menampilkan pesan sukses (Regresi Tahap Pro)."
+                "GATE-UPLOAD-INTEGRITY (W-09): Panggilan 'file.upload' di frontend tidak disimpan ke variabel "
+                "dan tidak diperiksa status keberhasilannya sebelum menampilkan pesan sukses."
             )
+
+    if re.search(rf"{client_fn}\s*(?:<[^>]+>)?\s*\(\s*['\"]file\.ticket['\"]\s*,\s*\{{\s*\}}", frontend_text):
+        failures.append(
+            "GATE-UPLOAD-TICKET (G-09): Panggilan 'file.ticket' mengirim payload kosong '{}' "
+            "(Wajib menyertakan { entity, entityId, uploadNonce })."
+        )
 
 
 def check_spec_to_ui_bindings(contract: dict, frontend_text: str, failures: list[str]) -> None:
@@ -183,6 +193,19 @@ def check_anti_slop_and_web_gates(frontend_text: str, failures: list[str]) -> No
         failures.append(
             "GATE-ANTI-FABRICATION (U-03): Ditemukan klaim bisnis/uptime fabrikasi yang di-hardcode di frontend."
         )
+
+    if "source.unsplash.com" in frontend_text:
+        failures.append(
+            "GATE-MEDIA-PLACEHOLDER (W-10): Ditemukan domain mati 'source.unsplash.com'. "
+            "Gunakan URL langsung images.unsplash.com / images.pexels.com / cdn.pixabay.com."
+        )
+
+    for vtag in re.findall(r"<video\b[^>]*>", frontend_text, re.IGNORECASE):
+        if re.search(r"\bautoplay\b", vtag, re.IGNORECASE):
+            if not re.search(r"\bmuted\b", vtag, re.IGNORECASE) or not re.search(r"\bplaysinline\b", vtag, re.IGNORECASE):
+                failures.append(
+                    "GATE-MEDIA-PLACEHOLDER (W-10): Tag <video autoplay> wajib menyertakan atribut 'muted' dan 'playsinline'."
+                )
 
 
 ALLOWED_INSTALL_PLACEHOLDERS = {

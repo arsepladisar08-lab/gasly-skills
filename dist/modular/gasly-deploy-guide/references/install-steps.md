@@ -70,9 +70,9 @@ Setiap langkah di dalam panduan HTML (`<section data-install-step ...>`) wajib m
 
 ### Langkah 7 — Konfigurasi Environment & Deployment Frontend (`SELALU AKTIF`)
 - **Tujuan:** Menghubungkan kode frontend dengan URL `/exec` dan men-deploy ke layanan hosting yang sesuai dengan lisensi komersial (`src/core/facts.md`).
-- **Aksi:** Salin blok konfigurasi yang telah terisi `{{GAS_EXEC_URL}}` (dan `{{GOOGLE_CLIENT_ID}}` bila aktif) ke file konfigurasi proyek (`src/config.js` untuk `html-tailwind`, `.env.local` dengan `NEXT_PUBLIC_GAS_EXEC_URL` untuk `nextjs+shadcn`, atau `.env` dengan `PUBLIC_GAS_EXEC_URL` untuk `astro`), bangun aset produksi, lalu unggah/deploy ke target hosting (`cloudflare_pages` sebagai default komersial gratis; `github_pages_demo` / `vercel_hobby_noncommercial` khusus non-komersial; `vercel_pro` untuk SSR komersial).
+- **Aksi:** Salin blok konfigurasi yang telah terisi `{{GAS_EXEC_URL}}` (dan `{{GOOGLE_CLIENT_ID}}` bila aktif) ke file konfigurasi proyek (`src/config.js` untuk `html-tailwind`, atau `.env` dengan `VITE_GAS_EXEC_URL` untuk `react`), bangun aset produksi, lalu unggah/deploy ke target hosting (`cloudflare_pages` default komersial gratis; alternatif komersial `sevalla`, `netlify`, `firebase_hosting`, `vercel_pro`; atau `github_pages_demo` / `vercel_hobby_noncommercial` khusus demo/personal non-komersial).
 - **Hasil yang Diharapkan:** Aplikasi frontend tayang di `{{PAGES_DOMAIN}}` dengan mode simulasi/demo otomatis nonaktif (`Gate W-09`).
-- **Sumber:** `src/core/facts.md` (Seksi 2) & `src/stacks/html-tailwind.md` / `nextjs-shadcn.md` / `astro.md`
+- **Sumber:** `src/core/facts.md` (Seksi 2) & `src/stacks/html-tailwind.md` / `src/stacks/react-vite.md`
 - **Last Verified:** `2026-11-16`
 
 ### Langkah 8 — Konfigurasi Edge Relay / Webhook Proxy (`KONDISIONAL: TIER_2_EDGE_GATEWAY / TIER_3_HYBRID_SAAS`)

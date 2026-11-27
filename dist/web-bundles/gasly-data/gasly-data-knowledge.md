@@ -1246,12 +1246,129 @@ function setupAdminCredentials() {
     props.deleteProperty('ADMIN_PIN_INIT');
   }
 }
+
+/**
+ * Entrypoint 1-Klik di dropdown "Run" toolbar Apps Script Editor.
+ * Menjalankan: (1) initialSetupDatabase(), (2) setupAdminCredentials() bila properti init tersedia,
+ * (3) pemeriksaan kesiapan ScriptProperties & Drive, serta (4) diagnostik skema tanpa membocorkan secret.
+ */
+function setupAppEnvironment(fromClient) {
+  if (fromClient !== undefined) {
+    throw new Error('setupAppEnvironment() hanya boleh dijalankan dari toolbar Apps Script atau menu Spreadsheet.');
+  }
+
+  var setupResult = initialSetupDatabase();
+  var props = PropertiesService.getScriptProperties();
+  var actionsRequired = [];
+
+  var hasInitPass = Boolean(props.getProperty('ADMIN_PASSPHRASE_INIT'));
+  var hasInitPin = Boolean(props.getProperty('ADMIN_PIN_INIT'));
+  var credStatus = 'SKIPPED';
+
+  if (hasInitPass || hasInitPin) {
+    setupAdminCredentials();
+    credStatus = 'CONFIGURED_AND_CLEANED';
+  }
+
+  var hasAdminPassHash = Boolean(props.getProperty('ADMIN_PASSPHRASE_HASH'));
+  var hasAdminPinHash = Boolean(props.getProperty('ADMIN_PIN_HASH'));
+
+  if (!hasAdminPassHash) {
+    actionsRequired.push(
+      'ADMIN_PASSPHRASE_HASH belum diatur. Jalankan menu "Gasly Setup > 2. Atur Passphrase & PIN Admin" di Spreadsheet, ' +
+      'atau isi sementara ADMIN_PASSPHRASE_INIT (>=12 karakter) di Project Settings > Script Properties lalu jalankan setupAppEnvironment() lagi.'
+    );
+  }
+  if (!hasAdminPinHash) {
+    actionsRequired.push(
+      'ADMIN_PIN_HASH belum diatur. Atur PIN 6 digit via menu Spreadsheet atau isi sementara ADMIN_PIN_INIT di Script Properties lalu jalankan setupAppEnvironment() lagi.'
+    );
+  }
+
+  var diagnostics = typeof buildDiagnosticsReport_ === 'function'
+    ? buildDiagnosticsReport_()
+    : { ok: true, schemaVersion: setupResult.schemaVersion };
+
+  var summary = {
+    status: actionsRequired.length === 0 && diagnostics.ok ? 'READY_TO_DEPLOY' : 'PARTIAL_SETUP',
+    schemaVersion: setupResult.schemaVersion,
+    accessProfile: props.getProperty('ACCESS_PROFILE') || ACCESS_PROFILE,
+    credentialsStep: credStatus,
+    checks: {
+      hmacSecretReady: Boolean(props.getProperty('AUTH_HMAC_SECRET')),
+      pepperReady: Boolean(props.getProperty('AUTH_PEPPER')),
+      adminPassphraseReady: hasAdminPassHash,
+      adminPinReady: hasAdminPinHash,
+      driveRootReady: Boolean(props.getProperty('DRIVE_ROOT_FOLDER_ID')),
+      googleClientIdSet: Boolean(props.getProperty('GOOGLE_CLIENT_ID')),
+      sheetsHealthy: Boolean(diagnostics.ok)
+    },
+    actionsRequired: actionsRequired
+  };
+
+  console.log('=== GASLY SETUP APP ENVIRONMENT REPORT ===\n' + JSON.stringify(summary, null, 2));
+  return summary;
+}
+
+/**
+ * Memasang menu "Gasly Setup" secara otomatis di toolbar Google Sheets saat Spreadsheet dibuka.
+ */
+function onOpen() {
+  try {
+    if (typeof SpreadsheetApp.getUi !== 'function') return;
+    SpreadsheetApp.getUi()
+      .createMenu('Gasly Setup')
+      .addItem('1. Setup App Environment (Init DB & Cek)', 'setupAppEnvironment')
+      .addItem('2. Atur Passphrase & PIN Admin (Dialog Aman)', 'setupAdminCredentialsFromUi')
+      .addSeparator()
+      .addItem('3. Jalankan Diagnostik Sistem', 'runDiagnostics')
+      .addToUi();
+  } catch (e) {
+    // Abaikan bila dipanggil pada konteks tanpa UI (headless/trigger)
+  }
+}
+
+/**
+ * Dialog interaktif aman dari toolbar Google Sheets untuk menyimpan hash passphrase & PIN admin
+ * ke ScriptProperties tanpa pernah menulis plaintext di kode .gs atau di sel Spreadsheet.
+ */
+function setupAdminCredentialsFromUi(fromClient) {
+  if (fromClient !== undefined) {
+    throw new Error('setupAdminCredentialsFromUi() hanya boleh dijalankan dari menu Google Sheets.');
+  }
+  var ui = SpreadsheetApp.getUi();
+  var passPrompt = ui.prompt(
+    'Atur Passphrase Admin',
+    'Masukkan passphrase admin minimal 12 karakter (disimpan sebagai hash di ScriptProperties, tidak masuk Sheet):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (passPrompt.getSelectedButton() !== ui.Button.OK) return;
+
+  var pinPrompt = ui.prompt(
+    'Atur PIN Step-Up Admin',
+    'Masukkan tepat 6 digit angka PIN untuk konfirmasi aksi sensitif (hapus/purge):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (pinPrompt.getSelectedButton() !== ui.Button.OK) return;
+
+  try {
+    configureAdminPassphrase_(passPrompt.getResponseText());
+    configureAdminPin_(pinPrompt.getResponseText());
+    ui.alert('Berhasil', 'Hash passphrase dan PIN admin tersimpan aman di Script Properties.', ui.ButtonSet.OK);
+  } catch (err) {
+    ui.alert('Gagal Validasi', err.message || 'Pastikan passphrase >= 12 karakter dan PIN 6 digit angka.', ui.ButtonSet.OK);
+  }
+}
+
 ```
 
 ---
 
-## 3. Prosedur Pembaruan Deployment Tanpa Mengubah URL `/exec`
+## 3. Prosedur Setup 1-Klik & Pembaruan Deployment Tanpa Mengubah URL `/exec`
 
+0. **Inisialisasi 1-Klik (`setupAppEnvironment`):**
+   - Di toolbar editor Apps Script, pilih **`setupAppEnvironment`** pada dropdown fungsi lalu klik **Run** (atau muat ulang Spreadsheet lalu gunakan menu **Gasly Setup > 1. Setup App Environment** dan **2. Atur Passphrase & PIN Admin**).
+   - Pastikan Execution Log menampilkan `status: "READY_TO_DEPLOY"` sebelum men-deploy Web App.
 1. **Deployment Pertama Kali:**
    - Di editor Google Apps Script, klik **Deploy > New deployment**.
    - Pilih jenis **Web app**.
@@ -1341,7 +1458,7 @@ Body HTTP `POST` adalah string JSON yang valid dengan struktur berikut:
 ```
 
 ### B. Format Query Parameter `GET` (Khusus Operasi Baca)
-Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya saat *build-time* atau *ISR revalidation* di Next.js/Astro) dengan parameter query:
+Operasi baca publik/idempoten (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` dengan parameter query:
 `?action=domain.verb&v=1&auth=<opsional>&payload=<encodeURIComponent(JSON.stringify(payload))>`
 
 ### C. Konvensi Penamaan `action` dan Allowlist Registry
@@ -1350,16 +1467,18 @@ Operasi baca (`*.list`, `*.get`) boleh dipanggil melalui HTTP `GET` (misalnya sa
   - Otentikasi: `auth.login`, `auth.google`, `auth.logout`, `auth.setCredentials`, `auth.verifyPin`
   - Entitas Data: `<entity>.list`, `<entity>.get`, `<entity>.create`, `<entity>.update`, `<entity>.delete`
   - Unggahan File Drive: `file.ticket`, `file.upload`, `file.replace`, `file.delete`
-  - **Kontrak Step-Up PIN (`stepUpToken`):** Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
+  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
+  - Integrasi Eksternal & Monetisasi: `webhook.receive`, `mail.send`, `notify.whatsapp`, `ai.generate`, `plans.list`, `subscription.get`, `payment.createCheckout`
+- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
+
+**Kontrak Step-Up PIN (`stepUpToken`):**
+- Untuk aksi sensitif yang terdaftar di `STEP_UP_ALLOWED_ACTIONS_` (`items.delete`, `admin.purgeSeed`, `file.delete`, serta `auth.setCredentials` saat mengganti PIN lama atau saat `ADMIN` mengatur akun lain), client wajib memanggil `auth.verifyPin` (`payload: { pin, targetAction }`) terlebih dahulu dan menyertakan `stepUpToken` sekali pakai yang diterima ke dalam `payload.stepUpToken` pada aksi tujuan.
 
 **Kontrak Upload Publik:**
 - Respons `items.create` memberikan `data.uploadNonce` sekali kepada pemanggil. Nilai ini disimpan di kolom internal `upload_nonce` dan wajib disembunyikan dari `items.list`/`items.get`.
 - `file.ticket` harus menerima `payload: { entity, entityId, uploadNonce }`. Server hanya menerbitkan tiket untuk record baru (maksimal 15 menit) yang nonce-nya cocok, belum diarsipkan, dan belum memiliki `file_id/file_url`.
 - Tiket berlaku 5 menit dan terikat pada `entity`, `entityId`, serta nonce. `file.upload` memverifikasi scope dan mengonsumsi tiket sekali pakai di dalam lock.
 - Upload publik ditolak bila attachment sudah ada. Hanya sesi bertanda tangan ber-role `ADMIN` atau `STAFF` yang boleh mengganti attachment.
-  - Administrasi & Pemeliharaan: `admin.purgeSeed`, `admin.diagnostics`
-  - Integrasi Eksternal: `webhook.receive`
-- Server wajib memeriksa `action` terhadap *Central Action Registry* (allowlist eksplisit). Jika `action` tidak terdaftar atau nilai `v` tidak didukung, kembalikan error envelope dengan kode `VALIDATION_ERROR` (atau `NOT_FOUND` untuk action yang tidak dikenal).
 
 ---
 
@@ -1433,11 +1552,12 @@ Untuk mencegah perbedaan antara spesifikasi `gasly-prd`, backend `gasly-data`, d
    - `INTERNAL_APP`: Langsung menuju layar login & workspace operasional padat data (tanpa landing page pemasaran).
    - `PUBLIC_SERVICE`: Papan informasi/antrean/formulir layanan publik + panel petugas terproteksi.
    - `MARKETPLACE` / `SAAS_PLATFORM`: *Dual-Surface* terpisah (Landing Page akuisisi publik pada rute utama `/` dan Dashboard terotentikasi pada rute/view `/app`).
-2. **Pemilihan Tangga Arsitektur & Lisensi Hosting:**
-   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS untuk alat sederhana satu pintu.
-   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis/SSR di **Cloudflare Pages** (diizinkan untuk komersial gratis) + Backend GAS `/exec`. *(Catatan: GitHub Pages dan Vercel Hobby hanya boleh direkomendasikan untuk prototipe/demo non-komersial).*
-   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy Cloudflare Worker / Vercel Function (`/api/gas`) dengan tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* untuk Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
-   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dan **Vercel Pro**, sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
+2. **Pemilihan Tangga Arsitektur, Stack Minimalis & Lisensi Hosting (`facts.md`):**
+   - **Tiga Stack Kanonik:** `html-tailwind` (decoupled ringan), `react` (React + Vite SPA), dan `gas-htmlservice` (legacy monolitik `gasly-pro`).
+   - `TIER_0_GAS_NATIVE` (`gasly-pro` Legacy): Monolitik `HtmlService` di dalam GAS tanpa hosting eksternal untuk alat sederhana satu pintu.
+   - `TIER_1_DECOUPLED_WORKSPACE` (Default): Frontend statis (`html-tailwind` atau `react` Vite) di **Cloudflare Pages** (default komersial gratis), atau alternatif komersial **Sevalla**, **Netlify**, **Firebase Hosting**, maupun **Vercel Pro** + Backend GAS `/exec`. *(Catatan: **GitHub Pages** dan **Vercel Hobby** hanya boleh direkomendasikan untuk demo/portofolio/personal non-komersial).*
+   - `TIER_2_EDGE_GATEWAY`: Menambahkan proxy serverless tipis (Cloudflare Worker / Netlify Function / Vercel Function sesuai paket) untuk tanda tangan HMAC server-to-server, *rate limit* IP, dan *Webhook Relay* Payment Gateway / WhatsApp Gateway (mengatasi HTTP 302 GAS).
+   - `TIER_3_HYBRID_SAAS`: Menggunakan **Supabase (PostgreSQL + Auth + RLS)** sebagai *System of Record* utama pelanggan multi-tenant dengan hosting komersial (**Cloudflare Pages** / **Sevalla** / **Vercel Pro**), sementara GAS bertugas menjalankan pelaporan Google Sheets satu arah (*Outbox*) serta automasi dokumen Google Drive/Docs/Gmail.
 
 ## 9. Batas Kepercayaan Input Eksternal (Trust Boundary)
 
@@ -1994,7 +2114,7 @@ function handleFileDelete_(req) {
 <!-- FILE: references/facts.md -->
 # Gasly Verified Technical & Commercial Facts (`facts.md`)
 
-- **Last Verified Date:** `2026-11-16`
+- **Last Verified Date:** `2026-11-25`
 - **Rule:** Seluruh angka kuota, batas waktu runtime, dan ketentuan lisensi komersial pada rekomendasi arsitektur wajib mengacu pada dokumen ini.
 
 ## 1. Kuota & Batas Runtime Google Apps Script (GAS)
@@ -2010,11 +2130,15 @@ function handleFileDelete_(req) {
 - **Perilaku HTTP `/exec`:** Selalu membalas `POST` dengan **HTTP 302 Redirect** ke `script.googleusercontent.com` dan tidak mendukung preflight `OPTIONS` maupun pembacaan alamat IP klien.
 
 ## 2. Ketentuan Lisensi Komersial Hosting Frontend
-| Layanan Hosting | Status Lisensi Komersial (Tier Gratis) | Posisi Resmi di Tangga Arsitektur Gasly |
-| :--- | :--- | :--- |
-| **Cloudflare Pages** | **Diizinkan** untuk penggunaan komersial (batas 500 build/bulan pada Free plan) | **Default Tier 1 & Tier 2** untuk produksi komersial hemat biaya |
-| **Vercel (Hobby Plan)** | **Dilarang untuk komersial** (*Personal / Non-Commercial Only*). Penggunaan komersial wajib **Vercel Pro ($20/bulan)** | Gunakan Hobby hanya untuk Dev/Preview; gunakan **Vercel Pro** untuk SaaS komersial berbasis Next.js SSR |
-| **GitHub Pages** | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (sesuai GitHub Terms of Service) | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial** |
+| Layanan Hosting | Status Lisensi Komersial (Tier Gratis) | Batas Kuota Gratis & Catatan Penting | Posisi Resmi di Tangga Arsitektur Gasly |
+| :--- | :--- | :--- | :--- |
+| **Cloudflare Pages** (`cloudflare_pages`) | **Diizinkan** untuk penggunaan komersial | Batas 500 build/bulan pada Free plan, bandwidth statis tidak dibatasi (tunduk pada Fair Use). | **Default utama Tier 1 & Tier 2** untuk `html-tailwind` & `react` (Vite) komersial hemat biaya. |
+| **Sevalla Static Sites** (`sevalla`) | **Diizinkan** untuk penggunaan komersial (tunduk pada Fair Use Policy) | Gratis biaya bulanan dengan alokasi gratis 100 GB bandwidth/bulan & 600 menit build/bulan pada 260+ edge locations (kelebihan ditagih sesuai pemakaian). | **Alternatif produksi Tier 1 & Tier 2** untuk static site `html-tailwind` / `react` (Vite) dan mudah diperluas ke Docker/DB bila naik tier. |
+| **Netlify** (`netlify`) | **Diizinkan** untuk proyek komersial (dilarang *resell* hosting) | Free plan menggunakan batas keras (*hard cap*) 300 kredit/bulan (dipakai bersama oleh deploy & bandwidth); situs dijeda bila kredit habis hingga siklus berikutnya atau upgrade ke Pro ($20/bulan). | **Alternatif produksi Tier 1** untuk aplikasi statis trafik ringan–menengah; pantau pemakaian kredit bila trafik komersial aktif. |
+| **Firebase Hosting** (`firebase_hosting`) | **Diizinkan** untuk bisnis & komersial (Spark Plan) | Kuota gratis Spark Plan meliputi penyimpanan & transfer terbatas (berhenti melayani bila kuota terlampaui sampai upgrade ke Blaze *pay-as-you-go*). | **Alternatif produksi Tier 1** terutama untuk tim yang sudah berada di ekosistem Google Cloud / Workspace. |
+| **Vercel** (`vercel_hobby_noncommercial` / `vercel_pro`) | **Hobby Plan DILARANG untuk komersial** (*Personal / Non-Commercial Only*). Komersial wajib **Vercel Pro ($20/bulan)** | Hobby memberi 100 GB transfer/bulan hanya untuk proyek personal/non-komersial. | Gunakan Hobby **hanya** untuk Dev/Preview/Personal; gunakan **Vercel Pro** untuk deployment komersial di Vercel. |
+| **GitHub Pages** (`github_pages_demo`) | **Dilarang untuk bisnis online, e-commerce, atau SaaS komersial** (GitHub ToS) | Ukuran publikasi maks. 1 GB, soft limit 100 GB bandwidth/bulan. | Hanya untuk **Dokumentasi, Portofolio, atau Demo Prototipe Non-Komersial**. |
+| **Google Apps Script (`HtmlService`)** (`gas_htmlservice`) | Tunduk pada kuota akun Google / Google Workspace | Berjalan di dalam iframe Google tanpa hosting eksternal. | **Khusus Mode Legacy (`gasly-pro`)** bila pengguna meminta 100% di dalam GAS. |
 
 ## 3. Referensi Dokumentasi & Status Verifikasi Langkah Antarmuka Pihak Ketiga (`gasly-deploy-guide`)
 - **Aturan Provenance (`Gate I-05`):** Setiap langkah antarmuka pihak ketiga di dalam `gasly-deploy-guide` wajib mencantumkan URL dokumentasi resmi dan status verifikasi. Karena antarmuka web pihak ketiga dapat berubah tanpa pemberitahuan di luar repositori statis, langkah klik menu spesifik ditandai `UNVERIFIED` dan dicatat pada `VERIFY.md` (`A-12`).
@@ -2027,10 +2151,13 @@ function handleFileDelete_(req) {
 - **Google Cloud Console — OAuth 2.0 Client ID (`auth.google`):**
   - Dokumentasi Resmi: `https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
   - Syarat wajib: konfigurasi OAuth Consent Screen (mewajibkan URL kebijakan privasi `/privacy` publik sesuai `src/core/monetization-and-tiers.md`) dan pembuatan Web Application Client ID dengan *Authorized JavaScript origins* berisi domain frontend.
-- **Hosting Frontend (Cloudflare Pages / Vercel / GitHub Pages):**
-  - Dokumentasi Resmi Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
-  - Dokumentasi Resmi Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
-  - Dokumentasi Resmi GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+- **Hosting Frontend yang Didukung:**
+  - Cloudflare Pages: `https://developers.cloudflare.com/pages/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Sevalla Static Site Hosting: `https://docs.sevalla.com/static-site-hosting/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Netlify: `https://docs.netlify.com/` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Firebase Hosting: `https://firebase.google.com/docs/hosting` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - Vercel: `https://vercel.com/docs/projects/environment-variables` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
+  - GitHub Pages: `https://docs.github.com/en/pages` (`Status UI: UNVERIFIED — dicatat di VERIFY.md`).
 
 
 ---
@@ -2099,11 +2226,20 @@ function handleFileDelete_(req) {
         },
         "frontend_stack": {
           "type": "string",
-          "enum": ["html-tailwind", "nextjs+shadcn", "astro", "react-vite", "flutter", "inherit"]
+          "enum": ["html-tailwind", "react", "gas-htmlservice"]
         },
         "hosting_target": {
           "type": "string",
-          "enum": ["gas_htmlservice", "cloudflare_pages", "vercel_pro", "vercel_hobby_noncommercial", "github_pages_demo"]
+          "enum": [
+            "cloudflare_pages",
+            "netlify",
+            "firebase_hosting",
+            "sevalla",
+            "vercel_pro",
+            "vercel_hobby_noncommercial",
+            "github_pages_demo",
+            "gas_htmlservice"
+          ]
         },
         "auth_primary": {
           "type": "string",
@@ -2244,7 +2380,7 @@ function handleFileDelete_(req) {
 ## 1. Hierarki Otoritas & Aturan Penegakan
 
 Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instruksi pengguna biasa. Tidak ada satu pun gerbang dari versi sebelumnya yang dihapus; setiap gerbang diklasifikasikan ke dalam 4 kelas sesuai ruang lingkup arsitekturnya:
-- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (termasuk ke-15 stack pewaris), `gasly-deploy-guide`, dan `gasly-pro`.
+- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (`html-tailwind` dan `react`), `gasly-deploy-guide`, dan `gasly-pro`.
 - **`GAS-ONLY`**: Wajib dipatuhi oleh `gasly-data` dan bagian backend `gasly-pro`.
 - **`WEB-ONLY`**: Wajib dipatuhi oleh `gasly-ui` (pada seluruh stack web) dan bagian frontend `gasly-pro`.
 - **`LEGACY-HTMLSERVICE`**: Wajib dipatuhi oleh `gasly-pro` saat membangun aplikasi monolitik berbasis `HtmlService` + `google.script.run`.
@@ -2259,6 +2395,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
    - Setiap pemeriksaan hak akses dan peran wajib dieksekusi di dalam Google Apps Script sebelum menyentuh Google Sheets atau Google Drive. Penyembunyian tombol di UI hanyalah bantuan navigasi, bukan pengaman.
 3. **Anti-Fabrikasi Klaim Bisnis (`U-03`):**
    - Dilarang mengarang jumlah pengguna/pelanggan, logo klien, testimoni palsu, badge *verified*, persentase peningkatan ROI/efisiensi, jaminan mutlak bebas biaya server, kebijakan *refund/free trial*, maupun angka harga paket yang tidak diberikan oleh pengguna. Gunakan data asli dari pengguna, slot `{{...}}`, atau *Role-Based Use Cases* dan kapabilitas nyata dari kode.
+   - **Batas Foto/Video Dummy:** Penggunaan foto/video stock dari penyedia publik (Unsplash, Pexels, Pixabay, Coverr/Mixkit) untuk kebutuhan visual suasana, hero, atau katalog contoh **diizinkan** sesuai `Gate W-10`, selama tidak pernah disamarkan sebagai testimoni pelanggan asli, foto tim nyata, atau logo klien fiktif.
 4. **Canonical Response Envelope & Sanitized Errors (`U-04`):**
    - Seluruh komunikasi server-ke-client wajib memakai `{ status: 'success' | 'error', data, message, code, meta }` dengan kode `OK`, `VALIDATION_ERROR`, `NOT_FOUND`, `FORBIDDEN`, `CONFLICT`, `LOCK_TIMEOUT`, `INTERNAL_ERROR`. Dilarang membocorkan `err.stack` atau `err.toString()` mentah ke client.
 5. **Kontras Warna WCAG AA (`U-05`):**
@@ -2299,7 +2436,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 7. **Pencegahan Formula Injection Khusus Teks Bebas (`G-07`):**
    - Terapkan `escapeFormula_()` (menambahkan apostrof `'` jika string diawali `=`, `+`, `-`, `@`) **hanya** pada kolom teks bebas menurut skema. Jangan terapkan pada kolom numerik agar angka negatif tetap tersimpan sebagai `Number`.
 8. **Akhiran Underscore (`_`) pada Fungsi Internal (`G-08`):**
-   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `initialSetupDatabase`, `setupAdminCredentials`, `runDiagnostics`) yang ditulis tanpa akhiran `_`.
+   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `setupAppEnvironment`, `initialSetupDatabase`, `setupAdminCredentials`, `setupAdminCredentialsFromUi`, `onOpen`, `runDiagnostics`) yang ditulis tanpa akhiran `_`, dan seluruh fungsi utilitas toolbar wajib memiliki guard `if (fromClient !== undefined)` bila tidak dipanggil oleh `doPost`/`doGet`.
 9. **Keamanan Unggahan Drive & Penulisan Sheet Atomik (`G-09`):**
    - Aksi `file.upload` wajib memvalidasi profil akses / tiket sekali pakai (`file.ticket`), membatasi ukuran byte hasil decode (default `<= 5 MB`), memeriksa daftar putih MIME (`image/jpeg`, `image/png`, `image/webp`) **sekaligus** *magic bytes* header biner, menyanitasi nama file, menyimpan ke `ROOT/<entity>/<yyyy-mm>`, mengatur izin berbagi sesuai klasifikasi (`private` sebagai default mutlak untuk data sensitif), dan menulis `file_id` serta `file_url` ke baris Sheet di dalam satu operasi ber-lock (serta menghapus file Drive bila update Sheet gagal).
 10. **Anti-Enumerasi Endpoint Pelacakan Publik (`G-10`):**
@@ -2335,6 +2472,15 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 9. **Verifikasi Hasil Upload & Isolasi Mode Demo Produksi (`W-09`):**
    - Pada alur unggah file (`file.ticket` -> `file.upload`), kode frontend wajib menyimpan respons `file.upload` ke variabel dan memastikan `uploadRes.status === 'success' && uploadRes.code === 'OK'` sebelum menampilkan banner sukses; jika gagal, tampilkan state `RECOVERY` untuk unggah ulang tanpa membuat duplikasi tiket.
    - Tombol pengisi kredensial demo (`Isi Demo`) dan bar pengubah URL `/exec` runtime hanya boleh dirender saat `isSimulationMode() === true` (ketika variabel environment produksi kosong), dan wajib disembunyikan/dinonaktifkan sepenuhnya pada konfigurasi produksi.
+10. **Media Placeholder Eksternal (Foto & Video Dummy) & Fallback Aman (`W-10`):**
+    - Aplikasi frontend (`gasly-ui`, `gasly-pro`, dan `gasly-prd-to-uiux`) **diizinkan** menggunakan foto dan video dummy sebagai placeholder visual dari sumber stock publik tepercaya:
+      - **Foto:** **Unsplash** (`images.unsplash.com`), **Pexels** (`images.pexels.com`), **Pixabay** (`cdn.pixabay.com`).
+      - **Video:** **Pexels Videos** (`videos.pexels.com`), **Pixabay Videos** (`cdn.pixabay.com`), **Coverr**, atau **Mixkit**.
+      - **Aset AI / Upscaler (seperti Magnific AI):** Dilarang melakukan *hotlink* ke URL unduhan sementara (*signed URL*) yang dapat kedaluwarsa; simpan aset hasil AI di folder statis proyek (`public/assets/`) atau unggah ke Google Drive berklasifikasi `PUBLIC`.
+    - **Larangan Endpoint Mati:** Dilarang keras memakai `https://source.unsplash.com/...` karena layanan tersebut sudah dihentikan. Gunakan URL aset langsung dengan parameter optimasi ukuran (mis. `?auto=format&fit=crop&w=1200&q=80`).
+    - **Sentralisasi & Label Placeholder:** Pisahkan seluruh URL media dummy ke satu registry terpusat (`MEDIA_PLACEHOLDERS`) dengan flag `isPlaceholder: true` dan komentar sumber agar pemilik proyek mudah menggantinya saat produksi.
+    - **Wajib Fallback & Aksesibilitas:** Setiap `<img>` placeholder wajib menyertakan `loading="lazy"`, `decoding="async"`, `alt` deskriptif, serta fallback `onerror` ke *inline SVG data URI* atau permukaan warna token preset (cegah ikon gambar pecah saat offline/terblokir). Setiap `<video>` dummy wajib menggunakan `muted loop playsinline preload="metadata"`, menyertakan atribut `poster`, dan menonaktifkan autoplay saat `prefers-reduced-motion: reduce` aktif.
+    - **Pengecualian Mutlak (`Gate I-01`):** Media placeholder eksternal **dilarang keras** dipakai pada file `install-guide.html` keluaran `gasly-deploy-guide` (wajib 100% offline/tanpa panggilan jaringan).
 
 ---
 

@@ -520,6 +520,16 @@ var DB_SCHEMAS = {
 };
 
 /**
+ * Memetakan objek record ke array baris sesuai urutan header aktif (Gate G-12).
+ */
+function buildRowFromObject_(expectedHeaders, recordObj) {
+  return expectedHeaders.map(function(col) {
+    var val = recordObj[col];
+    return val === undefined || val === null ? '' : val;
+  });
+}
+
+/**
  * Fungsi inisialisasi database yang idempoten.
  * Tetap tanpa akhiran underscore (_) agar muncul di dropdown "Run" toolbar GAS IDE.
  */
@@ -575,7 +585,7 @@ function initialSetupDatabase() {
       }
     });
 
-    // Seed 16 baris data historis dengan penomoran urut per-hari (bukan i + 1 lintas tanggal)
+    // Seed 16 baris data historis berbasis Array of Objects + buildRowFromObject_ (Gate G-12)
     var itemsSheet = ss.getSheetByName('ITEMS');
     if (itemsSheet.getLastRow() <= 1 && props.getProperty('SEED_INITIALIZED') !== 'TRUE') {
       var now = new Date();
@@ -583,7 +593,7 @@ function initialSetupDatabase() {
       var categories = ['Operasional', 'Pemasaran', 'Infrastruktur', 'Lisensi'];
       var statuses = ['ACTIVE', 'ACTIVE', 'COMPLETED', 'PENDING'];
       var seqByDay = {};
-      var seedRows = [];
+      var seedObjects = [];
 
       for (var i = 0; i < dayOffsets.length; i++) {
         var d = new Date(now.getTime() - dayOffsets[i] * 86400000);
@@ -592,18 +602,28 @@ function initialSetupDatabase() {
         seqByDay[ymd] = (seqByDay[ymd] || 0) + 1;
         var seqStr = ('0000' + seqByDay[ymd]).slice(-4);
 
-        seedRows.push([
-          'SEED-' + ymd + '-' + seqStr,
-          isoOffset,
-          isoOffset,
-          'Contoh Transaksi #' + (i + 1),
-          categories[i % categories.length],
-          (i + 1) * 125000,
-          statuses[i % statuses.length],
-          'TRUE'
-        ]);
+        seedObjects.push({
+          id: 'SEED-' + ymd + '-' + seqStr,
+          created_at: isoOffset,
+          updated_at: isoOffset,
+          title: 'Contoh Transaksi #' + (i + 1),
+          category: categories[i % categories.length],
+          amount: (i + 1) * 125000,
+          status: statuses[i % statuses.length],
+          is_seed: 'TRUE'
+        });
       }
-      itemsSheet.getRange(2, 1, seedRows.length, DB_SCHEMAS.ITEMS.length).setValues(seedRows);
+
+      var activeHeaders = itemsSheet
+        .getRange(1, 1, 1, itemsSheet.getLastColumn())
+        .getValues()[0]
+        .map(function(h) {
+          return String(h || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        });
+      var seedRows = seedObjects.map(function(obj) {
+        return buildRowFromObject_(activeHeaders, obj);
+      });
+      itemsSheet.getRange(2, 1, seedRows.length, activeHeaders.length).setValues(seedRows);
       props.setProperty('SEED_INITIALIZED', 'TRUE');
     }
 

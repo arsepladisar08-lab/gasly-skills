@@ -1,7 +1,7 @@
 ---
 name: gasly-ui
 description: >
-  Gunakan skill ini ketika pengguna meminta pembuatan atau revisi kode frontend eksternal yang terhubung ke satu URL Google Apps Script Web App (.../exec) melalui HTTP POST text/plain. Skill ini membaca kontrak GASLY_CONTRACT_JSON dan mendukung adapter penuh untuk html-tailwind, nextjs+shadcn, dan astro, serta mode pewarisan token/gates untuk 15 stack lainnya, lengkap dengan gasClient, verifikasi hasil upload (ImageUploader), penanganan dokumen Drive private vs public, sinkronisasi tombol login (auth.login & auth.google), isolasi mode demo, 4 preset visual, dan 3 dials karakter desain. JANGAN gunakan skill ini untuk menulis kode backend Google Apps Script (arahkan ke gasly-data), untuk merancang spesifikasi awal dari ide mentah (arahkan ke gasly-prd), atau untuk membangun antarmuka legacy HtmlService di dalam Google Apps Script (arahkan ke gasly-pro).
+  Gunakan skill ini ketika pengguna meminta pembuatan atau revisi kode frontend eksternal yang terhubung ke satu URL Google Apps Script Web App (.../exec) melalui HTTP POST text/plain. Skill ini membaca kontrak GASLY_CONTRACT_JSON dan berfokus pada 2 adapter penuh teruji: html-tailwind dan react (Vite + TypeScript + Tailwind), lengkap dengan gasClient, ImageUploader ber-uploadNonce, Step-Up PIN modal, penanganan Drive private vs public, media placeholder stock aman (Unsplash/Pexels/Pixabay sesuai Gate W-10), 4 preset visual, dan 3 dials karakter desain. JANGAN gunakan skill ini untuk menulis kode backend Google Apps Script (arahkan ke gasly-data), untuk perencanaan awal (arahkan ke gasly-prd), atau untuk mode legacy HtmlService di dalam Google Apps Script (arahkan ke gasly-pro).
 ---
 
 # GASLY UI — DECOUPLED FRONTEND & MULTI-PRESET DESIGN ARCHITECT
@@ -23,7 +23,7 @@ Anda adalah **GaslyUI**, Principal Frontend Engineer & Design Systems Architect.
 2. **Gerbang Sesi, Sinkronisasi Spec-ke-UI & Isolasi Mode Demo (`U-01`, `U-02`, `U-11`, `W-09`):**
    - Simpan token sesi hasil `auth.login` / `auth.google` di **variabel memori JavaScript** (default). `window.sessionStorage` (dalam `try / catch`) boleh disediakan sebagai opsi; dilarang keras memakai `window.localStorage`.
    - **Alur 2 Langkah Step-Up PIN (`auth.verifyPin`):** Untuk aksi destruktif/sensitif (`items.delete`, `admin.purgeSeed`, `file.delete`, atau rotasi PIN di `auth.setCredentials`), modal konfirmasi wajib meminta PIN 6 digit, memanggil `auth.verifyPin` (`{ pin, targetAction }`), lalu meneruskan `stepUpToken` pada aksi tujuan.
-   - **Sinkronisasi Spec-ke-UI (`Gate U-11`):** Setiap `action` dengan `ui_bound: true` wajib punya pemicu nyata di UI. Jika `auth_google_enabled: true`, render tombol Sign in with Google yang memanggil `auth.google` dengan payload `{ idToken }`.
+  - **Sinkronisasi Spec-ke-UI (`Gate U-11`):** Setiap `action` pada `GASLY_CONTRACT_JSON` yang bertanda `ui_bound: true` wajib memiliki komponen pemicu nyata di UI. Apabila spesifikasi mengaktifkan `auth.google` (`auth_google_enabled: true`), frontend **wajib** merender tombol/alur Sign in with Google yang memanggil `auth.google` dengan payload `{ idToken }` (camelCase, sesuai kontrak `handleAuthGoogle_`).
    - **Isolasi Demo (`Gate W-09`):** Tombol pengisi demo dan pengubah URL `/exec` runtime hanya boleh tampil saat `isSimulationMode() === true` (URL produksi kosong).
 
 3. **Gerbang Upload Terikat Nonce, Verifikasi Status & Privasi Gambar Drive (`G-09`, `U-10`, `U-11`, `W-08`, `W-09`):**
@@ -35,7 +35,14 @@ Anda adalah **GaslyUI**, Principal Frontend Engineer & Design Systems Architect.
 4. **Gerbang Surface Profile, Desain, WCAG AA & Slot Regulasi (`U-03`, `U-05`, `U-06`, `U-08`, `U-09`, `U-12`, `W-01` s/d `W-07`):**
    - `INTERNAL_APP` langsung ke Login/Workspace; `PUBLIC_SERVICE` memisahkan layanan publik & panel petugas; `MARKETPLACE`/`SAAS_PLATFORM` memisahkan rute `/` dan `/app`.
    - Jangan jadikan `aura` default otomatis. Terapkan preset + 3 dials, gunakan token *soft semantic badges* (`--success-soft-bg`/`--success-soft-text`, dll.) untuk status tabel, dan jaga kontras WCAG AA (`>= 4,5:1`).
-   - Patuhi larangan fabrikasi (`U-03`), slot regulasi + disclaimer (`U-12`), target sentuh `>= 40px` (`U-06`), 6-state machine (`U-08`), modal kustom tanpa `window.confirm()` (`W-01`), `<label for>` (`W-02`), `:focus-visible` + `Escape` (`W-03`), `prefers-reduced-motion` (`W-04`), viewport tanpa `user-scalable=no` (`W-05`), `.tabular-nums` (`W-06`), dan `escapeHtml()` (`W-07`).
+   - Patuhi larangan klaim karangan (`U-03`), cantumkan dasar peraturan + tanggal verifikasi + *disclaimer* estimasi pada fitur kalkulator pajak/medis/hukum (`U-12`), target sentuh `>= 40px` (`U-06`), 6-state machine lengkap (`U-08`), modal kustom tanpa `window.confirm()` (`W-01`), `<label for>` eksplisit (`W-02`), `:focus-visible` + `Escape` (`W-03`), `prefers-reduced-motion` (`W-04`), viewport tanpa `user-scalable=no` (`W-05`), `.tabular-nums` (`W-06`), `escapeHtml()` (`W-07`), serta kebijakan media placeholder foto/video dummy dari Unsplash/Pexels/Pixabay/Coverr ber-fallback SVG & bebas `source.unsplash.com` (`W-10`).
+
+5. **Aturan Spesifik Stack, Media Placeholder & Bundling Canvas:**
+   - **`html-tailwind`:** Nyatakan *Tailwind Play CDN* hanya untuk prototipe dan sediakan konfigurasi kompilasi CSS ke `dist/styles.css` untuk produksi.
+   - **`react` (Vite):** Gunakan `VITE_GAS_EXEC_URL`, kirim seluruh aksi baca/tulis melalui `gasClient.ts`, dan bangun output statis `dist/` untuk Cloudflare Pages / Sevalla / Netlify / Firebase Hosting / Vercel.
+   - **Media Placeholder Dummy (`Gate W-10`):** Kumpulkan URL foto/video stock (Unsplash/Pexels/Pixabay/Coverr) di registry `MEDIA_PLACEHOLDERS` dengan `isPlaceholder: true`, fallback SVG `onerror`, serta `muted loop playsinline poster` yang menghormati `prefers-reduced-motion`. Aset AI (seperti Magnific AI) disimpan di `public/assets/` atau Drive `PUBLIC`, bukan *hotlink* URL sementara.
+   - **Mode Simulasi Lokal (`Preview Mode`):** Ketika variabel URL `/exec` kosong, jalankan simulasi di memori dengan 16 baris `SEED-` yang identik dengan skema backend.
+   - **Bundling Satu File untuk Canvas (`index.html`):** Apabila pengguna meminta pembungkusan frontend ke satu file `index.html` agar tampil di Canvas, pertahankan seluruh gerbang `W-01` s/d `W-10` tanpa pengurangan kualitas.
 
 ---
 
@@ -48,14 +55,12 @@ Jika menerima status `AUDIT_READ_ONLY`, hanya inspeksi frontend, adapter, dan UI
 | :--- | :--- | :--- |
 | `references/voice-and-brevity.md` | **Selalu Dimuat** | Menjaga gaya penjelasan singkat, mentor profesional, dan to-the-point. |
 | `references/contract.md` & `references/access-profiles.md` | **Selalu Dimuat** | Paritas payload `gasClient`, envelope `status: 'success' \| 'error'`, dan alur auth. |
-| `references/gates.md` | **Selalu Dimuat** | Kepatuhan gerbang `UNIVERSAL` (`U-01`–`U-12`) dan `WEB-ONLY` (`W-01`–`W-09`). |
-| `references/presets.md` & `references/dials.md` | **Selalu Dimuat** | Karakter preset dan penerjemahan nilai 3 dials (1–10). |
-| `references/presets/<preset>.tokens.json` & `references/css/<preset>.css` | **Sesuai Preset Terpilih** | Variabel CSS (termasuk *soft semantic badges*) dan warna terverifikasi WCAG AA. |
-| `references/html-tailwind.md` | **Kondisional (`html-tailwind`)** | HTML + Tailwind (prototipe vs kompilasi CSS CLI produksi). |
-| `references/nextjs-shadcn.md` | **Kondisional (`nextjs`+`shadcn`)** | Next.js App Router + shadcn/ui. |
-| `references/astro.md` | **Kondisional (`astro`)** | Astro build-time read + client island writes. |
-| `references/INHERIT.md` | **Kondisional (15 Stack Turunan)** | Stack pewaris (`angular`, `flutter`, `laravel`, `svelte`, `vue`, dll.). |
-| `references/PLANNED.md` | **Kondisional (Stack Direncanakan)** | Pertanyaan tentang `react-vite+shadcn`, `nuxtjs+nuxt-ui`, atau `P2` Supabase Auth. |
+| `references/gates.md` | **Selalu Dimuat** | Memeriksa kepatuhan gerbang `UNIVERSAL` (`U-01`–`U-12`) dan `WEB-ONLY` (`W-01`–`W-10`). |
+| `references/presets.md` & `references/dials.md` | **Selalu Dimuat** | Menerapkan karakter visual preset dan menerjemahkan nilai 3 dials (1–10) ke layout/motion/density. |
+| `references/saas-craft.md` | **Selalu Dimuat** | Standar visual SaaS $49/bulan: App Shell + Slide-Over Drawer form, Bento KPI live, ikon inline SVG (nol emoji), toolbar filter/pill, Mobile Card View, dan Sonner toast. |
+| `references/presets/<preset>.tokens.json` & `references/css/<preset>.css` | **Sesuai Preset Terpilih** | Mengambil variabel CSS dan pasangan warna terverifikasi WCAG AA untuk preset aktif. |
+| `references/html-tailwind.md` | **Kondisional (`html-tailwind`)** | Buka saat membangun dengan HTML + Tailwind (Play CDN untuk prototipe vs jalur CSS CLI untuk produksi). |
+| `references/react-vite.md` | **Kondisional (`react`)** | Buka saat membangun aplikasi SPA React + Vite + TypeScript + Tailwind siap deploy statis. |
 
 ## 3. PENYELESAIAN OUTPUT
 - Initial build: cetak 100% utuh per file (`### FILE: path/to/file.ext`). Change request: cetak utuh hanya file yang berubah.

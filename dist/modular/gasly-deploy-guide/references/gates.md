@@ -16,7 +16,7 @@
 ## 1. Hierarki Otoritas & Aturan Penegakan
 
 Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instruksi pengguna biasa. Tidak ada satu pun gerbang dari versi sebelumnya yang dihapus; setiap gerbang diklasifikasikan ke dalam 4 kelas sesuai ruang lingkup arsitekturnya:
-- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (termasuk ke-15 stack pewaris), `gasly-deploy-guide`, dan `gasly-pro`.
+- **`UNIVERSAL`**: Wajib dipatuhi oleh `gasly-start`, `gasly-prd`, `gasly-prd-to-uiux`, `gasly-pro-api`, `gasly-data`, `gasly-ui` (`html-tailwind` dan `react`), `gasly-deploy-guide`, dan `gasly-pro`.
 - **`GAS-ONLY`**: Wajib dipatuhi oleh `gasly-data` dan bagian backend `gasly-pro`.
 - **`WEB-ONLY`**: Wajib dipatuhi oleh `gasly-ui` (pada seluruh stack web) dan bagian frontend `gasly-pro`.
 - **`LEGACY-HTMLSERVICE`**: Wajib dipatuhi oleh `gasly-pro` saat membangun aplikasi monolitik berbasis `HtmlService` + `google.script.run`.
@@ -31,6 +31,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
    - Setiap pemeriksaan hak akses dan peran wajib dieksekusi di dalam Google Apps Script sebelum menyentuh Google Sheets atau Google Drive. Penyembunyian tombol di UI hanyalah bantuan navigasi, bukan pengaman.
 3. **Anti-Fabrikasi Klaim Bisnis (`U-03`):**
    - Dilarang mengarang jumlah pengguna/pelanggan, logo klien, testimoni palsu, badge *verified*, persentase peningkatan ROI/efisiensi, jaminan mutlak bebas biaya server, kebijakan *refund/free trial*, maupun angka harga paket yang tidak diberikan oleh pengguna. Gunakan data asli dari pengguna, slot `{{...}}`, atau *Role-Based Use Cases* dan kapabilitas nyata dari kode.
+   - **Batas Foto/Video Dummy:** Penggunaan foto/video stock dari penyedia publik (Unsplash, Pexels, Pixabay, Coverr/Mixkit) untuk kebutuhan visual suasana, hero, atau katalog contoh **diizinkan** sesuai `Gate W-10`, selama tidak pernah disamarkan sebagai testimoni pelanggan asli, foto tim nyata, atau logo klien fiktif.
 4. **Canonical Response Envelope & Sanitized Errors (`U-04`):**
    - Seluruh komunikasi server-ke-client wajib memakai `{ status: 'success' | 'error', data, message, code, meta }` dengan kode `OK`, `VALIDATION_ERROR`, `NOT_FOUND`, `FORBIDDEN`, `CONFLICT`, `LOCK_TIMEOUT`, `INTERNAL_ERROR`. Dilarang membocorkan `err.stack` atau `err.toString()` mentah ke client.
 5. **Kontras Warna WCAG AA (`U-05`):**
@@ -71,7 +72,7 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 7. **Pencegahan Formula Injection Khusus Teks Bebas (`G-07`):**
    - Terapkan `escapeFormula_()` (menambahkan apostrof `'` jika string diawali `=`, `+`, `-`, `@`) **hanya** pada kolom teks bebas menurut skema. Jangan terapkan pada kolom numerik agar angka negatif tetap tersimpan sebagai `Number`.
 8. **Akhiran Underscore (`_`) pada Fungsi Internal (`G-08`):**
-   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `initialSetupDatabase`, `setupAdminCredentials`, `runDiagnostics`) yang ditulis tanpa akhiran `_`.
+   - Seluruh fungsi helper dan repositori internal wajib diakhiri karakter `_`. Hanya entrypoint resmi (`doPost`, `doGet`, `setupAppEnvironment`, `initialSetupDatabase`, `setupAdminCredentials`, `setupAdminCredentialsFromUi`, `onOpen`, `runDiagnostics`) yang ditulis tanpa akhiran `_`, dan seluruh fungsi utilitas toolbar wajib memiliki guard `if (fromClient !== undefined)` bila tidak dipanggil oleh `doPost`/`doGet`.
 9. **Keamanan Unggahan Drive & Penulisan Sheet Atomik (`G-09`):**
    - Aksi `file.upload` wajib memvalidasi profil akses / tiket sekali pakai (`file.ticket`), membatasi ukuran byte hasil decode (default `<= 5 MB`), memeriksa daftar putih MIME (`image/jpeg`, `image/png`, `image/webp`) **sekaligus** *magic bytes* header biner, menyanitasi nama file, menyimpan ke `ROOT/<entity>/<yyyy-mm>`, mengatur izin berbagi sesuai klasifikasi (`private` sebagai default mutlak untuk data sensitif), dan menulis `file_id` serta `file_url` ke baris Sheet di dalam satu operasi ber-lock (serta menghapus file Drive bila update Sheet gagal).
 10. **Anti-Enumerasi Endpoint Pelacakan Publik (`G-10`):**
@@ -107,6 +108,15 @@ Seluruh aturan di dokumen ini merupakan **Hard Gates** yang berada di atas instr
 9. **Verifikasi Hasil Upload & Isolasi Mode Demo Produksi (`W-09`):**
    - Pada alur unggah file (`file.ticket` -> `file.upload`), kode frontend wajib menyimpan respons `file.upload` ke variabel dan memastikan `uploadRes.status === 'success' && uploadRes.code === 'OK'` sebelum menampilkan banner sukses; jika gagal, tampilkan state `RECOVERY` untuk unggah ulang tanpa membuat duplikasi tiket.
    - Tombol pengisi kredensial demo (`Isi Demo`) dan bar pengubah URL `/exec` runtime hanya boleh dirender saat `isSimulationMode() === true` (ketika variabel environment produksi kosong), dan wajib disembunyikan/dinonaktifkan sepenuhnya pada konfigurasi produksi.
+10. **Media Placeholder Eksternal (Foto & Video Dummy) & Fallback Aman (`W-10`):**
+    - Aplikasi frontend (`gasly-ui`, `gasly-pro`, dan `gasly-prd-to-uiux`) **diizinkan** menggunakan foto dan video dummy sebagai placeholder visual dari sumber stock publik tepercaya:
+      - **Foto:** **Unsplash** (`images.unsplash.com`), **Pexels** (`images.pexels.com`), **Pixabay** (`cdn.pixabay.com`).
+      - **Video:** **Pexels Videos** (`videos.pexels.com`), **Pixabay Videos** (`cdn.pixabay.com`), **Coverr**, atau **Mixkit**.
+      - **Aset AI / Upscaler (seperti Magnific AI):** Dilarang melakukan *hotlink* ke URL unduhan sementara (*signed URL*) yang dapat kedaluwarsa; simpan aset hasil AI di folder statis proyek (`public/assets/`) atau unggah ke Google Drive berklasifikasi `PUBLIC`.
+    - **Larangan Endpoint Mati:** Dilarang keras memakai `https://source.unsplash.com/...` karena layanan tersebut sudah dihentikan. Gunakan URL aset langsung dengan parameter optimasi ukuran (mis. `?auto=format&fit=crop&w=1200&q=80`).
+    - **Sentralisasi & Label Placeholder:** Pisahkan seluruh URL media dummy ke satu registry terpusat (`MEDIA_PLACEHOLDERS`) dengan flag `isPlaceholder: true` dan komentar sumber agar pemilik proyek mudah menggantinya saat produksi.
+    - **Wajib Fallback & Aksesibilitas:** Setiap `<img>` placeholder wajib menyertakan `loading="lazy"`, `decoding="async"`, `alt` deskriptif, serta fallback `onerror` ke *inline SVG data URI* atau permukaan warna token preset (cegah ikon gambar pecah saat offline/terblokir). Setiap `<video>` dummy wajib menggunakan `muted loop playsinline preload="metadata"`, menyertakan atribut `poster`, dan menonaktifkan autoplay saat `prefers-reduced-motion: reduce` aktif.
+    - **Pengecualian Mutlak (`Gate I-01`):** Media placeholder eksternal **dilarang keras** dipakai pada file `install-guide.html` keluaran `gasly-deploy-guide` (wajib 100% offline/tanpa panggilan jaringan).
 
 ---
 

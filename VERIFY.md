@@ -13,8 +13,7 @@ Dokumen ini merupakan konsolidasi akhir dari seluruh penanda versi (`<<PIN_VERSI
 | `.github/workflows/validate.yml` | `actions/setup-python` (`python-version`) | `"3.12"` (`<<PIN_VERSION>>`) | Sesuaikan dengan versi Python 3.10+ yang digunakan pada runner CI Anda. |
 | `.github/workflows/validate.yml` | `actions/setup-node` (`node-version`) | `"22"` (`<<PIN_VERSION>>`) | Sesuaikan dengan versi Node.js 22+ yang dibutuhkan oleh `tests/harness.js`. |
 | `src/stacks/html-tailwind.md` | `devDependencies.tailwindcss` pada contoh `package.json` | `"<<PIN_VERSION>>"` | Ganti dengan versi stabil `tailwindcss` saat menjalankan `npm init` pada proyek target. |
-| `src/stacks/nextjs-shadcn.md` | Paket `next`, `react`, `react-dom`, `tailwindcss` | `"<<PIN_VERSION>>"` | Pakukan versi mayor/minor yang dihasilkan oleh `create-next-app` pada proyek target. |
-| `src/stacks/astro.md` | Paket `astro`, `@astrojs/tailwind` | `"<<PIN_VERSION>>"` | Pakukan versi mayor/minor yang dihasilkan oleh `npm create astro` pada proyek target. |
+| `src/stacks/react-vite.md` | Paket `vite`, `react`, `react-dom`, `tailwindcss` | `"<<PIN_VERSION>>"` | Pakukan versi mayor/minor yang dihasilkan oleh `npm create vite@latest` pada proyek target. |
 
 ---
 
