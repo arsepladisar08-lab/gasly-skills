@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Panduan Instalasi DapurSaji — Gasly</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-base: #F1F5F9;
+      --bg-surface: #FFFFFF;
+      --bg-interactive: #E2E8F0;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-helper: #475569;
+      --border-subtle: #CBD5E1;
+      --border-focus: #1D4ED8;
+      --accent-solid: #1D4ED8;
+      --accent-text-on-solid: #FFFFFF;
+      --success-solid: #047857;
+      --warning-solid: #B45309;
+      --danger-solid: #B91C1C;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(15,23,42,.08);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg-base: #0B0F19;
+        --bg-surface: #111827;
+        --bg-interactive: #1E293B;
+        --text-primary: #F8FAFC;
+        --text-secondary: #CBD5E1;
+        --text-helper: #94A3B8;
+        --border-subtle: #334155;
+        --border-focus: #60A5FA;
+        --accent-solid: #2563EB;
+        --accent-text-on-solid: #FFFFFF;
+        --success-solid: #047857;
+        --warning-solid: #F59E0B;
+        --danger-solid: #DC2626;
+        --shadow: none;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-primary); font-size: 14px; line-height: 1.6; }
+    a { color: var(--border-focus); overflow-wrap: anywhere; }
+    code, pre, input { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    code { overflow-wrap: anywhere; }
+    .shell { max-width: 1240px; margin: 0 auto; padding: 20px 16px 64px; display: grid; grid-template-columns: 270px minmax(0,1fr); gap: 20px; align-items: start; }
+    .sidebar, .card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .sidebar { position: sticky; top: 14px; padding: 16px; }
+    main { min-width: 0; }
+    .card { padding: 20px; margin-bottom: 16px; }
+    h1,h2,h3 { margin: 0 0 8px; line-height: 1.3; letter-spacing: -.02em; }
+    h1 { font-size: 23px; } h2 { font-size: 18px; } h3 { font-size: 15px; }
+    p { color: var(--text-secondary); margin: 0 0 9px; }
+    .muted, .helper { color: var(--text-helper); font-size: 12px; }
+    .badge { display: inline-block; border-radius: 999px; padding: 3px 9px; background: var(--bg-interactive); color: var(--text-primary); font-size: 11px; font-weight: 700; }
+    .badge.ok { background: var(--success-solid); color: white; }
+    .badge.warn { background: var(--warning-solid); color: #fff; }
+    .progress-track { height: 8px; background: var(--bg-interactive); border-radius: 99px; overflow: hidden; margin: 10px 0; }
+    .progress-fill { height: 100%; width: 0; background: var(--success-solid); transition: width .15s ease; }
+    .nav-list { list-style: none; padding: 0; margin: 14px 0; display: grid; gap: 6px; }
+    button { min-height: 42px; min-width: 42px; padding: 8px 12px; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-interactive); color: var(--text-primary); font-weight: 650; cursor: pointer; }
+    button.primary { background: var(--accent-solid); color: var(--accent-text-on-solid); border-color: var(--accent-solid); }
+    button.nav-btn { width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 8px; background: transparent; border-color: transparent; color: var(--text-secondary); font-size: 12px; }
+    button.nav-btn[aria-current="step"] { border-color: var(--border-focus); background: var(--bg-interactive); color: var(--text-primary); }
+    button.nav-btn[data-done="true"]::after { content: "✓"; color: var(--success-solid); }
+    button:hover { filter: brightness(.97); }
+    :focus-visible { outline: 2px solid var(--border-focus); outline-offset: 3px; }
+    .sidebar-actions { display: grid; gap: 8px; border-top: 1px solid var(--border-subtle); padding-top: 12px; }
+    .header-row, .step-header, .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+    .grid-form { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 12px; margin: 12px 0; }
+    label { display: block; font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 5px; }
+    input[type="text"], input[type="url"] { width: 100%; min-height: 42px; padding: 9px 10px; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-base); color: var(--text-primary); }
+    .step-check { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; cursor: pointer; }
+    .step-check input { width: 18px; height: 18px; }
+    .meta { display: grid; gap: 5px; padding: 11px; margin: 10px 0; background: var(--bg-base); border: 1px solid var(--border-subtle); border-radius: 7px; font-size: 12px; }
+    .meta div { color: var(--text-secondary); }
+    .callout { border-left: 4px solid var(--border-focus); padding: 11px 13px; margin: 12px 0; background: var(--bg-base); color: var(--text-secondary); border-radius: 5px; }
+    .callout.warn { border-left-color: var(--warning-solid); }
+    .callout.danger { border-left-color: var(--danger-solid); }
+    .code-wrap { margin: 12px 0; }
+    .toolbar { margin-bottom: 6px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: auto; margin: 0; padding: 13px; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-base); color: var(--text-primary); font-size: 12px; }
+    .table-wrap { overflow-x: auto; margin: 12px 0; }
+    table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 12px; text-align: left; }
+    th,td { padding: 9px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+    th { color: var(--text-helper); }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .tab[aria-selected="true"] { background: var(--accent-solid); color: var(--accent-text-on-solid); border-color: var(--accent-solid); }
+    .hidden { display: none !important; }
+    details { border: 1px solid var(--border-subtle); border-radius: 7px; padding: 9px 12px; margin: 8px 0; background: var(--bg-base); }
+    summary { min-height: 40px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tabular { font-variant-numeric: tabular-nums; }
+    @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } .sidebar { position: static; } }
+    @media (max-width: 560px) { .card { padding: 15px; } .two-col { grid-template-columns: 1fr; } h1 { font-size: 20px; } }
+    @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" aria-label="Navigasi langkah instalasi">
+    <span class="badge">GASLY DEPLOY GUIDE</span>
+    <h2 style="margin-top:10px">Progres DapurSaji</h2>
+    <div id="progress-badge" class="muted tabular" aria-live="polite">0 / 6 langkah selesai (0%)</div>
+    <div class="progress-track" role="progressbar" aria-label="Progres instalasi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-wrap"><div class="progress-fill" id="progress-fill"></div></div>
+    <ul class="nav-list">
+      <li><button class="nav-btn" type="button" data-jump="step-1" aria-current="step">1. Spreadsheet &amp; backend</button></li>
+      <li><button class="nav-btn" type="button" data-jump="step-2">2. Setup environment</button></li>
+      <li><button class="nav-btn" type="button" data-jump="step-3">3. ScriptProperties &amp; admin</button></li>
+      <li><button class="nav-btn" type="button" data-jump="step-4">4. Web App /exec</button></li>
+      <li><button class="nav-btn" type="button" data-jump="step-5">5. Frontend &amp; hosting</button></li>
+      <li><button class="nav-btn" type="button" data-jump="step-6">6. Diagnostik &amp; go-live</button></li>
+    </ul>
+    <div class="sidebar-actions">
+      <button type="button" id="toggle-pending">Filter: hanya belum selesai</button>
+      <button type="button" id="reset-progress">Reset progres checklist</button>
+    </div>
+    <p class="helper" style="margin-top:12px">Status checklist hanya disimpan lokal. Nilai konfigurasi dan secret tidak disimpan.</p>
+  </aside>
+
+  <main>
+    <header class="card">
+      <div class="header-row">
+        <div>
+          <h1>Panduan Instalasi DapurSaji</h1>
+          <p class="helper">Tier 1 · P3 · html-tailwind · Google Apps Script + Spreadsheet + Drive</p>
+        </div>
+        <span class="badge ok">MANDIRI / OFFLINE</span>
+      </div>
+      <p>Panduan ini membantu memasang backend dan frontend DapurSaji. File panduan tidak memuat library, font, gambar, stylesheet, atau script eksternal. Tautan dokumentasi resmi hanya dibuka jika Anda memilihnya.</p>
+      <div class="callout"><strong>Arsitektur:</strong> Frontend publik untuk katalog dan pembuatan pesanan; backend GAS menangani otorisasi, validasi, data pesanan, serta unggahan bukti ke Google Drive privat. Google Sign-In dan Edge Relay tidak digunakan pada kontrak ini.</div>
+      <h2>Parameter konfigurasi (Live Snippet Filler)</h2>
+      <p class="helper">Isi nilai yang sudah Anda miliki. Semua snippet diperbarui melalui <code>textContent</code>. Form ini hanya berada di memori halaman dan tidak disimpan ke penyimpanan browser.</p>
+      <div class="grid-form">
+        <div><label for="cfg-sheet">Spreadsheet ID — {{SPREADSHEET_ID}}</label><input id="cfg-sheet" type="text" autocomplete="off" spellcheck="false"></div>
+        <div><label for="cfg-gas">URL Web App /exec — {{GAS_EXEC_URL}}</label><input id="cfg-gas" type="url" autocomplete="off" spellcheck="false"></div>
+        <div><label for="cfg-client">Google Client ID — {{GOOGLE_CLIENT_ID}}</label><input id="cfg-client" type="text" autocomplete="off" spellcheck="false"></div>
+        <div><label for="cfg-domain">Domain frontend — {{PAGES_DOMAIN}}</label><input id="cfg-domain" type="text" autocomplete="off" spellcheck="false"></div>
+      </div>
+      <p id="config-status" class="helper" role="status" aria-live="polite">Google Client ID tidak diperlukan karena Google Sign-In nonaktif. Kolom tetap tersedia untuk kompatibilitas placeholder.</p>
+    </header>
+
+    <section class="card" aria-labelledby="project-files">
+      <h2 id="project-files">File keluaran proyek</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Kelompok</th><th>File</th><th>Penempatan</th><th>Peran</th></tr></thead>
+        <tbody>
+          <tr><td>Backend GAS</td><td><code>setup.gs</code>, <code>code.gs</code></td><td>Editor Apps Script</td><td>Inisialisasi skema, autentikasi, API, pesanan, katalog, serta file Drive.</td></tr>
+          <tr><td>Frontend</td><td><code>index.html</code>, <code>package.json</code></td><td>Root proyek frontend</td><td>Dokumen aplikasi dan konfigurasi npm/scripts.</td></tr>
+          <tr><td>Frontend</td><td><code>src/preset-tokens.css</code>, <code>src/config.js</code></td><td>Folder <code>src/</code></td><td>Token visual dan konfigurasi URL backend.</td></tr>
+          <tr><td>Frontend</td><td><code>src/gasClient.js</code>, <code>src/imageUploader.js</code>, <code>src/mediaPlaceholders.js</code></td><td>Folder <code>src/</code></td><td>Klien GAS, alur upload, serta registry placeholder media.</td></tr>
+        </tbody>
+      </table></div>
+      <p class="helper">Daftar file tidak menyertakan isi <code>package.json</code>; periksa script yang benar-benar tersedia sebelum menjalankan perintah build. Jangan menambahkan CDN atau mengubah endpoint API berdasarkan asumsi.</p>
+    </section>
+
+    <section class="card install-step" id="step-1" data-install-step="step-1"
+      data-step-purpose="Membuat database DapurSaji dan memasang dua file backend GAS pada proyek yang terikat ke Spreadsheet."
+      data-step-action="Buat Spreadsheet baru, catat ID, buka Extensions > Apps Script, lalu salin setup.gs dan code.gs secara utuh ke editor."
+      data-step-expected="Proyek Apps Script tersimpan tanpa syntax error dan terikat ke Spreadsheet database DapurSaji."
+      data-step-source="references/install-steps.md Langkah 1; references/facts.md; https://developers.google.com/apps-script/guides/bound"
+      data-step-verified="UNVERIFIED">
+      <div class="step-header"><h3>Langkah 1 — Spreadsheet &amp; backend GAS</h3><label class="step-check"><input type="checkbox" data-check="step-1"> Selesai</label></div>
+      <div class="meta">
+        <div><strong>Tujuan:</strong> Menyiapkan database utama dan editor Apps Script container-bound.</div>
+        <div><strong>Aksi:</strong> Buat Google Spreadsheet baru. Dari URL Spreadsheet, salin bagian ID di antara <code>/d/</code> dan <code>/edit</code> ke parameter di atas. Buka <strong>Extensions &gt; Apps Script</strong>. Buat atau buka file <code>setup.gs</code> dan <code>code.gs</code>, lalu tempel isi file proyek masing-masing dan simpan.</div>
+        <div><strong>Hasil yang diharapkan:</strong> Kedua file backend tersimpan tanpa error sintaks.</div>
+        <div><strong>Sumber:</strong> <a href="https://developers.google.com/apps-script/guides/bound" target="_blank" rel="noopener noreferrer">Dokumentasi bound scripts</a>; katalog langkah instalasi.</div>
+        <div><strong>Last Verified:</strong> <span class="badge warn">UNVERIFIED</span> — jalur menu UI dicatat untuk pemeriksaan manual.</div>
+      </div>
+      <div class="code-wrap"><div class="toolbar"><span class="helper">Tautan Spreadsheet untuk diperiksa / disalin</span><button type="button" data-copy="snippet-sheet">Salin</button></div><pre id="snippet-sheet" data-template="https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit">Isi Spreadsheet ID pada form konfigurasi di atas.</pre></div>
+      <div class="callout warn">Pastikan nama file dan isi kode tetap sesuai keluaran proyek. Jangan mengganti skema database dengan contoh dari proyek lain.</div>
+    </section>
+
+    <section class="card install-step" id="step-2" data-install-step="step-2"
+      data-step-purpose="Menjalankan inisialisasi idempoten untuk skema, zona waktu, rahasia internal, dan folder Drive."
+      data-step-action="Pilih setupAppEnvironment() pada dropdown fungsi di toolbar Apps Script, lalu klik Run dan setujui izin yang diminta."
+      data-step-expected="Execution Log menunjukkan READY_TO_DEPLOY atau PARTIAL_SETUP dengan rincian pemeriksaan; tabel ORDERS, ORDER_ITEMS, CATALOG dan folder Drive siap."
+      data-step-source="references/config.md Seksi 2 dan 3; references/install-steps.md; daftar entitas GASLY_CONTRACT."
+      data-step-verified="UNVERIFIED">
+      <div class="step-header"><h3>Langkah 2 — Setup environment 1-klik</h3><label class="step-check"><input type="checkbox" data-check="step-2"> Selesai</label></div>
+      <div class="meta">
+        <div><strong>Tujuan:</strong> Menjalankan <code>initialSetupDatabase()</code> melalui entrypoint setup, menginisialisasi skema, serta membuat rahasia sistem dan folder Drive jika belum tersedia.</div>
+        <div><strong>Aksi:</strong> Di toolbar Apps Script, pilih <code>setupAppEnvironment</code> lalu klik <strong>Run</strong>. Setujui dialog otorisasi Google. Tunggu hingga eksekusi selesai dan buka Execution Log.</div>
+        <div><strong>Hasil yang diharapkan:</strong> Laporan setup menunjukkan <code>READY_TO_DEPLOY</code> setelah seluruh kredensial admin diatur; periksa juga <code>sheetsHealthy</code>, <code>hmacSecretReady</code>, <code>pepperReady</code>, dan <code>driveRootReady</code>.</div>
+        <div><strong>Sumber:</strong> <code>references/config.md</code> Seksi 2–3; daftar kontrak entitas.</div>
+        <div><strong>Last Verified:</strong> <span class="badge warn">UNVERIFIED</span> — jalur toolbar UI.</div>
+      </div>
+      <div class="callout danger"><strong>Jangan membuat manual:</strong> <code>AUTH_HMAC_SECRET</code>, <code>AUTH_PEPPER</code>, atau <code>DRIVE_ROOT_FOLDER_ID</code>. Inisialisasi server membuat dan mengelolanya. Folder bukti pesanan harus tetap privat.</div>
+      <p>Kontrak database DapurSaji mencakup:</p>
+      <ul>
+        <li><code>ORDERS</code> — data pelanggan dan pesanan, klasifikasi <strong>SENSITIVE_PII</strong>, unggahan Drive privat.</li>
+        <li><code>ORDER_ITEMS</code> — snapshot item pesanan, klasifikasi <strong>CONFIDENTIAL</strong>.</li>
+        <li><code>CATALOG</code> — data katalog publik, klasifikasi <strong>PUBLIC</strong>.</li>
+      </ul>
+    </section>
+
+    <section class="card install-step" id="step-3" data-install-step="step-3"
+      data-step-purpose="Mengatur Access Profile P3 dan kredensial admin dengan menyimpan hash, bukan plaintext dalam kode."
+      data-step-action="Atur properti sementara ADMIN_PASSPHRASE_INIT dan ADMIN_PIN_INIT melalui Project Settings > Script Properties, kemudian jalankan setupAdminCredentials() dari toolbar editor."
+      data-step-expected="Hash dan salt passphrase serta PIN tersimpan; kedua properti sementara dihapus otomatis, termasuk saat validasi gagal."
+      data-step-source="references/config.md Tabel ScriptProperties dan fungsi setupAdminCredentials(); references/install-steps.md Langkah 3; https://developers.google.com/apps-script/guides/properties"
+      data-step-verified="UNVERIFIED">
+      <div class="step-header"><h3>Langkah 3 — ScriptProperties &amp; kredensial admin</h3><label class="step-check"><input type="checkbox" data-check="step-3"> Selesai</label></div>
+      <div class="meta">
+        <div><strong>Tujuan:</strong> Menyimpan kredensial admin DapurSaji sebagai hash server-side dan menetapkan profil akses P3.</div>
+        <div><strong>Aksi:</strong> Buka <strong>Project Settings (ikon roda gigi) &gt; Script Properties</strong>. Tambahkan properti sementara <code>ADMIN_PASSPHRASE_INIT</code> dengan passphrase pilihan Anda minimal 12 karakter dan <code>ADMIN_PIN_INIT</code> dengan PIN pilihan Anda tepat 6 digit. Tambahkan <code>ACCESS_PROFILE</code> dengan nilai <code>P3</code>. Simpan. Kembali ke editor, pilih fungsi <code>setupAdminCredentials()</code> pada toolbar lalu klik <strong>Run</strong>.</div>
+        <div><strong>Hasil yang diharapkan:</strong> Properti hash dan salt admin tersimpan. <code>ADMIN_PASSPHRASE_INIT</code> dan <code>ADMIN_PIN_INIT</code> terhapus otomatis. Tidak ada plaintext kredensial di file <code>.gs</code>, HTML, atau Spreadsheet.</div>
+        <div><strong>Sumber:</strong> <code>references/config.md</code>; <code>references/install-steps.md</code>; <a href="https://developers.google.com/apps-script/guides/properties" target="_blank" rel="noopener noreferrer">Script Properties</a>.</div>
+        <div><strong>Last Verified:</strong> <span class="badge warn">UNVERIFIED</span> — jalur UI pihak ketiga.</div>
+      </div>
+      <div class="callout danger"><strong>Keamanan kredensial:</strong> Jangan menulis passphrase atau PIN ke source code, chat, file konfigurasi frontend, log, atau sel Spreadsheet. Jangan mengirim kredensial admin melalui parameter URL. Jalankan <code>setupAdminCredentials()</code> setelah properti sementara disimpan, lalu pastikan kedua properti init sudah hilang.</div>
+      <h3>Matriks ScriptProperties DapurSaji</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Nama properti</th><th>Pengaturan</th><th>Catatan</th></tr></thead>
+        <tbody>
+          <tr><td><code>ACCESS_PROFILE</code></td><td><code>P3</code> — manual</td><td>Sesuai kontrak proyek.</td></tr>
+          <tr><td><code>ADMIN_PASSPHRASE_INIT</code></td><td>Sementara — manual</td><td>Minimal 12 karakter; dihapus oleh <code>setupAdminCredentials()</code>.</td></tr>
+          <tr><td><code>ADMIN_PIN_INIT</code></td><td>Sementara — manual</td><td>Tepat 6 digit angka; dihapus oleh <code>setupAdminCredentials()</code>.</td></tr>
+          <tr><td><code>AUTH_HMAC_SECRET</code>, <code>AUTH_PEPPER</code></td><td>Otomatis</td><td>Dibuat oleh inisialisasi database; jangan isi manual.</td></tr>
+          <tr><td><code>ADMIN_PASSPHRASE_SALT</code>, <code>ADMIN_PASSPHRASE_HASH</code>, <code>ADMIN_PASSPHRASE_ITER</code></td><td>Otomatis</td><td>Dibuat saat kredensial passphrase diproses.</td></tr>
+          <tr><td><code>ADMIN_PIN_SALT</code>, <code>ADMIN_PIN_HASH</code></td><td>Otomatis</td><td>Dibuat saat PIN diproses.</td></tr>
+          <tr><td><code>SESSION_TTL_SECONDS</code>, <code>LOCKOUT_THRESHOLD</code>, <code>LOCKOUT_DURATION_SEC</code>, <code>MAX_UPLOAD_BYTES</code></td><td>Default setup</td><td>Nilai default sesuai <code>references/config.md</code>; unggahan default dibatasi 5 MB.</td></tr>
+          <tr><td><code>DRIVE_ROOT_FOLDER_ID</code></td><td>Otomatis / hasil setup</td><td>Folder root untuk bukti pesanan privat.</td></tr>
+          <tr><td><code>SCHEMA_VERSION</code></td><td>Otomatis</td><td>Versi skema yang dipasang.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout">Properti <code>GOOGLE_CLIENT_ID</code>, <code>WEBHOOK_SHARED_SECRET</code>, dan <code>P2_LITE_AUTO_PROVISION</code> tidak diperlukan oleh kontrak DapurSaji saat ini. Jangan menambahkannya tanpa perubahan kontrak dan kebutuhan fitur yang nyata.</div>
+      <div class="code-wrap"><div class="toolbar"><span class="helper">Checklist properti manual (tanpa nilai rahasia)</span><button type="button" data-copy="snippet-properties">Salin daftar</button></div><pre id="snippet-properties" data-template="ACCESS_PROFILE=P3&#10;ADMIN_PASSPHRASE_INIT=(isi sementara di Script Properties; jangan salin ke kode)&#10;ADMIN_PIN_INIT=(isi sementara di Script Properties; jangan salin ke kode)">ACCESS_PROFILE=P3
+ADMIN_PASSPHRASE_INIT=(isi sementara di Script Properties; jangan salin ke kode)
+ADMIN_PIN_INIT=(isi sementara di Script Properties; jangan salin ke kode)</pre></div>
+      <h3>Pembantu passphrase awal lokal (opsional)</h3>
+      <p class="helper">Generator dapat membuat string acak untuk digunakan sebagai nilai passphrase pada properti sementara <code>ADMIN_PASSPHRASE_INIT</code>. Nilai hanya tampil di memori halaman; salin sekarang dan masukkan langsung ke Script Properties. DapurSaji tidak mengaktifkan webhook.</p>
+      <div class="toolbar"><button type="button" class="primary" id="generate-secret">Buat string acak lokal</button><button type="button" data-copy="secret-output">Salin hasil</button></div>
+      <pre id="secret-output" aria-live="polite">Belum dibuat. Salin sekarang — hilang saat halaman dimuat ulang.</pre>
+    </section>
+
+    <section class="card install-step" id="step-4" data-install-step="step-4"
+      data-step-purpose="Menerbitkan satu URL Web App /exec yang digunakan frontend DapurSaji untuk mengirim request ke GAS."
+      data-step-action="Deploy > New deployment > Web app; set Execute as: Me dan Who has access: Anyone. Salin URL /exec ke parameter panduan dan src/config.js."
+      data-step-expected="URL HTTPS script.google.com dengan path /macros/.../exec aktif; update berikutnya mempertahankan URL deployment."
+      data-step-source="references/config.md Seksi 3; references/install-steps.md Langkah 4; https://developers.google.com/apps-script/guides/web"
+      data-step-verified="UNVERIFIED">
+      <div class="step-header"><h3>Langkah 4 — Deploy Web App /exec</h3><label class="step-check"><input type="checkbox" data-check="step-4"> Selesai</label></div>
+      <div class="meta">
+        <div><strong>Tujuan:</strong> Menyediakan endpoint backend yang bisa dipanggil frontend statis lintas domain.</div>
+        <div><strong>Aksi:</strong> Pastikan setup database dan kredensial admin selesai. Di editor Apps Script, klik <strong>Deploy &gt; New deployment</strong>, pilih <strong>Web app</strong>, set <strong>Execute as: Me</strong> dan <strong>Who has access: Anyone</strong>, lalu Deploy. Salin URL berakhiran <code>/exec</code> ke parameter panduan.</div>
+        <div><strong>Hasil yang diharapkan:</strong> URL Web App valid dengan host <code>script.google.com</code> dan path yang memuat <code>/macros/</code> serta berakhir <code>/exec</code>.</div>
+        <div><strong>Sumber:</strong> <code>references/config.md</code> Seksi 3; <a href="https://developers.google.com/apps-script/guides/web" target="_blank" rel="noopener noreferrer">Apps Script Web Apps</a>.</div>
+        <div><strong>Last Verified:</strong> <span class="badge warn">UNVERIFIED</span> — langkah menu UI dicatat untuk verifikasi manual.</div>
+      </div>
+      <div class="callout danger"><strong>Zero-downtime update:</strong> Untuk perubahan kode berikutnya, gunakan <strong>Deploy &gt; Manage deployments &gt; Edit (ikon pensil) &gt; Version: New version &gt; Deploy</strong>. Jangan membuat deployment baru jika ingin URL <code>/exec</code> tetap sama.</div>
+      <div class="code-wrap"><div class="toolbar"><span class="helper">URL endpoint setelah diisi</span><button type="button" data-copy="snippet-exec">Salin</button></div><pre id="snippet-exec" data-template="{{GAS_EXEC_URL}}">Isi URL Web App /exec di parameter konfigurasi di atas.</pre></div>
+      <p>Request aplikasi harus menggunakan metode <code>POST</code> dengan <code>Content-Type: text/plain;charset=utf-8</code> dan body JSON berbentuk <code>{ action, v: 1, auth, idem, payload }</code>. Jangan mengirim header Authorization atau Content-Type application/json karena dapat memicu preflight OPTIONS yang tidak dilayani GAS.</p>
+    </section>
+
+    <section class="card install-step" id="step-5" data-install-step="step-5"
+      data-step-purpose="Menghubungkan frontend html-tailwind dengan endpoint GAS dan menerbitkan situs statis DapurSaji pada hosting target."
+      data-step-action="Isi EXEC_URL pada src/config.js, periksa seluruh file frontend dan npm scripts, lalu deploy root situs ke Cloudflare Pages atau Vercel Pro."
+      data-step-expected="Frontend tersedia pada domain publik, terhubung ke URL /exec, dan tidak menggunakan konfigurasi demo sebagai kredensial produksi."
+      data-step-source="references/install-steps.md Langkah 7; references/facts.md Seksi 2; https://developers.cloudflare.com/pages/; https://vercel.com/docs"
+      data-step-verified="2026-11-25">
+      <div class="step-header"><h3>Langkah 5 — Konfigurasi frontend &amp; hosting</h3><label class="step-check"><input type="checkbox" data-check="step-5"> Selesai</label></div>
+      <div class="meta">
+        <div><strong>Tujuan:</strong> Menghubungkan frontend <code>html-tailwind</code> ke GAS dan menerbitkan aset statis pada hosting yang sesuai.</div>
+        <div><strong>Aksi:</strong> Buka <code>src/config.js</code> dan tetapkan URL Web App sesuai pola konfigurasi proyek. Periksa <code>package.json</code> untuk mengetahui scripts yang benar. Jangan mengarang perintah build; jalankan hanya script yang tersedia. Deploy hasil build atau root static site ke Cloudflare Pages. Alternatif Vercel untuk penggunaan komersial adalah Vercel Pro.</div>
+        <div><strong>Hasil yang diharapkan:</strong> Situs DapurSaji dapat dibuka pada domain frontend dan frontend menggunakan endpoint GAS yang sama dengan deployment backend.</div>
+        <div><strong>Sumber:</strong> <code>references/facts.md</code> (verifikasi 2026-11-25); <a href="https://developers.cloudflare.com/pages/" target="_blank" rel="noopener noreferrer">Cloudflare Pages</a>; <a href="https://vercel.com/docs" target="_blank" rel="noopener noreferrer">Vercel Docs</a>.</div>
+        <div><strong>Last Verified:</strong> <span class="badge ok">2026-11-25</span> untuk fakta hosting; langkah UI dashboard tetap UNVERIFIED.</div>
+      </div>
+      <h3>A. Pilih stack frontend</h3>
+      <div class="tabs" role="tablist" aria-label="Pilih stack frontend">
+        <button type="button" class="tab" role="tab" aria-selected="true" data-stack="html">HTML + Tailwind (DapurSaji)</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-stack="react">React / Vite (referensi alternatif)</button>
+      </div>
+      <div id="stack-html">
+        <p>Stack proyek DapurSaji adalah <code>html-tailwind</code>. File utama konfigurasi: <code>src/config.js</code>. Contoh berikut hanya pola nilai endpoint, bukan pengganti seluruh isi file.</p>
+        <div class="code-wrap"><div class="toolbar"><span class="helper">Snippet nilai konfigurasi frontend</span><button type="button" data-copy="snippet-config">Salin</button></div><pre id="snippet-config" data-template="window.GASLY_CONFIG = {&#10;  EXEC_URL: '{{GAS_EXEC_URL}}'&#10;};">window.GASLY_CONFIG = {
+  EXEC_URL: '{{GAS_EXEC_URL}}'
+};</pre></div>
+        <p class="helper">Jangan menghapus properti lain yang mungkin sudah digunakan <code>gasClient.js</code> atau aplikasi. Gabungkan URL ke struktur konfigurasi aktual, bukan menimpa file tanpa memeriksa isinya.</p>
+        <div class="code-wrap"><div class="toolbar"><span class="helper">Domain publik dan status OAuth (OAuth nonaktif pada DapurSaji)</span><button type="button" data-copy="snippet-domain">Salin</button></div><pre id="snippet-domain" data-template="PAGES_DOMAIN={{PAGES_DOMAIN}}&#10;GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}} (tidak digunakan; Google Sign-In nonaktif)">PAGES_DOMAIN={{PAGES_DOMAIN}}
+GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}} (tidak digunakan; Google Sign-In nonaktif)</pre></div>
+      </div>
+      <div id="stack-react" class="hidden">
+        <p>Panel ini hanya referensi jika arsitektur frontend kelak dimigrasikan ke React/Vite. Tidak berlaku untuk daftar file DapurSaji saat ini.</p>
+        <div class="code-wrap"><div class="toolbar"><span class="helper">Contoh konfigurasi environment React/Vite</span><button type="button" data-copy="snippet-react-env">Salin</button></div><pre id="snippet-react-env" data-template="VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}">VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}</pre></div>
+        <p class="helper">Jangan membuat file .env atau menjalankan build React pada proyek html-tailwind ini tanpa migrasi stack yang disengaja.</p>
+      </div>
+      <h3>B. Pilih hosting</h3>
+      <div class="tabs" role="tablist" aria-label="Pilih hosting frontend">
+        <button type="button" class="tab" role="tab" aria-selected="true" data-host="cloudflare">Cloudflare Pages</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-host="sevalla">Sevalla</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-host="netlify">Netlify</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-host="firebase">Firebase Hosting</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-host="vercel">Vercel</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-host="ghpages">GitHub Pages</button>
+      </div>
+      <div id="host-cloudflare">
+        <div class="callout"><strong>Target kontrak DapurSaji:</strong> Cloudflare Pages adalah hosting default dan diizinkan untuk penggunaan komersial pada tier gratis sesuai fakta referensi (batas build dan Fair Use tetap berlaku).</div>
+        <ol><li>Push direktori proyek frontend ke repository Git yang Anda kendalikan.</li><li>Buat proyek Pages dan hubungkan repository.</li><li>Atur build command berdasarkan script yang benar-benar tersedia di <code>package.json</code>, serta output directory sesuai hasil build aktual.</li><li>Jika tidak memerlukan bundling, pastikan <code>index.html</code> dan seluruh aset statis yang dirujuk berada di direktori yang dipublikasikan.</li><li>Setel custom domain bila diperlukan, lalu uji aplikasi.</li></ol>
+        <pre id="snippet-cf">https://developers.cloudflare.com/pages/</pre>
+      </div>
+      <div id="host-sevalla" class="hidden">
+        <p>Alternatif static hosting produksi yang diizinkan untuk penggunaan komersial sesuai Fair Use. Tentukan build command dan publish directory berdasarkan struktur proyek sebenarnya.</p>
+        <pre>https://docs.sevalla.com/static-site-hosting/</pre>
+      </div>
+      <div id="host-netlify" class="hidden">
+        <p>Alternatif hosting Tier 1 untuk proyek komersial; pantau batas kredit paket yang digunakan. Atur build dan publish directory berdasarkan hasil proyek.</p>
+        <pre>https://docs.netlify.com/</pre>
+      </div>
+      <div id="host-firebase" class="hidden">
+        <p>Alternatif hosting untuk tim yang menggunakan ekosistem Google Cloud/Workspace. Perhatikan batas kuota Spark dan biaya Blaze bila upgrade.</p>
+        <pre>https://firebase.google.com/docs/hosting</pre>
+      </div>
+      <div id="host-vercel" class="hidden">
+        <div class="callout warn"><strong>Lisensi komersial:</strong> Vercel Hobby hanya untuk penggunaan personal/non-komersial. Karena DapurSaji adalah layanan publik, gunakan Vercel Pro jika deployment digunakan secara komersial.</div>
+        <ol><li>Import repository frontend ke Vercel.</li><li>Atur framework preset, build command, dan output directory berdasarkan isi <code>package.json</code> serta hasil build proyek yang sebenarnya.</li><li>Tambahkan domain produksi dan deploy.</li><li>Pastikan URL endpoint GAS tetap konfigurasi publik yang memang diizinkan, bukan secret.</li></ol>
+        <pre id="snippet-vercel">https://vercel.com/docs</pre>
+      </div>
+      <div id="host-ghpages" class="hidden">
+        <div class="callout danger"><strong>Bukan target produksi DapurSaji:</strong> GitHub Pages hanya untuk dokumentasi, portofolio, atau demo prototipe non-komersial; jangan gunakan untuk bisnis/e-commerce/SaaS komersial.</div>
+        <pre>https://docs.github.com/en/pages</pre>
+      </div>
+      <div class="callout warn">File <code>src/mediaPlaceholders.js</code> boleh dipakai aplikasi utama sesuai registry proyek. Namun panduan ini sendiri tidak memuat media eksternal. Data pesanan, nomor telepon, alamat, catatan pelanggan, dan bukti pembayaran tidak boleh dipublikasikan atau disimpan pada folder Drive publik.</div>
+    </section>
+
+    <section class="card install-step" id="step-6" data-install-step="step-6"
+      data-step-purpose="Memeriksa kesiapan backend dan menguji response envelope serta endpoint katalog tanpa menjalankan request jaringan dari halaman panduan."
+      data-step-action="Jalankan runDiagnostics() dari Apps Script, kemudian salin salah satu perintah pengujian dan jalankan secara manual pada terminal atau DevTools Console."
+      data-step-expected="Diagnostik backend menyatakan ok; pengujian catalog.list mengembalikan JSON envelope success/error dengan kode yang termasuk kontrak."
+      data-step-source="references/install-steps.md Langkah 9; references/gates.md I-06; GASLY_CONTRACT envelope_spec dan actions."
+      data-step-verified="2026-11-25">
+      <div class="step-header"><h3>Langkah 6 — Diagnostik &amp; uji koneksi</h3><label class="step-check"><input type="checkbox" data-check="step-6"> Selesai</label></div>
+      <div class="meta">
+        <div><strong>Tujuan:</strong> Memastikan backend siap dan endpoint Web App merespons dengan envelope kanonik.</div>
+        <div><strong>Aksi:</strong> Di Apps Script jalankan <code>runDiagnostics()</code> dan pastikan <code>ok: true</code>. Setelah itu pilih alat uji di bawah, salin snippet, lalu jalankan sendiri. Panduan ini tidak memanggil endpoint.</div>
+        <div><strong>Hasil yang diharapkan:</strong> Respons berbentuk <code>{ status, code, data, message, meta }</code>, dengan status <code>success</code> atau <code>error</code> dan kode sesuai kontrak.</div>
+        <div><strong>Sumber:</strong> Kontrak DapurSaji <code>envelope_spec</code> dan action <code>catalog.list</code>; <code>references/install-steps.md</code>; <code>references/gates.md</code>.</div>
+        <div><strong>Last Verified:</strong> <span class="badge ok">2026-11-25</span> untuk fakta runtime/HTTP; diagnostik proyek harus dijalankan pemilik.</div>
+      </div>
+      <div class="callout">Endpoint GAS dapat mengembalikan HTTP 302 dan dialihkan ke <code>script.googleusercontent.com</code>. Gunakan <code>curl -L</code> atau opsi redirect follow pada pengujian manual. Request browser memakai <code>POST</code> dan <code>text/plain;charset=utf-8</code>.</div>
+      <div class="tabs" role="tablist" aria-label="Pilih sistem pengujian">
+        <button class="tab" type="button" role="tab" aria-selected="true" data-test="curl">cURL</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-test="powershell">PowerShell</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-test="console">Browser Console</button>
+      </div>
+      <div id="test-curl">
+        <div class="toolbar"><span class="helper">Salin dan jalankan di terminal macOS / Linux / Git Bash</span><button type="button" data-copy="test-snippet-curl">Salin</button></div>
+        <pre id="test-snippet-curl" data-template="curl -sL -X POST '{{GAS_EXEC_URL}}' \&#10;  -H 'Content-Type: text/plain;charset=utf-8' \&#10;  -d '{&quot;action&quot;:&quot;catalog.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">curl -sL -X POST '{{GAS_EXEC_URL}}' \
+  -H 'Content-Type: text/plain;charset=utf-8' \
+  -d '{"action":"catalog.list","v":1,"auth":null,"idem":null,"payload":{}}'</pre>
+      </div>
+      <div id="test-powershell" class="hidden">
+        <div class="toolbar"><span class="helper">Salin dan jalankan di Windows PowerShell</span><button type="button" data-copy="test-snippet-ps">Salin</button></div>
+        <pre id="test-snippet-ps" data-template="$body = '{&quot;action&quot;:&quot;catalog.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'&#10;Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;charset=utf-8' -Body $body">$body = '{"action":"catalog.list","v":1,"auth":null,"idem":null,"payload":{}}'
+Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;charset=utf-8' -Body $body</pre>
+      </div>
+      <div id="test-console" class="hidden">
+        <div class="toolbar"><span class="helper">Salin dan jalankan sendiri di DevTools Console domain frontend</span><button type="button" data-copy="test-snippet-console">Salin</button></div>
+        <pre id="test-snippet-console" data-template="fetch('{{GAS_EXEC_URL}}', {&#10;  method: 'POST',&#10;  headers: { 'Content-Type': 'text/plain;charset=utf-8' },&#10;  redirect: 'follow',&#10;  body: JSON.stringify({ action: 'catalog.list', v: 1, auth: null, idem: null, payload: {} })&#10;}).then(function (response) { return response.json(); }).then(console.log);">fetch('{{GAS_EXEC_URL}}', {
+  method: 'POST',
+  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+  redirect: 'follow',
+  body: JSON.stringify({ action: 'catalog.list', v: 1, auth: null, idem: null, payload: {} })
+}).then(function (response) { return response.json(); }).then(console.log);</pre>
+      </div>
+      <h3>Checklist uji fungsi DapurSaji</h3>
+      <ul>
+        <li><code>catalog.list</code>: katalog publik dapat dibaca.</li>
+        <li><code>order.create</code>: uji pembuatan pesanan pada lingkungan yang sesuai; action ini wajib membawa idempotency key sesuai implementasi backend.</li>
+        <li><code>order.track</code>: uji hanya dengan token pelacakan berentropi tinggi yang diterbitkan server; jangan menguji enumerasi ID pesanan.</li>
+        <li><code>file.ticket</code> lalu <code>file.upload</code>: uji unggah bukti milik pemesan dengan tiket dan idempotency key; pastikan Drive tetap private.</li>
+        <li><code>auth.login</code>, <code>order.adminList</code>, <code>order.updateStatus</code>, <code>file.adminView</code>, dan <code>catalog.save</code>: uji setelah autentikasi admin berhasil.</li>
+        <li><code>auth.logout</code>: uji sesi admin berakhir.</li>
+      </ul>
+      <div class="callout danger"><strong>Privasi:</strong> Jangan menyalin respons yang berisi data pribadi pelanggan ke issue publik, forum, atau chat. Jangan pernah membuka bukti pembayaran melalui URL publik atau mengubah izin folder menjadi Anyone with link.</div>
+    </section>
+
+    <section class="card" aria-labelledby="troubleshooting">
+      <h2 id="troubleshooting">Troubleshooting</h2>
+      <details><summary>POST menghasilkan HTTP 302</summary><p>Redirect GAS adalah perilaku yang dapat terjadi pada Web App. Ikuti redirect saat menjalankan uji manual dengan <code>curl -L</code> atau <code>redirect: 'follow'</code>.</p></details>
+      <details><summary>Browser menampilkan CORS atau preflight OPTIONS gagal</summary><p>Gunakan <code>POST</code> dengan <code>Content-Type: text/plain;charset=utf-8</code>. Letakkan <code>auth</code> dan <code>idem</code> di body JSON, bukan header khusus. Hindari <code>application/json</code>.</p></details>
+      <details><summary>Halaman meminta otorisasi Google atau menampilkan HTML, bukan JSON</summary><p>Periksa pengaturan deployment Web App: <strong>Execute as: Me</strong> dan <strong>Who has access: Anyone</strong>. Pastikan URL yang dipakai adalah URL deployment berakhiran <code>/exec</code>.</p></details>
+      <details><summary>Perubahan kode backend tidak muncul</summary><p>Gunakan <strong>Deploy &gt; Manage deployments &gt; Edit &gt; New version &gt; Deploy</strong>. Jangan membuat deployment baru jika URL lama harus dipertahankan.</p></details>
+      <details><summary>Upload bukti pesanan gagal</summary><p>Pastikan tiket upload masih valid, file sesuai batas ukuran dan MIME yang diterima backend, serta respons <code>file.upload</code> benar-benar sukses sebelum UI menampilkan status berhasil. Bukti pesanan disimpan privat.</p></details>
+      <details><summary>Setup belum menunjukkan READY_TO_DEPLOY</summary><p>Baca <code>actionsRequired</code> pada Execution Log. Pastikan properti init kredensial disetel dengan benar, jalankan <code>setupAdminCredentials()</code>, lalu jalankan ulang <code>setupAppEnvironment()</code> untuk memeriksa kesiapan.</p></details>
+    </section>
+
+    <footer class="card">
+      <h2>Selesai pemasangan</h2>
+      <p>Pastikan enam checklist di sidebar selesai, domain frontend aktif, URL backend stabil, login admin berfungsi, dan data sensitif tetap berada pada penyimpanan privat.</p>
+      <p class="helper">Fakta kuota dan lisensi pada panduan ini mengikuti <code>references/facts.md</code> (Last Verified 2026-11-25). Jalur menu UI pihak ketiga yang ditandai UNVERIFIED perlu dicatat dan diverifikasi manual dalam <code>VERIFY.md</code>.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function (root) {
+  "use strict";
+
+  var STORAGE_KEY = "gasly_install_dapursaji_checklist_v1";
+  var FORBIDDEN = /[<>"'\s]/;
+  var ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  var TOKENS = ["SPREADSHEET_ID", "GAS_EXEC_URL", "GOOGLE_CLIENT_ID", "PAGES_DOMAIN"];
+
+  function fillPlaceholders(templateStr, valuesObj) {
+    var template = String(templateStr == null ? "" : templateStr);
+    var values = valuesObj && typeof valuesObj === "object" ? valuesObj : {};
+    return template.replace(/\{\{([A-Z0-9_]+)\}\}/g, function (match, token) {
+      if (TOKENS.indexOf(token) === -1) {
+        throw new Error("Placeholder tidak dikenal: " + token);
+      }
+      var value = values[token];
+      if (value === undefined || value === null || String(value) === "") return match;
+      var text = String(value);
+      if (FORBIDDEN.test(text)) throw new Error("Karakter terlarang pada placeholder " + token);
+      return text;
+    });
+  }
+
+  function validateConfig(configObj) {
+    var cfg = configObj && typeof configObj === "object" ? configObj : {};
+    var values = {
+      SPREADSHEET_ID: String(cfg.SPREADSHEET_ID || cfg.spreadsheetId || ""),
+      GAS_EXEC_URL: String(cfg.GAS_EXEC_URL || cfg.gasExecUrl || cfg.execUrl || ""),
+      GOOGLE_CLIENT_ID: String(cfg.GOOGLE_CLIENT_ID || cfg.googleClientId || ""),
+      PAGES_DOMAIN: String(cfg.PAGES_DOMAIN || cfg.pagesDomain || "")
+    };
+    var errors = {};
+
+    Object.keys(values).forEach(function (key) {
+      if (values[key] && FORBIDDEN.test(values[key])) {
+        errors[key] = "Input tidak boleh mengandung <, >, kutip, atau spasi.";
+      }
+    });
+
+    if (values.SPREADSHEET_ID && !/^[A-Za-z0-9_-]{6,128}$/.test(values.SPREADSHEET_ID)) {
+      errors.SPREADSHEET_ID = "Format Spreadsheet ID tidak valid.";
+    }
+
+    if (values.GAS_EXEC_URL && !errors.GAS_EXEC_URL) {
+      try {
+        var parsed = new URL(values.GAS_EXEC_URL);
+        var validPath = parsed.pathname.indexOf("/macros/") !== -1 && /\/exec$/.test(parsed.pathname);
+        if (parsed.protocol !== "https:" || parsed.hostname !== "script.google.com" ||
+            !validPath || parsed.search || parsed.hash || parsed.username || parsed.password) {
+          errors.GAS_EXEC_URL = "URL harus HTTPS, host script.google.com, path memuat /macros/ dan berakhir /exec.";
+        }
+      } catch (error) {
+        errors.GAS_EXEC_URL = "URL Web App tidak valid.";
+      }
+    }
+
+    if (values.GOOGLE_CLIENT_ID && !errors.GOOGLE_CLIENT_ID &&
+        !/^[A-Za-z0-9._-]+$/.test(values.GOOGLE_CLIENT_ID)) {
+      errors.GOOGLE_CLIENT_ID = "Format Google Client ID tidak valid.";
+    }
+
+    if (values.PAGES_DOMAIN && !errors.PAGES_DOMAIN) {
+      try {
+        var domain = new URL(values.PAGES_DOMAIN);
+        if ((domain.protocol !== "https:" && domain.protocol !== "http:") ||
+            domain.username || domain.password || domain.search || domain.hash) {
+          errors.PAGES_DOMAIN = "Domain frontend harus URL HTTP(S) tanpa kredensial, query, atau fragment.";
+        }
+      } catch (error2) {
+        errors.PAGES_DOMAIN = "Domain frontend harus berupa URL valid.";
+      }
+    }
+
+    return { valid: Object.keys(errors).length === 0, errors: errors, values: values };
+  }
+
+  function generateSecret(length) {
+    var size = length === undefined ? 32 : Number(length);
+    if (!Number.isInteger(size) || size < 16 || size > 128) {
+      throw new Error("Panjang secret harus bilangan bulat antara 16 dan 128.");
+    }
+    var cryptoApi = root.crypto;
+    if (!cryptoApi || typeof cryptoApi.getRandomValues !== "function") {
+      throw new Error("crypto.getRandomValues tidak tersedia pada browser ini.");
+    }
+    var bytes = new Uint8Array(size);
+    cryptoApi.getRandomValues(bytes);
+    var output = "";
+    for (var i = 0; i < bytes.length; i++) {
+      output += ALPHABET.charAt(bytes[i] % ALPHABET.length);
+    }
+    return output;
+  }
+
+  root.GaslyGuide = {
+    fillPlaceholders: fillPlaceholders,
+    validateConfig: validateConfig,
+    generateSecret: generateSecret
+  };
+
+  function byId(id) {
+    return root.document.getElementById(id);
+  }
+
+  function readValues() {
+    return {
+      SPREADSHEET_ID: byId("cfg-sheet").value,
+      GAS_EXEC_URL: byId("cfg-gas").value,
+      GOOGLE_CLIENT_ID: byId("cfg-client").value,
+      PAGES_DOMAIN: byId("cfg-domain").value
+    };
+  }
+
+  function refreshSnippets() {
+    var config = readValues();
+    var result = validateConfig(config);
+    var status = byId("config-status");
+    if (!result.valid) {
+      var firstError = Object.keys(result.errors)[0];
+      status.textContent = "Input ditolak: " + result.errors[firstError];
+      return;
+    }
+    var templates = root.document.querySelectorAll("[data-template]");
+    for (var i = 0; i < templates.length; i++) {
+      var source = templates[i].getAttribute("data-template") || "";
+      try {
+        templates[i].textContent = fillPlaceholders(source, config);
+      } catch (error) {
+        status.textContent = error.message;
+        return;
+      }
+    }
+    status.textContent = "Input valid. Snippet diperbarui di memori halaman; tidak disimpan.";
+  }
+
+  function bindTabs(attribute, prefix) {
+    var buttons = root.document.querySelectorAll("[" + attribute + "]");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener("click", function () {
+        var selected = this.getAttribute(attribute);
+        for (var j = 0; j < buttons.length; j++) {
+          var active = buttons[j].getAttribute(attribute) === selected;
+          buttons[j].setAttribute("aria-selected", active ? "true" : "false");
+        }
+        var panels = ["html", "react", "cloudflare", "sevalla", "netlify", "firebase", "vercel", "ghpages", "curl", "powershell", "console"];
+        for (var k = 0; k < panels.length; k++) {
+          var panel = byId(prefix + panels[k]);
+          if (panel) panel.classList.toggle("hidden", panels[k] !== selected);
+        }
+      });
+    }
+  }
+
+  function loadChecklist() {
+    try {
+      var raw = root.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveChecklist(state) {
+    try {
+      root.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      /* Checklist tetap berfungsi di memori saat localStorage diblokir. */
+    }
+  }
+
+  function init() {
+    var inputs = ["cfg-sheet", "cfg-gas", "cfg-client", "cfg-domain"];
+    for (var i = 0; i < inputs.length; i++) {
+      byId(inputs[i]).addEventListener("input", refreshSnippets);
+    }
+
+    byId("generate-secret").addEventListener("click", function () {
+      byId("secret-output").textContent =
+        root.GaslyGuide.generateSecret(32) + "\nSalin sekarang — hilang saat halaman dimuat ulang.";
+    });
+
+    var copyButtons = root.document.querySelectorAll("[data-copy]");
+    for (var c = 0; c < copyButtons.length; c++) {
+      copyButtons[c].addEventListener("click", function () {
+        var target = byId(this.getAttribute("data-copy"));
+        if (!target) return;
+        var text = target.textContent || "";
+        if (root.navigator && root.navigator.clipboard && root.navigator.clipboard.writeText) {
+          root.navigator.clipboard.writeText(text).then(function () {
+            /* Tidak mengubah konten snippet; status tombol menggunakan textContent. */
+          }).catch(function () {});
+        }
+      });
+    }
+
+    bindTabs("data-stack", "stack-");
+    bindTabs("data-host", "host-");
+    bindTabs("data-test", "test-");
+
+    var state = loadChecklist();
+    var checks = root.document.querySelectorAll("[data-check]");
+    var pendingOnly = false;
+
+    function updateProgress() {
+      var done = 0;
+      for (var j = 0; j < checks.length; j++) {
+        var id = checks[j].getAttribute("data-check");
+        if (checks[j].checked) done++;
+        var section = byId(id);
+        if (section) section.classList.toggle("hidden", pendingOnly && checks[j].checked);
+        var nav = root.document.querySelector('[data-jump="' + id + '"]');
+        if (nav) nav.setAttribute("data-done", checks[j].checked ? "true" : "false");
+      }
+      var percent = checks.length ? Math.round(done * 100 / checks.length) : 0;
+      byId("progress-badge").textContent = done + " / " + checks.length + " langkah selesai (" + percent + "%)";
+      byId("progress-fill").style.width = percent + "%";
+      byId("progress-wrap").setAttribute("aria-valuenow", String(percent));
+    }
+
+    for (var n = 0; n < checks.length; n++) {
+      (function (checkbox) {
+        var key = checkbox.getAttribute("data-check");
+        checkbox.checked = Boolean(state[key]);
+        checkbox.addEventListener("change", function () {
+          state[key] = Boolean(checkbox.checked);
+          saveChecklist(state);
+          updateProgress();
+        });
+      })(checks[n]);
+    }
+
+    var navButtons = root.document.querySelectorAll("[data-jump]");
+    for (var b = 0; b < navButtons.length; b++) {
+      navButtons[b].addEventListener("click", function () {
+        var targetId = this.getAttribute("data-jump");
+        for (var x = 0; x < navButtons.length; x++) navButtons[x].removeAttribute("aria-current");
+        this.setAttribute("aria-current", "step");
+        var target = byId(targetId);
+        if (target) {
+          target.classList.remove("hidden");
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+
+    byId("toggle-pending").addEventListener("click", function () {
+      pendingOnly = !pendingOnly;
+      this.textContent = pendingOnly ? "Filter: tampilkan semua" : "Filter: hanya belum selesai";
+      updateProgress();
+    });
+
+    byId("reset-progress").addEventListener("click", function () {
+      state = {};
+      for (var y = 0; y < checks.length; y++) checks[y].checked = false;
+      saveChecklist(state);
+      updateProgress();
+    });
+
+    refreshSnippets();
+    updateProgress();
+  }
+
+  if (root.document.readyState === "loading") {
+    root.document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})(window);
+</script>
+</body>
+</html>

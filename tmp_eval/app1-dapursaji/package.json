@@ -1,0 +1,15 @@
+{
+  "name": "dapursaji-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DapurSaji - GaslyUI HTML Tailwind frontend",
+  "type": "module",
+  "scripts": {
+    "dev:css": "tailwindcss -i ./src/preset-tokens.css -o ./dist/styles.css --content ./index.html ./src/**/*.js --watch",
+    "build:css": "tailwindcss -i ./src/preset-tokens.css -o ./dist/styles.css --content ./index.html ./src/**/*.js --minify",
+    "build": "npm run build:css"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

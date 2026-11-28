@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FDFBF7">
+  <meta name="description" content="DapurSaji — Katalog katering, pemesanan dan pelacakan pesanan.">
+  <title>DapurSaji — Katering & Pesanan</title>
+
+  <!-- Tailwind Play CDN hanya untuk preview browser.
+       Produksi menggunakan hasil kompilasi dist/styles.css. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./src/preset-tokens.css">
+  <link rel="stylesheet" href="./dist/styles.css">
+
+  <style>
+    [hidden] { display: none !important; }
+    .hero-image { width:100%;height:100%;object-fit:cover; }
+    .hero-overlay {
+      position:absolute;inset:0;
+      background:linear-gradient(90deg,rgba(14,43,34,.88),rgba(14,43,34,.2));
+    }
+    .hero-copy {
+      position:absolute;inset:0;
+      display:flex;flex-direction:column;justify-content:center;
+      padding:clamp(20px,5vw,55px);
+      color:white;
+    }
+    .section-heading { font-size:20px;font-weight:800;letter-spacing:-.6px; }
+    .muted { color:var(--text-helper); }
+    .divider { border-bottom:1px solid var(--border-subtle); }
+    .drawer-header {
+      position:sticky;top:0;z-index:2;
+      background:var(--bg-base);
+      border-bottom:1px solid var(--border-subtle);
+      padding:20px 23px;
+    }
+    .drawer-footer {
+      position:sticky;bottom:0;
+      background:white;
+      border-top:1px solid var(--border-subtle);
+      padding:16px 22px;
+    }
+    .field-error { color:#9F1239;font-size:11px;margin-top:5px; }
+    .toast-icon {
+      width:23px;height:23px;display:grid;place-items:center;
+      border-radius:50%;flex:0 0 auto;
+    }
+    .nav-brand-mark {
+      width:38px;height:38px;
+      display:grid;place-items:center;
+      border-radius:12px;
+      background:#E3F1ED;color:#0F766E;
+    }
+    .order-summary {
+      background:#F3EFE6;
+      border:1px solid var(--border-subtle);
+      border-radius:13px;padding:15px;
+    }
+    .price { font-weight:800;font-variant-numeric:tabular-nums; }
+    .photo-frame {
+      position:relative;overflow:hidden;
+      background:var(--bg-interactive);
+      border-radius:15px;
+    }
+    .admin-private-link {
+      color:#115E59;text-decoration:underline;font-weight:700;
+    }
+    .demo-banner {
+      display:flex;align-items:center;gap:8px;
+      padding:9px 14px;
+      background:#FEF3C7;color:#78350F;
+      border-bottom:1px solid #FDE68A;
+      font-size:11px;font-weight:700;
+    }
+    .hero-video {
+      position:absolute;inset:0;width:100%;height:100%;
+      object-fit:cover;opacity:.22;
+    }
+    .quantity-control {
+      display:flex;align-items:center;gap:10px;
+    }
+    .quantity-control button {
+      width:40px;height:40px;border:1px solid var(--border-subtle);
+      border-radius:10px;background:white;font-weight:800;
+    }
+    .catalog-grid {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:17px;
+    }
+    .catalog-card {
+      overflow:hidden;
+      border:1px solid var(--border-subtle);
+      border-radius:17px;background:white;
+    }
+    .catalog-card img {
+      display:block;width:100%;aspect-ratio:16/10;
+      object-fit:cover;background:var(--bg-interactive);
+    }
+    .catalog-card-body { padding:17px; }
+    .catalog-card h3 { font-size:14px;font-weight:800; }
+    .catalog-card p { font-size:11px;color:var(--text-helper);line-height:1.7; }
+    .catalog-card .btn { width:100%;margin-top:13px; }
+    .media-label {
+      position:absolute;bottom:10px;left:10px;
+      padding:5px 9px;border-radius:7px;
+      background:rgba(255,255,255,.94);
+      color:#334E48;font-size:10px;font-weight:700;
+    }
+    .tracking-result {
+      border:1px solid var(--border-subtle);
+      background:white;border-radius:15px;padding:20px;
+    }
+    .tracking-line {
+      display:flex;gap:12px;align-items:flex-start;
+      padding:12px 0;
+    }
+    .tracking-dot {
+      width:12px;height:12px;border-radius:50%;
+      background:#15803D;margin-top:4px;flex:0 0 auto;
+    }
+    .upload-drop {
+      display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:8px;
+      min-height:125px;padding:20px;
+      border:1.5px dashed #B7C9BE;
+      background:#F8FAF7;border-radius:13px;
+      text-align:center;
+    }
+    .admin-nav-label {
+      margin:23px 11px 8px;
+      color:#A8C4B8;font-size:9px;font-weight:800;
+      text-transform:uppercase;letter-spacing:1px;
+    }
+    .pin-input {
+      font-size:25px;letter-spacing:9px;text-align:center;
+      font-family:monospace;
+    }
+    .recovery-panel {
+      padding:14px;border-radius:12px;
+      border:1px solid #F5C77D;background:#FFFBEB;
+    }
+    @media(max-width:767px) {
+      .catalog-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:10px; }
+      .catalog-card-body { padding:12px; }
+      .catalog-card .btn { padding:8px; }
+      .hero-copy { padding:23px; }
+      .section-heading { font-size:18px; }
+      .hero-title { font-size:30px !important; }
+      .hide-mobile { display:none !important; }
+    }
+    @media(max-width:430px) {
+      .catalog-grid { grid-template-columns:1fr; }
+      .catalog-card img { aspect-ratio:16/9; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="toast-region" class="toast-region" role="status" aria-live="polite" aria-atomic="false"></div>
+
+  <div id="simulation-banner" class="demo-banner" hidden>
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M12 11v5m0-8h.01"></path>
+    </svg>
+    Preview Mode — Data simulasi lokal. Tidak ada transaksi yang dikirim ke server.
+    <button type="button" id="reset-preview" class="underline ml-auto">Reset preview</button>
+  </div>
+
+  <div id="public-view">
+    <header class="sticky top-0 z-30" style="background:rgba(253,251,247,.96);border-bottom:1px solid var(--border-subtle);backdrop-filter:blur(12px)">
+      <div class="max-w-7xl mx-auto px-4 md:px-7 flex items-center justify-between" style="min-height:72px">
+        <a href="#" class="flex items-center gap-3" aria-label="DapurSaji beranda">
+          <div class="nav-brand-mark">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M4 12h16M6 12c0 5 2.7 8 6 8s6-3 6-8"></path>
+              <path d="M8 7c0-2 2-3 4-3s4 1 4 3M12 4V2"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="font-extrabold text-base tracking-tight">DapurSaji</div>
+            <div class="text-xs muted">Sajian hangat, pemesanan praktis</div>
+          </div>
+        </a>
+
+        <nav class="flex items-center gap-2 md:gap-5" aria-label="Navigasi utama">
+          <a href="#katalog" class="text-xs font-bold muted hover:text-emerald-800">Katalog</a>
+          <button id="nav-track" class="btn btn-secondary" type="button">Cek Pesanan</button>
+          <button id="nav-admin" class="btn btn-primary" type="button">
+            <svg class="icon" viewBox="0 0 24 24">
+              <rect x="3" y="10" width="18" height="11" rx="2"></rect>
+              <path d="M7 10V7a5 5 0 0110 0v3"></path>
+            </svg>
+            <span class="hide-mobile">Admin</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="max-w-7xl mx-auto px-4 md:px-7 pt-7">
+        <div class="photo-frame" style="height:clamp(300px,42vw,450px)">
+          <img id="hero-image" class="hero-image"
+            alt="Foto ilustrasi hidangan katering"
+            loading="lazy" decoding="async">
+          <video id="hero-video" class="hero-video" muted loop playsinline preload="metadata" poster="" aria-label="Visual ilustrasi suasana dapur"></video>
+          <div class="hero-overlay"></div>
+          <div class="hero-copy">
+            <div class="text-xs font-bold tracking-widest uppercase" style="color:#D7E9D9">DAPURSAJI · KATERING</div>
+            <h1 class="hero-title mt-4 font-extrabold leading-tight" style="font-size:clamp(34px,5vw,57px);max-width:600px;letter-spacing:-2px">
+              Sajian istimewa untuk setiap momen.
+            </h1>
+            <p class="mt-4 text-sm leading-relaxed" style="color:#E5F1E9;max-width:420px">
+              Jelajahi pilihan paket, atur kebutuhan pesanan, dan pantau prosesnya dalam satu tempat.
+            </p>
+            <div class="flex flex-wrap gap-3 mt-7">
+              <a href="#katalog" class="btn" style="background:white;color:#183B32">Lihat Katalog</a>
+              <button id="hero-track" class="btn" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.5);color:white">Lacak Pesanan</button>
+            </div>
+          </div>
+          <span class="media-label">Foto ilustrasi · Bukan dokumentasi DapurSaji</span>
+        </div>
+      </section>
+
+      <section class="max-w-7xl mx-auto px-4 md:px-7 py-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="surface p-4">
+            <div class="flex items-center gap-2 text-xs font-bold">
+              <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10M7 12h7M7 16h5"></path></svg>
+              Katalog paket
+            </div>
+            <p class="text-xs muted mt-2">Pilihan menu yang dikelola admin.</p>
+          </div>
+          <div class="surface p-4">
+            <div class="flex items-center gap-2 text-xs font-bold">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h8M8 17h4"></path></svg>
+              Form online
+            </div>
+            <p class="text-xs muted mt-2">Informasi pesanan lebih terstruktur.</p>
+          </div>
+          <div class="surface p-4">
+            <div class="flex items-center gap-2 text-xs font-bold">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
+              Pencatatan
+            </div>
+            <p class="text-xs muted mt-2">Data tersimpan melalui backend.</p>
+          </div>
+          <div class="surface p-4">
+            <div class="flex items-center gap-2 text-xs font-bold">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+              Pelacakan
+            </div>
+            <p class="text-xs muted mt-2">Cek status dengan token pribadi.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="katalog" class="max-w-7xl mx-auto px-4 md:px-7 py-7">
+        <div class="flex items-end justify-between gap-4 mb-5">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--accent-solid)">MENU KAMI</div>
+            <h2 class="section-heading mt-2">Temukan paket pilihan</h2>
+            <p class="text-xs muted mt-2">Harga dan ketersediaan mengikuti katalog aktif.</p>
+          </div>
+          <button id="catalog-reload" class="btn btn-secondary">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"></path><path d="M5.5 9A7 7 0 0118 6l2 6M4 12l2 6a7 7 0 0012.5-3"></path></svg>
+            <span class="hide-mobile">Muat ulang</span>
+          </button>
+        </div>
+
+        <div class="toolbar mb-5">
+          <div class="flex-1 min-w-0">
+            <label for="catalog-search" class="sr-only">Cari paket</label>
+            <input id="catalog-search" class="field" type="search" placeholder="Cari nama paket atau kategori...">
+          </div>
+          <div id="catalog-filters" class="filter-pills">
+            <button class="filter-pill active" data-category="ALL">Semua</button>
+          </div>
+        </div>
+
+        <div id="catalog-state" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="surface p-3">
+            <div class="skeleton" style="height:160px"></div>
+            <div class="skeleton mt-4" style="height:16px;width:60%"></div>
+            <div class="skeleton mt-3" style="height:12px;width:85%"></div>
+          </div>
+          <div class="surface p-3">
+            <div class="skeleton" style="height:160px"></div>
+            <div class="skeleton mt-4" style="height:16px;width:60%"></div>
+            <div class="skeleton mt-3" style="height:12px;width:85%"></div>
+          </div>
+          <div class="surface p-3">
+            <div class="skeleton" style="height:160px"></div>
+            <div class="skeleton mt-4" style="height:16px;width:60%"></div>
+            <div class="skeleton mt-3" style="height:12px;width:85%"></div>
+          </div>
+        </div>
+        <div id="catalog-grid" class="catalog-grid"></div>
+      </section>
+
+      <section class="max-w-7xl mx-auto px-4 md:px-7 py-7">
+        <div class="surface p-6 md:p-8 grid md:grid-cols-2 gap-6 items-center">
+          <div>
+            <div class="text-xs uppercase font-bold tracking-widest" style="color:var(--accent-solid)">PESANAN ANDA</div>
+            <h2 class="section-heading mt-3">Sudah memesan?</h2>
+            <p class="text-xs muted leading-relaxed mt-3">
+              Gunakan nomor pesanan dan tracking token yang diberikan saat pemesanan untuk melihat status pesanan.
+            </p>
+            <button id="bottom-track" class="btn btn-primary mt-5">Periksa status pesanan</button>
+          </div>
+          <div class="order-summary">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold">Keamanan pelacakan</span>
+              <span class="status-pill status-success">Token diperlukan</span>
+            </div>
+            <p class="text-xs muted mt-3 leading-relaxed">
+              Nomor pesanan saja tidak cukup untuk mengakses informasi. Tracking token wajib digunakan sebagai verifikasi kepemilikan.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="mt-10" style="background:#183B32;color:#E5F1E9">
+      <div class="max-w-7xl mx-auto px-5 py-9">
+        <div class="font-extrabold text-lg">DapurSaji</div>
+        <p class="text-xs mt-2" style="color:#C0D5C9">Katalog dan layanan pemesanan katering.</p>
+        <div class="mt-7 pt-5 text-xs" style="border-top:1px solid #45665A;color:#C0D5C9">
+          Informasi menu mengikuti data katalog yang tersedia.
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <div id="admin-view" hidden>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand flex items-center gap-3 px-2 mb-7">
+          <div class="nav-brand-mark">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M4 12h16M6 12c0 5 2.7 8 6 8s6-3 6-8M8 7c0-2 2-3 4-3s4 1 4 3"></path></svg>
+          </div>
+          <div>
+            <div class="font-extrabold">DapurSaji</div>
+            <div class="text-xs" style="color:#C1D8CD">Admin Workspace</div>
+          </div>
+        </div>
+
+        <div class="admin-nav-label">Workspace</div>
+        <nav aria-label="Navigasi admin">
+          <button class="sidebar-link active" data-admin-tab="orders">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10M7 12h10M7 16h5"></path></svg>
+            Pesanan
+          </button>
+          <button class="sidebar-link" data-admin-tab="catalog">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 5V3m8 2V3M8 10h8M8 14h5"></path></svg>
+            Katalog
+          </button>
+        </nav>
+
+        <div class="sidebar-footer mt-auto">
+          <div class="rounded-xl p-3 text-xs" style="background:rgba(255,255,255,.09)">
+            <div class="font-bold">Koneksi aplikasi</div>
+            <div id="connection-status" class="mt-2" style="color:#C0D5C9">Memeriksa...</div>
+          </div>
+          <button id="admin-logout" class="sidebar-link mt-4 w-full">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M21 4v16"></path></svg>
+            Keluar
+          </button>
+          <button id="back-public" class="sidebar-link w-full">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6M9 12h12"></path></svg>
+            Tampilan publik
+          </button>
+        </div>
+      </aside>
+
+      <div class="main-area">
+        <header class="topbar">
+          <div>
+            <div class="font-extrabold text-base" id="admin-page-title">Manajemen Pesanan</div>
+            <div class="text-xs muted mt-1" id="admin-page-subtitle">Kelola pesanan dan status layanan.</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="admin-session-pill" class="status-pill status-success">Admin aktif</span>
+            <button id="admin-refresh" class="btn btn-secondary" aria-label="Muat ulang data">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5 9a7 7 0 0113-2l2 5M4 12l2 6a7 7 0 0013-3"></path></svg>
+            </button>
+          </div>
+        </header>
+
+        <main class="content-area">
+          <div id="admin-orders-section">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+              <div>
+                <h1 class="text-2xl font-extrabold tracking-tight">Ringkasan operasional</h1>
+                <p class="text-xs muted mt-2">Metrik dihitung langsung dari data pesanan.</p>
+              </div>
+              <button id="orders-reload" class="btn btn-secondary">Sinkronkan data</button>
+            </div>
+
+            <div id="kpi-grid" class="kpi-grid mb-6">
+              <div class="surface kpi-card"><div class="skeleton" style="height:11px;width:80px"></div><div class="skeleton mt-4" style="height:29px;width:70px"></div></div>
+              <div class="surface kpi-card"><div class="skeleton" style="height:11px;width:80px"></div><div class="skeleton mt-4" style="height:29px;width:70px"></div></div>
+              <div class="surface kpi-card"><div class="skeleton" style="height:11px;width:80px"></div><div class="skeleton mt-4" style="height:29px;width:70px"></div></div>
+              <div class="surface kpi-card"><div class="skeleton" style="height:11px;width:80px"></div><div class="skeleton mt-4" style="height:29px;width:70px"></div></div>
+            </div>
+
+            <section class="surface overflow-hidden">
+              <div class="p-5 divider">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 class="font-extrabold text-base">Daftar pesanan</h2>
+                    <p class="text-xs muted mt-1">Data pesanan tersinkronisasi dari backend.</p>
+                  </div>
+                  <span id="orders-count" class="status-pill status-neutral tabular-nums">0 pesanan</span>
+                </div>
+              </div>
+
+              <div class="p-4 space-y-3">
+                <div class="toolbar">
+                  <div class="toolbar-search flex-1">
+                    <label for="order-search" class="sr-only">Cari pesanan</label>
+                    <input id="order-search" class="field" type="search" placeholder="Cari nomor pesanan atau nama...">
+                  </div>
+                  <label class="sr-only" for="order-status-filter">Filter status</label>
+                  <select id="order-status-filter" class="field" style="width:auto;min-width:155px">
+                    <option value="ALL">Semua status</option>
+                    <option value="MENUNGGU_DP">Menunggu DP</option>
+                    <option value="DP_DITERIMA">DP diterima</option>
+                    <option value="DIPROSES">Diproses</option>
+                    <option value="SIAP_DIANTAR">Siap diantar</option>
+                    <option value="SELESAI">Selesai</option>
+                    <option value="DIBATALKAN">Dibatalkan</option>
+                  </select>
+                </div>
+
+                <div class="filter-pills" id="order-filter-pills">
+                  <button class="filter-pill active" data-status="ALL">Semua</button>
+                  <button class="filter-pill" data-status="MENUNGGU_DP">Menunggu DP</button>
+                  <button class="filter-pill" data-status="DP_DITERIMA">DP diterima</button>
+                  <button class="filter-pill" data-status="DIPROSES">Diproses</button>
+                  <button class="filter-pill" data-status="SELESAI">Selesai</button>
+                </div>
+              </div>
+
+              <div id="orders-state" class="p-4">
+                <div class="skeleton mb-3" style="height:40px"></div>
+                <div class="skeleton mb-3" style="height:40px"></div>
+                <div class="skeleton" style="height:40px"></div>
+              </div>
+
+              <div class="table-wrap" id="orders-table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nomor pesanan</th>
+                      <th>Pelanggan</th>
+                      <th>Tanggal</th>
+                      <th>Jumlah</th>
+                      <th>Status</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orders-table-body"></tbody>
+                </table>
+              </div>
+              <div id="orders-mobile" class="mobile-cards"></div>
+            </section>
+          </div>
+
+          <div id="admin-catalog-section" hidden>
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+              <div>
+                <h1 class="text-2xl font-extrabold">Manajemen katalog</h1>
+                <p class="text-xs muted mt-2">Kelola informasi paket dan ketersediaannya.</p>
+              </div>
+              <button id="catalog-add" class="btn btn-primary">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                Tambah paket
+              </button>
+            </div>
+            <div class="surface overflow-hidden">
+              <div class="p-4 divider toolbar">
+                <h2 class="font-bold">Daftar paket</h2>
+                <span id="admin-catalog-count" class="status-pill status-neutral">0 paket</span>
+              </div>
+              <div id="admin-catalog-state" class="p-4"></div>
+              <div id="admin-catalog-grid" class="catalog-grid p-4"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRAWER: PEMESANAN -->
+  <div id="order-drawer-backdrop" class="drawer-backdrop" aria-hidden="true">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="order-drawer-title">
+      <div class="drawer-header flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--accent-solid)">FORM PESANAN</div>
+          <h2 id="order-drawer-title" class="font-extrabold text-lg mt-1">Buat pesanan baru</h2>
+        </div>
+        <button class="btn btn-secondary" data-close-drawer="order-drawer-backdrop" aria-label="Tutup form">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <form id="order-form">
+        <div class="form-section">
+          <h3 class="font-extrabold mb-4">Informasi pelanggan</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="field-label" for="order-customer-name">Nama lengkap *</label>
+              <input class="field" id="order-customer-name" name="customer_name" required minlength="2" maxlength="120">
+            </div>
+            <div>
+              <label class="field-label" for="order-customer-phone">Nomor WhatsApp/telepon *</label>
+              <input class="field" id="order-customer-phone" name="customer_phone" type="tel" required maxlength="20" placeholder="08xxxxxxxxxx">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="font-extrabold mb-4">Jadwal pemesanan</h3>
+          <div class="form-grid">
+            <div>
+              <label class="field-label" for="order-delivery-date">Tanggal kebutuhan *</label>
+              <input class="field" id="order-delivery-date" name="delivery_date" type="date" required>
+            </div>
+            <div>
+              <label class="field-label" for="order-delivery-time">Waktu kebutuhan *</label>
+              <input class="field" id="order-delivery-time" name="delivery_time" type="time" required>
+            </div>
+            <div class="form-full">
+              <label class="field-label" for="order-fulfillment">Metode pemenuhan *</label>
+              <select class="field" id="order-fulfillment" name="fulfillment_type" required>
+                <option value="DELIVERY">Antar ke alamat</option>
+                <option value="PICKUP">Ambil sendiri</option>
+              </select>
+            </div>
+            <div class="form-full" id="delivery-address-wrap">
+              <label class="field-label" for="order-address">Alamat pengantaran</label>
+              <textarea class="field" id="order-address" name="delivery_address" rows="3" maxlength="1000"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="font-extrabold mb-4">Pilihan paket</h3>
+          <div id="order-items-container" class="space-y-3"></div>
+          <div class="mt-4">
+            <label class="field-label" for="order-note">Catatan tambahan</label>
+            <textarea class="field" id="order-note" name="customer_note" rows="3" maxlength="1000" placeholder="Informasi tambahan untuk pesanan..."></textarea>
+          </div>
+          <div class="order-summary mt-4">
+            <div class="flex justify-between text-xs">
+              <span>Subtotal indikatif</span>
+              <strong id="order-subtotal" class="price">-</strong>
+            </div>
+            <p class="text-xs muted mt-2">Total akhir dan nominal DP mengikuti perhitungan server.</p>
+          </div>
+        </div>
+
+        <div class="drawer-footer">
+          <div class="flex gap-3">
+            <button type="button" class="btn btn-secondary flex-1" data-close-drawer="order-drawer-backdrop">Batal</button>
+            <button id="order-submit" type="submit" class="btn btn-primary flex-1">Kirim pesanan</button>
+          </div>
+        </div>
+      </form>
+    </aside>
+  </div>
+
+  <!-- DRAWER: BUKTI TRANSFER -->
+  <div id="proof-drawer-backdrop" class="drawer-backdrop" aria-hidden="true">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="proof-title">
+      <div class="drawer-header flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--accent-solid)">BUKTI PEMBAYARAN</div>
+          <h2 id="proof-title" class="font-extrabold text-lg mt-1">Unggah bukti transfer</h2>
+        </div>
+        <button class="btn btn-secondary" data-close-drawer="proof-drawer-backdrop" aria-label="Tutup unggahan">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-5">
+        <div class="order-summary">
+          <div class="text-xs muted">Nomor pesanan</div>
+          <div id="proof-order-id" class="font-extrabold mt-1 tabular-nums"></div>
+          <p class="text-xs muted mt-3">Token pelacakan digunakan untuk memverifikasi kepemilikan pesanan.</p>
+        </div>
+        <div>
+          <label class="field-label" for="proof-file">Foto bukti transfer (JPEG, PNG, WebP)</label>
+          <label class="upload-drop" for="proof-file">
+            <svg class="icon" viewBox="0 0 24 24" style="width:29px;height:29px;color:var(--accent-solid)">
+              <path d="M12 16V4m-5 5l5-5 5 5M4 17v3h16v-3"></path>
+            </svg>
+            <span class="font-bold text-xs">Pilih foto bukti transfer</span>
+            <span class="text-xs muted">Maksimal 1 MB setelah kompresi</span>
+          </label>
+          <input id="proof-file" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" class="mt-3 field" required>
+          <p id="proof-file-name" class="text-xs muted mt-2" aria-live="polite">Belum ada file dipilih.</p>
+        </div>
+
+        <div id="proof-progress" hidden class="space-y-2">
+          <div class="flex justify-between text-xs font-bold">
+            <span id="proof-progress-label">Memproses...</span>
+            <span id="proof-progress-state">LOADING</span>
+          </div>
+          <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-interactive)">
+            <div id="proof-progress-bar" class="h-full rounded-full" style="width:10%;background:var(--accent-solid);transition:width .2s"></div>
+          </div>
+        </div>
+
+        <div id="proof-recovery" class="recovery-panel" hidden>
+          <div class="font-extrabold text-xs">Unggahan belum berhasil</div>
+          <p id="proof-error" class="text-xs mt-2"></p>
+          <button id="proof-retry" type="button" class="btn btn-primary mt-3 w-full">
+            Unggah Ulang Foto Saja
+          </button>
+          <p class="text-xs muted mt-2">Pesanan tetap tersimpan. Percobaan ulang tidak membuat pesanan baru.</p>
+        </div>
+        <div class="text-xs muted leading-relaxed">
+          Bukti transfer merupakan data keuangan pribadi. File dikirim melalui tiket upload terikat pesanan dan disimpan privat.
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- DRAWER: TRACKING -->
+  <div id="tracking-drawer-backdrop" class="drawer-backdrop" aria-hidden="true">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="tracking-title">
+      <div class="drawer-header flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--accent-solid)">PELACAKAN</div>
+          <h2 id="tracking-title" class="font-extrabold text-lg mt-1">Cek status pesanan</h2>
+        </div>
+        <button class="btn btn-secondary" data-close-drawer="tracking-drawer-backdrop" aria-label="Tutup pelacakan">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="p-5">
+        <form id="tracking-form" class="space-y-4">
+          <div>
+            <label class="field-label" for="tracking-order-id">Nomor pesanan *</label>
+            <input id="tracking-order-id" class="field" required autocomplete="off" placeholder="ORD-YYYYMMDD-XXXX">
+          </div>
+          <div>
+            <label class="field-label" for="tracking-token">Tracking token *</label>
+            <input id="tracking-token" class="field" required autocomplete="off" type="password" placeholder="Masukkan token pelacakan">
+          </div>
+          <button id="tracking-submit" class="btn btn-primary w-full" type="submit">Periksa status</button>
+        </form>
+        <div id="tracking-result" class="mt-5" aria-live="polite"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- DRAWER: DETAIL ADMIN -->
+  <div id="detail-drawer-backdrop" class="drawer-backdrop" aria-hidden="true">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <div class="drawer-header flex items-center justify-between">
+        <div>
+          <div class="text-xs uppercase font-bold tracking-widest" style="color:var(--accent-solid)">DETAIL PESANAN</div>
+          <h2 id="detail-title" class="font-extrabold text-lg mt-1">Detail</h2>
+        </div>
+        <button class="btn btn-secondary" data-close-drawer="detail-drawer-backdrop" aria-label="Tutup detail">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div id="detail-content" class="p-5 space-y-4"></div>
+    </aside>
+  </div>
+
+  <!-- DRAWER: CATALOG EDITOR -->
+  <div id="catalog-drawer-backdrop" class="drawer-backdrop" aria-hidden="true">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="catalog-drawer-title">
+      <div class="drawer-header flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--accent-solid)">KATALOG</div>
+          <h2 id="catalog-drawer-title" class="font-extrabold text-lg mt-1">Tambah paket</h2>
+        </div>
+        <button class="btn btn-secondary" data-close-drawer="catalog-drawer-backdrop" aria-label="Tutup editor">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <form id="catalog-form">
+        <input id="catalog-package-id" type="hidden">
+        <input id="catalog-expected-updated" type="hidden">
+        <div class="p-5 space-y-4">
+          <div>
+            <label class="field-label" for="catalog-name">Nama paket *</label>
+            <input class="field" id="catalog-name" required maxlength="120">
+          </div>
+          <div>
+            <label class="field-label" for="catalog-category">Kategori *</label>
+            <input class="field" id="catalog-category" required maxlength="80">
+          </div>
+          <div>
+            <label class="field-label" for="catalog-description">Deskripsi *</label>
+            <textarea class="field" id="catalog-description" required rows="3" maxlength="1000"></textarea>
+          </div>
+          <div>
+            <label class="field-label" for="catalog-menu-details">Detail menu *</label>
+            <textarea class="field" id="catalog-menu-details" required rows="4" maxlength="2000"></textarea>
+          </div>
+          <div class="form-grid">
+            <div>
+              <label class="field-label" for="catalog-price">Harga (Rp)</label>
+              <input class="field tabular-nums" id="catalog-price" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label class="field-label" for="catalog-minimum">Minimum jumlah</label>
+              <input class="field" id="catalog-minimum" type="number" min="1" step="1">
+            </div>
+          </div>
+          <div>
+            <label class="field-label" for="catalog-image">URL gambar publik</label>
+            <input class="field" id="catalog-image" type="url" maxlength="1000">
+          </div>
+          <div>
+            <label class="field-label" for="catalog-active">Status paket</label>
+            <select class="field" id="catalog-active">
+              <option value="true">Aktif</option>
+              <option value="false">Nonaktif</option>
+            </select>
+          </div>
+        </div>
+        <div class="drawer-footer">
+          <button type="submit" id="catalog-save" class="btn btn-primary w-full">Simpan paket</button>
+        </div>
+      </form>
+    </aside>
+  </div>
+
+  <!-- LOGIN MODAL -->
+  <div id="login-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="modal-card">
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--accent-solid)">DAPURSAJI</div>
+          <h2 id="login-title" class="text-xl font-extrabold mt-2">Login Admin</h2>
+        </div>
+        <button class="btn btn-secondary" data-close-modal="login-modal" aria-label="Tutup login">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <form id="login-form" class="mt-5 space-y-4">
+        <div>
+          <label class="field-label" for="login-passphrase">Passphrase admin *</label>
+          <input class="field" id="login-passphrase" type="password" required minlength="12" autocomplete="current-password">
+        </div>
+        <label class="flex items-center gap-2 text-xs muted">
+          <input id="login-persist" type="checkbox">
+          Pertahankan sesi selama tab terbuka
+        </label>
+        <div id="login-demo-info" hidden class="order-summary">
+          <p class="text-xs font-bold">Mode simulasi</p>
+          <p class="text-xs muted mt-2">Gunakan tombol Isi Demo untuk membuka panel simulasi. Tidak ada passphrase produksi yang disediakan.</p>
+          <button id="login-demo" type="button" class="btn btn-secondary w-full mt-3">Isi Demo</button>
+        </div>
+        <button id="login-submit" class="btn btn-primary w-full" type="submit">Masuk ke dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL STEP-UP / ARSIP -->
+  <div id="stepup-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="stepup-title">
+    <div class="modal-card">
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-xs uppercase tracking-widest font-bold" style="color:var(--danger-solid)">KONFIRMASI SENSITIF</div>
+          <h2 id="stepup-title" class="text-lg font-extrabold mt-2">Verifikasi PIN admin</h2>
+        </div>
+        <button class="btn btn-secondary" data-close-modal="stepup-modal" aria-label="Tutup modal">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <p id="stepup-description" class="text-xs muted leading-relaxed mt-4"></p>
+      <form id="stepup-form" class="mt-5 space-y-4">
+        <div>
+          <label for="stepup-pin" class="field-label">PIN 6 digit *</label>
+          <input id="stepup-pin" class="field pin-input" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="off" required>
+        </div>
+        <div id="stepup-blocker" class="recovery-panel">
+          <p class="text-xs font-bold">Menunggu perluasan kontrak backend</p>
+          <p class="text-xs mt-2">Kontrak saat ini belum mendaftarkan auth.verifyPin dan aksi arsip/hapus pesanan. PIN tidak akan dikirim sebelum endpoint resmi tersedia.</p>
+        </div>
+        <button type="submit" class="btn btn-danger w-full">Verifikasi dan lanjutkan</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="./src/config.js"></script>
+  <script src="./src/gasClient.js"></script>
+  <script src="./src/imageUploader.js"></script>
+  <script src="./src/mediaPlaceholders.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var $ = function (selector, root) {
+      return (root || document).querySelector(selector);
+    };
+
+    var $$ = function (selector, root) {
+      return Array.from((root || document).querySelectorAll(selector));
+    };
+
+    var state = {
+      catalog: [],
+      orders: [],
+      selectedItems: {},
+      selectedCategory: 'ALL',
+      orderStatus: 'ALL',
+      adminTab: 'orders',
+      admin: false,
+      orderBusy: false,
+      catalogBusy: false,
+      orderResult: null,
+      pendingUpload: null,
+      uploadState: 'INITIAL',
+      orderState: 'INITIAL',
+      catalogState: 'INITIAL',
+      lastFocus: null,
+      pendingSensitiveAction: null
+    };
+
+    var currency = new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0
+    });
+
+    var STATUS = {
+      MENUNGGU_DP: ['Menunggu DP', 'warning'],
+      DP_DITERIMA: ['DP diterima', 'info'],
+      DIPROSES: ['Diproses', 'info'],
+      SIAP_DIANTAR: ['Siap diantar', 'success'],
+      SELESAI: ['Selesai', 'success'],
+      DIBATALKAN: ['Dibatalkan', 'danger']
+    };
+
+    var ALLOWED_TRANSITIONS = {
+      MENUNGGU_DP: ['DP_DITERIMA', 'DIBATALKAN'],
+      DP_DITERIMA: ['DIPROSES', 'DIBATALKAN'],
+      DIPROSES: ['SIAP_DIANTAR', 'DIBATALKAN'],
+      SIAP_DIANTAR: ['SELESAI'],
+      SELESAI: [],
+      DIBATALKAN: []
+    };
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatMoney(value) {
+      if (value === null || value === undefined || value === '') return '-';
+      var amount = Number(value);
+      return Number.isFinite(amount) ? currency.format(amount) : 'Data tidak valid';
+    }
+
+    function isSuccess(result) {
+      return Boolean(result && result.status === 'success' && result.code === 'OK');
+    }
+
+    function showToast(title, description, type) {
+      var region = $('#toast-region');
+      var toast = document.createElement('div');
+      var iconType = type || 'success';
+      var icon = iconType === 'error'
+        ? '<path d="M12 8v5m0 4h.01M4 20h16L12 4 4 20z"></path>'
+        : '<path d="M5 12l4 4L19 6"></path>';
+
+      toast.className = 'toast';
+      toast.innerHTML =
+        '<div class="toast-icon" style="background:' +
+        (iconType === 'error' ? 'var(--danger-soft-bg)' : 'var(--success-soft-bg)') +
+        ';color:' + (iconType === 'error' ? 'var(--danger-soft-text)' : 'var(--success-soft-text)') + '">' +
+        '<svg class="icon" viewBox="0 0 24 24">' + icon + '</svg></div>' +
+        '<div class="min-w-0 flex-1"><div class="toast-message">' + escapeHtml(title) + '</div>' +
+        '<div class="toast-description">' + escapeHtml(description || '') + '</div></div>' +
+        '<button type="button" aria-label="Tutup notifikasi" class="text-xs muted" data-toast-close>&times;</button>';
+
+      region.appendChild(toast);
+
+      var timer = window.setTimeout(function () {
+        toast.remove();
+      }, 4500);
+
+      $('[data-toast-close]', toast).addEventListener('click', function () {
+        window.clearTimeout(timer);
+        toast.remove();
+      });
+    }
+
+    function setButtonBusy(button, busy, label) {
+      if (!button) return;
+      if (busy) {
+        button.dataset.originalText = button.textContent;
+        button.textContent = label || 'Memproses...';
+        button.disabled = true;
+      } else {
+        button.textContent = button.dataset.originalText || button.textContent;
+        button.disabled = false;
+      }
+    }
+
+    function openDrawer(id) {
+      var backdrop = document.getElementById(id);
+      if (!backdrop) return;
+      state.lastFocus = document.activeElement;
+      backdrop.classList.add('open');
+      backdrop.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      var focusable = $('input,button,select,textarea', backdrop);
+      if (focusable) window.setTimeout(function () { focusable.focus(); }, 30);
+    }
+
+    function closeDrawer(id) {
+      var backdrop = document.getElementById(id);
+      if (!backdrop) return;
+      backdrop.classList.remove('open');
+      backdrop.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (state.lastFocus && typeof state.lastFocus.focus === 'function') {
+        state.lastFocus.focus();
+      }
+    }
+
+    function openModal(id) {
+      state.lastFocus = document.activeElement;
+      var modal = document.getElementById(id);
+      if (!modal) return;
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      var field = $('input,button', modal);
+      if (field) field.focus();
+    }
+
+    function closeModal(id) {
+      var modal = document.getElementById(id);
+      if (!modal) return;
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+      if (state.lastFocus && typeof state.lastFocus.focus === 'function') {
+        state.lastFocus.focus();
+      }
+    }
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        $$('.drawer-backdrop.open').forEach(function (element) {
+          closeDrawer(element.id);
+        });
+        $$('.modal-backdrop.open').forEach(function (element) {
+          closeModal(element.id);
+        });
+      }
+    });
+
+    $$('[data-close-drawer]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        closeDrawer(button.dataset.closeDrawer);
+      });
+    });
+
+    $$('[data-close-modal]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        closeModal(button.dataset.closeModal);
+      });
+    });
+
+    $$('.drawer-backdrop').forEach(function (backdrop) {
+      backdrop.addEventListener('click', function (event) {
+        if (event.target === backdrop) closeDrawer(backdrop.id);
+      });
+    });
+
+    $$('.modal-backdrop').forEach(function (backdrop) {
+      backdrop.addEventListener('click', function (event) {
+        if (event.target === backdrop) closeModal(backdrop.id);
+      });
+    });
+
+    function showPublic() {
+      $('#public-view').hidden = false;
+      $('#admin-view').hidden = true;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showAdmin() {
+      $('#public-view').hidden = true;
+      $('#admin-view').hidden = false;
+      renderAdminTab(state.adminTab);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showLogin() {
+      $('#login-demo-info').hidden = !window.GaslyClient.isSimulationMode();
+      openModal('login-modal');
+    }
+
+    $('#nav-admin').addEventListener('click', function () {
+      if (window.GaslyClient.isSimulationMode() && !state.admin) {
+        showLogin();
+      } else if (state.admin) {
+        showAdmin();
+      } else {
+        showLogin();
+      }
+    });
+
+    $('#back-public').addEventListener('click', showPublic);
+
+    function fallbackImage(element, label) {
+      window.GaslyMedia.applyImageFallback(element, label);
+    }
+
+    function initializeMedia() {
+      var hero = window.GaslyMedia.MEDIA_PLACEHOLDERS.hero;
+      var heroImage = $('#hero-image');
+      heroImage.src = hero.url;
+      heroImage.onerror = function () {
+        fallbackImage(heroImage, hero.label);
+      };
+
+      var ambient = window.GaslyMedia.MEDIA_PLACEHOLDERS.ambient;
+      window.GaslyMedia.attachVideo($('#hero-video'), ambient);
+    }
+
+    function renderCatalogFilters() {
+      var categories = ['ALL'].concat(
+        Array.from(new Set(state.catalog.map(function (item) {
+          return item.category || 'Lainnya';
+        })))
+      );
+
+      $('#catalog-filters').innerHTML = categories.map(function (category) {
+        return '<button class="filter-pill ' +
+          (category === state.selectedCategory ? 'active' : '') +
+          '" data-category="' + escapeHtml(category) + '">' +
+          (category === 'ALL' ? 'Semua' : escapeHtml(category)) +
+          '</button>';
+      }).join('');
+
+      $$('[data-category]', $('#catalog-filters')).forEach(function (button) {
+        button.addEventListener('click', function () {
+          state.selectedCategory = button.dataset.category;
+          renderCatalogFilters();
+          renderCatalog();
+        });
+      });
+    }
+
+    function renderCatalog() {
+      var query = $('#catalog-search').value.toLowerCase().trim();
+
+      var filtered = state.catalog.filter(function (item) {
+        var matchesCategory = state.selectedCategory === 'ALL' ||
+          item.category === state.selectedCategory;
+        var text = [
+          item.package_name,
+          item.category,
+          item.description,
+          item.menu_details
+        ].join(' ').toLowerCase();
+
+        return matchesCategory && text.indexOf(query) >= 0;
+      });
+
+      $('#catalog-state').hidden = true;
+      var grid = $('#catalog-grid');
+
+      if (!filtered.length) {
+        grid.innerHTML =
+          '<div class="surface empty-state" style="grid-column:1/-1">' +
+          '<div class="empty-icon"><svg class="icon" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"></circle><path d="M15 15l5 5"></path></svg></div>' +
+          '<div class="font-extrabold">Paket tidak ditemukan</div>' +
+          '<p class="text-xs muted mt-2">Coba kata kunci atau filter yang berbeda.</p>' +
+          '<button class="btn btn-secondary mt-4" id="clear-catalog-search">Reset pencarian</button></div>';
+
+        $('#clear-catalog-search').addEventListener('click', function () {
+          $('#catalog-search').value = '';
+          state.selectedCategory = 'ALL';
+          renderCatalogFilters();
+          renderCatalog();
+        });
+        return;
+      }
+
+      grid.innerHTML = filtered.map(function (item, index) {
+        var image = item.image_url || [
+          window.GaslyMedia.MEDIA_PLACEHOLDERS.riceBox.url,
+          window.GaslyMedia.MEDIA_PLACEHOLDERS.catering.url,
+          window.GaslyMedia.MEDIA_PLACEHOLDERS.traditional.url
+        ][index % 3];
+
+        var price = formatMoney(item.price_amount);
+        var minimum = item.minimum_quantity
+          ? 'Minimum ' + escapeHtml(item.minimum_quantity) + ' porsi'
+          : 'Minimum belum ditentukan';
+
+        return '<article class="catalog-card menu-card">' +
+          '<div class="relative">' +
+          '<img src="' + escapeHtml(image) + '" alt="Foto ilustrasi ' + escapeHtml(item.package_name) + '" loading="lazy" decoding="async" onerror="window.GaslyMedia.applyImageFallback(this,\'Foto referensi menu\')">' +
+          '<span class="media-label">Foto ilustrasi</span></div>' +
+          '<div class="catalog-card-body">' +
+          '<div class="text-xs font-bold" style="color:var(--accent-solid)">' + escapeHtml(item.category || 'Paket') + '</div>' +
+          '<h3 class="mt-2">' + escapeHtml(item.package_name) + '</h3>' +
+          '<p class="mt-2">' + escapeHtml(item.description || 'Informasi paket belum tersedia.') + '</p>' +
+          '<div class="mt-3 flex items-center justify-between gap-2">' +
+          '<div><div class="text-xs muted">Harga per porsi</div><div class="price mt-1">' + escapeHtml(price) + '</div></div>' +
+          '<span class="text-xs muted">' + minimum + '</span></div>' +
+          '<button type="button" class="btn btn-primary" data-order-package="' + escapeHtml(item.package_id) + '" ' +
+          (item.price_amount === null || item.price_amount === undefined ? 'disabled title="Harga belum tersedia"' : '') +
+          '>Pilih paket</button>' +
+          '</div></article>';
+      }).join('');
+
+      $$('[data-order-package]', grid).forEach(function (button) {
+        button.addEventListener('click', function () {
+          openOrderForm(button.dataset.orderPackage);
+        });
+      });
+    }
+
+    async function loadCatalog() {
+      state.catalogState = 'LOADING';
+      $('#catalog-state').hidden = false;
+      $('#catalog-grid').innerHTML = '';
+
+      var result = await window.GaslyClient.request('catalog.list', {
+        active_only: true
+      }, {
+        idempotent: false
+      });
+
+      if (!isSuccess(result)) {
+        state.catalogState = 'ERROR';
+        $('#catalog-state').innerHTML =
+          '<div class="surface empty-state" style="grid-column:1/-1">' +
+          '<div class="font-bold">Katalog belum dapat dimuat</div>' +
+          '<p class="text-xs muted mt-2">' + escapeHtml(result.message) + '</p>' +
+          '<button id="catalog-retry" class="btn btn-primary mt-4">Coba lagi</button></div>';
+
+        $('#catalog-retry').addEventListener('click', loadCatalog);
+        return;
+      }
+
+      var data = result.data;
+      state.catalog = Array.isArray(data) ? data : (data.items || data.catalog || []);
+      state.catalogState = state.catalog.length ? 'INITIAL' : 'EMPTY';
+
+      renderCatalogFilters();
+      renderCatalog();
+      renderAdminCatalog();
+    }
+
+    $('#catalog-search').addEventListener('input', renderCatalog);
+    $('#catalog-reload').addEventListener('click', loadCatalog);
+
+    function openOrderForm(packageId) {
+      state.selectedItems = {};
+
+      if (packageId) state.selectedItems[packageId] = 1;
+
+      $('#order-form').reset();
+      $('#order-delivery-date').min = new Date().toISOString().slice(0, 10);
+      $('#order-items-container').innerHTML = '';
+
+      state.catalog.filter(function (item) {
+        return item.price_amount !== null &&
+          item.price_amount !== undefined &&
+          Number.isFinite(Number(item.price_amount));
+      }).forEach(function (item) {
+        var quantity = state.selectedItems[item.package_id] || 0;
+
+        var element = document.createElement('div');
+        element.className = 'surface p-3';
+        element.innerHTML =
+          '<div class="flex items-start justify-between gap-3">' +
+          '<div class="min-w-0 flex-1"><div class="font-bold text-xs">' +
+          escapeHtml(item.package_name) +
+          '</div><div class="text-xs muted mt-1">' +
+          escapeHtml(formatMoney(item.price_amount)) + ' / porsi</div></div>' +
+          '<div class="quantity-control">' +
+          '<button type="button" aria-label="Kurangi jumlah" data-quantity-change="-1" data-package="' + escapeHtml(item.package_id) + '">−</button>' +
+          '<span class="font-bold tabular-nums" data-quantity="' + escapeHtml(item.package_id) + '">' + quantity + '</span>' +
+          '<button type="button" aria-label="Tambah jumlah" data-quantity-change="1" data-package="' + escapeHtml(item.package_id) + '">+</button>' +
+          '</div></div>';
+
+        $('#order-items-container').appendChild(element);
+      });
+
+      if (!$('#order-items-container').children.length) {
+        $('#order-items-container').innerHTML =
+          '<p class="text-xs muted">Belum ada paket dengan harga yang dapat dipesan.</p>';
+      }
+
+      $$('[data-quantity-change]', $('#order-items-container')).forEach(function (button) {
+        button.addEventListener('click', function () {
+          var id = button.dataset.package;
+          var delta = Number(button.dataset.quantityChange);
+          var item = state.catalog.find(function (entry) {
+            return entry.package_id === id;
+          });
+
+          var current = state.selectedItems[id] || 0;
+          var next = Math.max(0, current + delta);
+
+          if (item && item.minimum_quantity && next > 0) {
+            next = Math.max(next, Number(item.minimum_quantity));
+          }
+
+          state.selectedItems[id] = next;
+          $('[data-quantity="' + CSS.escape(id) + '"]').textContent = next;
+          updateOrderSubtotal();
+        });
+      });
+
+      updateOrderSubtotal();
+      openDrawer('order-drawer-backdrop');
+    }
+
+    function updateOrderSubtotal() {
+      var subtotal = 0;
+
+      Object.keys(state.selectedItems).forEach(function (id) {
+        var item = state.catalog.find(function (entry) {
+          return entry.package_id === id;
+        });
+
+        if (item && Number.isFinite(Number(item.price_amount))) {
+          subtotal += Number(item.price_amount) * state.selectedItems[id];
+        }
+      });
+
+      $('#order-subtotal').textContent = subtotal ? formatMoney(subtotal) : '-';
+    }
+
+    $('#order-fulfillment').addEventListener('change', function () {
+      var delivery = $('#order-fulfillment').value === 'DELIVERY';
+      $('#delivery-address-wrap').hidden = !delivery;
+      $('#order-address').required = delivery;
+    });
+
+    async function submitOrder(event) {
+      event.preventDefault();
+
+      if (state.orderBusy) return;
+
+      var form = event.currentTarget;
+      var selected = Object.keys(state.selectedItems).filter(function (id) {
+        return state.selectedItems[id] > 0;
+      });
+
+      if (!selected.length) {
+        showToast('Paket belum dipilih', 'Pilih minimal satu paket sebelum mengirim pesanan.', 'error');
+        return;
+      }
+
+      var items = selected.map(function (id) {
+        return {
+          package_id: id,
+          quantity: Number(state.selectedItems[id])
+        };
+      });
+
+      var payload = {
+        customer_name: form.customer_name.value.trim(),
+        customer_phone: form.customer_phone.value.trim(),
+        delivery_date: form.delivery_date.value,
+        delivery_time: form.delivery_time.value,
+        fulfillment_type: form.fulfillment_type.value,
+        delivery_address: form.delivery_address.value.trim(),
+        customer_note: form.customer_note.value.trim(),
+        items: items
+      };
+
+      if (payload.fulfillment_type === 'DELIVERY' && !payload.delivery_address) {
+        showToast('Alamat diperlukan', 'Lengkapi alamat pengantaran.', 'error');
+        return;
+      }
+
+      state.orderBusy = true;
+      var button = $('#order-submit');
+      setButtonBusy(button, true, 'Mengirim pesanan...');
+
+      try {
+        var result = await window.GaslyClient.request('order.create', payload, {
+          idempotent: true
+        });
+
+        if (!isSuccess(result)) {
+          showToast('Pesanan belum tersimpan', result.message, 'error');
+          return;
+        }
+
+        var data = result.data || {};
+        var orderId = data.order_id;
+        var trackingToken = data.tracking_token;
+        var uploadNonce = data.uploadNonce || data.upload_nonce;
+
+        if (!orderId || !trackingToken) {
+          showToast(
+            'Respons pesanan belum lengkap',
+            'Backend perlu mengembalikan order_id dan tracking_token.',
+            'error'
+          );
+          return;
+        }
+
+        state.orderResult = {
+          orderId: orderId,
+          trackingToken: trackingToken,
+          uploadNonce: uploadNonce
+        };
+
+        closeDrawer('order-drawer-backdrop');
+
+        showToast('Pesanan berhasil dibuat', 'Simpan nomor pesanan dan tracking token Anda.');
+
+        showTrackingResult({
+          order_id: orderId,
+          tracking_token: trackingToken,
+          order_status: data.order_status || 'MENUNGGU_DP',
+          subtotal_amount: data.subtotal_amount,
+          dp_amount: data.dp_amount,
+          payment_due_at: data.payment_due_at
+        }, true);
+
+        if (uploadNonce) {
+          state.pendingUpload = {
+            orderId: orderId,
+            trackingToken: trackingToken,
+            uploadNonce: uploadNonce,
+            file: null
+          };
+
+          $('#proof-order-id').textContent = orderId;
+          openDrawer('proof-drawer-backdrop');
+        }
+      } finally {
+        state.orderBusy = false;
+        setButtonBusy(button, false);
+      }
+    }
+
+    $('#order-form').addEventListener('submit', submitOrder);
+
+    function updateUploadProgress(status, message) {
+      state.uploadState = status.toUpperCase();
+
+      var labels = {
+        compressing: ['Mengompres foto', 'LOADING', '45%'],
+        uploading: ['Mengunggah bukti privat', 'SAVING', '80%'],
+        done: ['Upload berhasil diverifikasi', 'SUCCESS', '100%'],
+        error: ['Upload belum berhasil', 'RECOVERY', '100%']
+      };
+
+      var info = labels[status] || [message, status.toUpperCase(), '10%'];
+
+      $('#proof-progress').hidden = false;
+      $('#proof-progress-label').textContent = info[0];
+      $('#proof-progress-state').textContent = info[1];
+      $('#proof-progress-bar').style.width = info[2];
+    }
+
+    $('#proof-file').addEventListener('change', function () {
+      var file = this.files && this.files[0];
+      $('#proof-file-name').textContent = file
+        ? file.name + ' · ' + (file.size / 1024).toFixed(1) + ' KB'
+        : 'Belum ada file dipilih.';
+
+      if (state.pendingUpload) state.pendingUpload.file = file || null;
+    });
+
+    async function uploadProof() {
+      if (!state.pendingUpload || !state.pendingUpload.file) {
+        showToast('Foto belum dipilih', 'Pilih foto bukti transfer terlebih dahulu.', 'error');
+        return;
+      }
+
+      $('#proof-recovery').hidden = true;
+      $('#proof-retry').disabled = true;
+
+      var result = await window.GaslyImage.uploadPhoto({
+        file: state.pendingUpload.file,
+        orderId: state.pendingUpload.orderId,
+        trackingToken: state.pendingUpload.trackingToken,
+        uploadNonce: state.pendingUpload.uploadNonce,
+        onStateChange: function (status, message) {
+          updateUploadProgress(status, message);
+        }
+      });
+
+      if (result && result.status === 'success' && result.code === 'OK') {
+        $('#proof-recovery').hidden = true;
+        showToast('Bukti transfer diterima', 'Server telah mengonfirmasi unggahan.');
+        $('#proof-file').value = '';
+        $('#proof-file-name').textContent = 'Bukti transfer berhasil diunggah.';
+        state.pendingUpload = null;
+      } else {
+        $('#proof-recovery').hidden = false;
+        $('#proof-error').textContent = result && result.message
+          ? result.message
+          : 'Server belum mengonfirmasi keberhasilan upload.';
+        showToast('Upload gagal', 'Pesanan tetap tersimpan. Anda dapat mengunggah ulang foto saja.', 'error');
+      }
+
+      $('#proof-retry').disabled = false;
+    }
+
+    $('#proof-retry').addEventListener('click', uploadProof);
+
+    function showTrackingResult(order, oneTime) {
+      var status = STATUS[order.order_status] || ['Status tidak diketahui', 'neutral'];
+
+      var tokenHtml = oneTime
+        ? '<div class="order-summary mt-4"><div class="text-xs font-bold">Tracking token — tampil satu kali</div>' +
+          '<div class="font-mono text-xs break-all mt-3" id="one-time-token">' +
+          escapeHtml(order.tracking_token) +
+          '</div><button class="btn btn-secondary mt-3 w-full" type="button" id="copy-tracking-token">Salin token</button>' +
+          '<p class="text-xs muted mt-2">Simpan token ini secara pribadi. Token tidak akan ditampilkan kembali oleh halaman ini.</p></div>'
+        : '';
+
+      $('#tracking-result').innerHTML =
+        '<div class="tracking-result">' +
+        '<div class="flex items-center justify-between gap-2"><span class="text-xs muted">Nomor pesanan</span>' +
+        '<span class="font-mono font-bold text-xs">' + escapeHtml(order.order_id) + '</span></div>' +
+        '<div class="mt-4"><span class="status-pill status-' + status[1] + '">' + escapeHtml(status[0]) + '</span></div>' +
+        '<div class="mt-4 text-xs muted">Subtotal</div><div class="font-extrabold mt-1 tabular-nums">' + escapeHtml(formatMoney(order.subtotal_amount)) + '</div>' +
+        '<div class="mt-3 text-xs muted">Nominal DP</div><div class="font-extrabold mt-1 tabular-nums">' + escapeHtml(formatMoney(order.dp_amount)) + '</div>' +
+        tokenHtml +
+        '<p class="text-xs muted mt-4">Untuk menjaga privasi, informasi ditampilkan berdasarkan hasil verifikasi token.</p></div>';
+
+      if (oneTime) {
+        $('#copy-tracking-token').addEventListener('click', function () {
+          navigator.clipboard.writeText(order.tracking_token).then(function () {
+            showToast('Token disalin', 'Simpan token pada tempat yang aman.');
+          }).catch(function () {
+            showToast('Tidak dapat menyalin', 'Silakan salin token secara manual.', 'error');
+          });
+        });
+
+        $('#tracking-order-id').value = order.order_id;
+        $('#tracking-token').value = '';
+      }
+    }
+
+    async function checkTracking(event) {
+      event.preventDefault();
+
+      var orderId = $('#tracking-order-id').value.trim();
+      var token = $('#tracking-token').value.trim();
+
+      if (!orderId || !token) {
+        showToast('Data belum lengkap', 'Nomor pesanan dan tracking token wajib diisi.', 'error');
+        return;
+      }
+
+      var button = $('#tracking-submit');
+      setButtonBusy(button, true, 'Memeriksa...');
+
+      $('#tracking-result').innerHTML =
+        '<div class="skeleton" style="height:100px"></div>';
+
+      try {
+        var result = await window.GaslyClient.request('order.track', {
+          order_id: orderId,
+          tracking_token: token
+        }, {
+          idempotent: false,
+          maxRetries: 0
+        });
+
+        if (!isSuccess(result)) {
+          $('#tracking-result').innerHTML =
+            '<div class="recovery-panel"><p class="text-xs font-bold">Pesanan belum dapat diverifikasi</p>' +
+            '<p class="text-xs mt-2">Periksa kembali nomor pesanan dan token pelacakan Anda.</p></div>';
+          return;
+        }
+
+        var order = result.data.order || result.data;
+        showTrackingResult(order, false);
+      } finally {
+        setButtonBusy(button, false);
+      }
+    }
+
+    $('#tracking-form').addEventListener('submit', checkTracking);
+
+    function openTracking() {
+      $('#tracking-result').innerHTML = '';
+      openDrawer('tracking-drawer-backdrop');
+    }
+
+    ['nav-track', 'hero-track', 'bottom-track'].forEach(function (id) {
+      $('#' + id).addEventListener('click', openTracking);
+    });
+
+    function badge(status) {
+      var item = STATUS[status] || ['Tidak diketahui', 'neutral'];
+      return '<span class="status-pill status-' + item[1] + '">' + escapeHtml(item[0]) + '</span>';
+    }
+
+    function computeKpis() {
+      var orders = state.orders.filter(function (order) {
+        return !order.deleted_at;
+      });
+
+      var count = orders.length;
+      var pending = orders.filter(function (order) {
+        return order.order_status === 'MENUNGGU_DP';
+      }).length;
+
+      var processing = orders.filter(function (order) {
+        return ['DP_DITERIMA', 'DIPROSES', 'SIAP_DIANTAR'].indexOf(order.order_status) >= 0;
+      }).length;
+
+      var revenue = orders.filter(function (order) {
+        return order.order_status === 'SELESAI';
+      }).reduce(function (sum, order) {
+        var amount = Number(order.subtotal_amount);
+        return sum + (Number.isFinite(amount) ? amount : 0);
+      }, 0);
+
+      $('#kpi-grid').innerHTML =
+        '<article class="surface kpi-card primary"><div class="kpi-label">Total pesanan</div><div class="kpi-value tabular-nums">' + count + '</div><div class="text-xs mt-2" style="color:#D9EDE3">Data aktual</div></article>' +
+        '<article class="surface kpi-card"><div class="kpi-label">Menunggu DP</div><div class="kpi-value tabular-nums">' + pending + '</div><div class="text-xs muted mt-2">Perlu pemeriksaan pembayaran</div></article>' +
+        '<article class="surface kpi-card"><div class="kpi-label">Dalam proses</div><div class="kpi-value tabular-nums">' + processing + '</div><div class="text-xs muted mt-2">DP diterima sampai pengantaran</div></article>' +
+        '<article class="surface kpi-card"><div class="kpi-label">Nominal pesanan selesai</div><div class="kpi-value tabular-nums" style="font-size:19px">' + escapeHtml(formatMoney(revenue)) + '</div><div class="text-xs muted mt-2">Akumulasi pesanan selesai</div></article>';
+    }
+
+    function filteredOrders() {
+      var query = $('#order-search').value.toLowerCase().trim();
+
+      return state.orders.filter(function (order) {
+        var text = [
+          order.order_id,
+          order.customer_name,
+          order.customer_phone
+        ].join(' ').toLowerCase();
+
+        return (!query || text.indexOf(query) >= 0) &&
+          (state.orderStatus === 'ALL' || order.order_status === state.orderStatus);
+      });
+    }
+
+    function orderRow(order) {
+      var amount = formatMoney(order.subtotal_amount);
+      return '<tr>' +
+        '<td><div class="font-bold font-mono">' + escapeHtml(order.order_id) + '</div><div class="text-xs muted mt-1">' + escapeHtml(order.fulfillment_type || '-') + '</div></td>' +
+        '<td><div class="font-bold">' + escapeHtml(order.customer_name) + '</div><div class="text-xs muted mt-1">' + escapeHtml(order.customer_phone) + '</div></td>' +
+        '<td class="tabular-nums">' + escapeHtml(order.delivery_date || '-') + '<div class="text-xs muted mt-1">' + escapeHtml(order.delivery_time || '') + '</div></td>' +
+        '<td class="font-bold tabular-nums">' + escapeHtml(amount) + '</td>' +
+        '<td>' + badge(order.order_status) + '</td>' +
+        '<td><button class="btn btn-secondary" data-order-detail="' + escapeHtml(order.order_id) + '">Detail</button></td>' +
+        '</tr>';
+    }
+
+    function orderMobileCard(order) {
+      return '<article class="mobile-order-card">' +
+        '<div class="flex justify-between gap-3 items-start"><div class="min-w-0">' +
+        '<div class="font-mono font-bold text-xs">' + escapeHtml(order.order_id) + '</div>' +
+        '<div class="font-bold mt-2">' + escapeHtml(order.customer_name) + '</div>' +
+        '<div class="text-xs muted mt-1">' + escapeHtml(order.customer_phone) + '</div></div>' +
+        badge(order.order_status) + '</div>' +
+        '<div class="grid grid-cols-2 gap-3 mt-4 pt-3 divider">' +
+        '<div><div class="text-xs muted">Tanggal</div><div class="text-xs font-bold mt-1">' + escapeHtml(order.delivery_date || '-') + '</div></div>' +
+        '<div><div class="text-xs muted">Subtotal</div><div class="text-xs font-bold mt-1 tabular-nums">' + escapeHtml(formatMoney(order.subtotal_amount)) + '</div></div>' +
+        '</div><button class="btn btn-secondary w-full mt-3" data-order-detail="' + escapeHtml(order.order_id) + '">Lihat detail pesanan</button></article>';
+    }
+
+    function renderOrders() {
+      computeKpis();
+
+      var orders = filteredOrders();
+      $('#orders-count').textContent = orders.length + ' pesanan';
+
+      if (!orders.length) {
+        $('#orders-state').innerHTML =
+          '<div class="empty-state"><div class="empty-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9h10M7 13h6"></path></svg></div>' +
+          '<div class="font-extrabold">Belum ada pesanan</div><p class="text-xs muted mt-2">Pesanan yang masuk akan muncul di sini.</p></div>';
+        $('#orders-table-body').innerHTML = '';
+        $('#orders-mobile').innerHTML = '';
+        return;
+      }
+
+      $('#orders-state').innerHTML = '';
+      $('#orders-table-body').innerHTML = orders.map(orderRow).join('');
+      $('#orders-mobile').innerHTML = orders.map(orderMobileCard).join('');
+
+      $$('[data-order-detail]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          openOrderDetail(button.dataset.orderDetail);
+        });
+      });
+    }
+
+    async function loadAdminOrders() {
+      if (!state.admin) return;
+
+      state.orderState = 'LOADING';
+      $('#orders-state').innerHTML =
+        '<div class="space-y-3"><div class="skeleton" style="height:40px"></div><div class="skeleton" style="height:40px"></div><div class="skeleton" style="height:40px"></div></div>';
+
+      var result = await window.GaslyClient.request('order.adminList', {
+        status: $('#order-status-filter').value === 'ALL' ? undefined : $('#order-status-filter').value,
+        query: $('#order-search').value.trim(),
+        page: 1,
+        page_size: 100
+      }, {
+        idempotent: false
+      });
+
+      if (!isSuccess(result)) {
+        state.orderState = 'ERROR';
+        $('#orders-state').innerHTML =
+          '<div class="recovery-panel"><p class="text-xs font-bold">Gagal memuat pesanan</p>' +
+          '<p class="text-xs mt-2">' + escapeHtml(result.message) + '</p>' +
+          '<button id="retry-orders" class="btn btn-primary mt-3">Coba lagi</button></div>';
+        $('#retry-orders').addEventListener('click', loadAdminOrders);
+        return;
+      }
+
+      var data = result.data;
+      state.orders = Array.isArray(data) ? data : (data.items || data.orders || []);
+      state.orderState = state.orders.length ? 'INITIAL' : 'EMPTY';
+      renderOrders();
+    }
+
+    function openOrderDetail(id) {
+      var order = state.orders.find(function (entry) {
+        return entry.order_id === id;
+      });
+
+      if (!order) return;
+
+      $('#detail-title').textContent = id;
+
+      var transitions = ALLOWED_TRANSITIONS[order.order_status] || [];
+      var selectOptions = transitions.map(function (next) {
+        var item = STATUS[next];
+        return '<option value="' + next + '">' + escapeHtml(item[0]) + '</option>';
+      }).join('');
+
+      var privateFile = order.proof_file_id
+        ? '<div class="order-summary"><div class="font-bold text-xs">Bukti transfer privat</div>' +
+          '<p class="text-xs muted mt-2">File hanya dibuka melalui otorisasi admin dan izin Google Drive.</p>' +
+          '<button type="button" id="view-private-proof" class="btn btn-secondary mt-3 w-full">Minta tautan aman bukti</button></div>'
+        : '<div class="order-summary"><div class="text-xs font-bold">Bukti transfer belum tersedia</div></div>';
+
+      var archiveMessage =
+        '<div class="recovery-panel"><div class="font-bold text-xs">Arsip pesanan</div>' +
+        '<p class="text-xs mt-2">Aksi arsip belum tersedia dalam action registry kontrak saat ini. Tidak ada penghapusan data yang dilakukan.</p>' +
+        '<button type="button" id="archive-unavailable" class="btn btn-secondary mt-3 w-full">Konfirmasi melalui modal PIN</button></div>';
+
+      $('#detail-content').innerHTML =
+        '<div class="flex justify-between items-center">' + badge(order.order_status) +
+        '<span class="text-xs muted">' + escapeHtml(order.delivery_date || '-') + '</span></div>' +
+        '<div class="surface p-4 space-y-3">' +
+        '<div><div class="text-xs muted">Pelanggan</div><div class="font-bold mt-1">' + escapeHtml(order.customer_name) + '</div></div>' +
+        '<div><div class="text-xs muted">Nomor telepon</div><div class="font-bold mt-1">' + escapeHtml(order.customer_phone) + '</div></div>' +
+        '<div><div class="text-xs muted">Jadwal</div><div class="font-bold mt-1">' + escapeHtml(order.delivery_date || '-') + ' · ' + escapeHtml(order.delivery_time || '-') + '</div></div>' +
+        '<div><div class="text-xs muted">Alamat</div><div class="text-xs mt-1">' + escapeHtml(order.delivery_address || 'Ambil sendiri / tidak tersedia') + '</div></div>' +
+        '<div><div class="text-xs muted">Catatan</div><div class="text-xs mt-1">' + escapeHtml(order.customer_note || '-') + '</div></div>' +
+        '<div><div class="text-xs muted">Subtotal</div><div class="font-extrabold mt-1 tabular-nums">' + escapeHtml(formatMoney(order.subtotal_amount)) + '</div></div>' +
+        '<div><div class="text-xs muted">DP</div><div class="font-extrabold mt-1 tabular-nums">' + escapeHtml(formatMoney(order.dp_amount)) + '</div></div>' +
+        '</div>' +
+        privateFile +
+        (transitions.length ? '<div class="surface p-4"><label class="field-label" for="next-order-status">Perbarui status pesanan</label>' +
+          '<select class="field" id="next-order-status">' + selectOptions + '</select>' +
+          '<label class="field-label mt-3" for="admin-status-note">Catatan admin</label><textarea class="field" id="admin-status-note" rows="2"></textarea>' +
+          '<button id="update-order-status" class="btn btn-primary w-full mt-3">Simpan status</button></div>' : '') +
+        archiveMessage;
+
+      var viewButton = $('#view-private-proof');
+
+      if (viewButton) {
+        viewButton.addEventListener('click', async function () {
+          viewButton.disabled = true;
+          viewButton.textContent = 'Meminta akses aman...';
+
+          try {
+            var response = await window.GaslyClient.request('file.adminView', {
+              order_id: id
+            }, {
+              idempotent: false
+            });
+
+            if (!isSuccess(response)) {
+              showToast('Bukti tidak dapat diakses', response.message, 'error');
+              return;
+            }
+
+            var safeData = response.data || {};
+            var fileUrl = safeData.file_url || safeData.url;
+
+            if (!fileUrl) {
+              showToast('Tautan tidak tersedia', 'Backend tidak mengembalikan file_url.', 'error');
+              return;
+            }
+
+            if (!/^https:\/\/drive\.google\.com\/file\/d\/[^/]+\/view/.test(fileUrl)) {
+              showToast('Tautan tidak valid', 'URL file tidak sesuai format Google Drive.', 'error');
+              return;
+            }
+
+            var link = document.createElement('a');
+            link.href = fileUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'admin-private-link';
+            link.textContent = 'Buka bukti privat di Google Drive';
+            link.style.display = 'block';
+            link.style.marginTop = '12px';
+            viewButton.replaceWith(link);
+          } finally {
+            if (viewButton.isConnected) {
+              viewButton.disabled = false;
+              viewButton.textContent = 'Minta tautan aman bukti';
+            }
+          }
+        });
+      }
+
+      var updateButton = $('#update-order-status');
+
+      if (updateButton) {
+        updateButton.addEventListener('click', async function () {
+          var nextStatus = $('#next-order-status').value;
+          var note = $('#admin-status-note').value.trim();
+
+          setButtonBusy(updateButton, true, 'Menyimpan status...');
+
+          try {
+            var result = await window.GaslyClient.request('order.updateStatus', {
+              order_id: id,
+              next_status: nextStatus,
+              expected_updated_at: order.updated_at,
+              admin_note: note
+            }, {
+              idempotent: true
+            });
+
+            if (!isSuccess(result)) {
+              showToast('Status belum diperbarui', result.message, 'error');
+              return;
+            }
+
+            showToast('Status berhasil diperbarui', 'Data telah dikonfirmasi server.');
+            closeDrawer('detail-drawer-backdrop');
+            await loadAdminOrders();
+          } finally {
+            setButtonBusy(updateButton, false);
+          }
+        });
+      }
+
+      $('#archive-unavailable').addEventListener('click', function () {
+        state.pendingSensitiveAction = {
+          action: 'order.archive',
+          orderId: id
+        };
+        $('#stepup-description').textContent =
+          'Permintaan arsip pesanan ' + id + '. Konfirmasi PIN 6 digit disediakan, tetapi kontrak backend belum mendaftarkan aksi verifikasinya.';
+        openModal('stepup-modal');
+      });
+
+      openDrawer('detail-drawer-backdrop');
+    }
+
+    $('#stepup-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      $('#stepup-pin').value = '';
+      showToast(
+        'Aksi belum tersedia',
+        'auth.verifyPin dan aksi arsip harus didaftarkan di kontrak/backend terlebih dahulu.',
+        'error'
+      );
+    });
+
+    async function loadAdminCatalog() {
+      $('#admin-catalog-state').innerHTML =
+        '<div class="skeleton" style="height:40px"></div>';
+
+      var result = await window.GaslyClient.request('catalog.list', {
+        active_only: false
+      }, {
+        idempotent: false
+      });
+
+      if (!isSuccess(result)) {
+        $('#admin-catalog-state').innerHTML =
+          '<div class="recovery-panel"><p class="text-xs">' + escapeHtml(result.message) + '</p><button id="retry-admin-catalog" class="btn btn-primary mt-3">Coba lagi</button></div>';
+        $('#retry-admin-catalog').addEventListener('click', loadAdminCatalog);
+        return;
+      }
+
+      var data = result.data;
+      state.catalog = Array.isArray(data) ? data : (data.items || data.catalog || []);
+      renderAdminCatalog();
+      renderCatalogFilters();
+      renderCatalog();
+    }
+
+    function renderAdminCatalog() {
+      $('#admin-catalog-count').textContent = state.catalog.length + ' paket';
+
+      if (!state.catalog.length) {
+        $('#admin-catalog-grid').innerHTML =
+          '<div class="empty-state" style="grid-column:1/-1"><div class="font-bold">Katalog kosong</div><p class="text-xs muted mt-2">Tambahkan paket untuk mulai menampilkan katalog.</p></div>';
+        return;
+      }
+
+      $('#admin-catalog-grid').innerHTML = state.catalog.map(function (item) {
+        return '<article class="catalog-card">' +
+          '<div class="p-4"><div class="font-bold">' + escapeHtml(item.package_name) + '</div>' +
+          '<div class="text-xs muted mt-1">' + escapeHtml(item.category) + '</div>' +
+          '<div class="font-extrabold mt-3 tabular-nums">' + escapeHtml(formatMoney(item.price_amount)) + '</div>' +
+          '<div class="mt-3">' + (item.is_active ? '<span class="status-pill status-success">Aktif</span>' : '<span class="status-pill status-neutral">Nonaktif</span>') + '</div>' +
+          '<button type="button" class="btn btn-secondary w-full mt-4" data-edit-catalog="' + escapeHtml(item.package_id) + '">Edit paket</button>' +
+          '</div></article>';
+      }).join('');
+
+      $$('[data-edit-catalog]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          openCatalogEditor(button.dataset.editCatalog);
+        });
+      });
+    }
+
+    function openCatalogEditor(id) {
+      var item = id ? state.catalog.find(function (entry) {
+        return entry.package_id === id;
+      }) : null;
+
+      $('#catalog-form').reset();
+      $('#catalog-package-id').value = item ? item.package_id : '';
+      $('#catalog-expected-updated').value = item ? item.updated_at || '' : '';
+      $('#catalog-drawer-title').textContent = item ? 'Edit paket' : 'Tambah paket';
+
+      if (item) {
+        $('#catalog-name').value = item.package_name || '';
+        $('#catalog-category').value = item.category || '';
+        $('#catalog-description').value = item.description || '';
+        $('#catalog-menu-details').value = item.menu_details || '';
+        $('#catalog-price').value = item.price_amount ?? '';
+        $('#catalog-minimum').value = item.minimum_quantity ?? '';
+        $('#catalog-image').value = item.image_url || '';
+        $('#catalog-active').value = String(Boolean(item.is_active));
+      }
+
+      openDrawer('catalog-drawer-backdrop');
+    }
+
+    $('#catalog-add').addEventListener('click', function () {
+      openCatalogEditor(null);
+    });
+
+    $('#catalog-form').addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      if (state.catalogBusy) return;
+      state.catalogBusy = true;
+
+      var button = $('#catalog-save');
+      setButtonBusy(button, true, 'Menyimpan...');
+
+      var priceValue = $('#catalog-price').value;
+      var minimumValue = $('#catalog-minimum').value;
+
+      var payload = {
+        package_name: $('#catalog-name').value.trim(),
+        category: $('#catalog-category').value.trim(),
+        description: $('#catalog-description').value.trim(),
+        menu_details: $('#catalog-menu-details').value.trim(),
+        price_amount: priceValue === '' ? null : Number(priceValue),
+        minimum_quantity: minimumValue === '' ? null : Number(minimumValue),
+        image_url: $('#catalog-image').value.trim(),
+        is_active: $('#catalog-active').value === 'true'
+      };
+
+      var packageId = $('#catalog-package-id').value;
+      var updated = $('#catalog-expected-updated').value;
+
+      if (packageId) {
+        payload.package_id = packageId;
+        payload.expected_updated_at = updated;
+      }
+
+      try {
+        var result = await window.GaslyClient.request('catalog.save', payload, {
+          idempotent: true
+        });
+
+        if (!isSuccess(result)) {
+          showToast('Katalog belum tersimpan', result.message, 'error');
+          return;
+        }
+
+        showToast('Katalog berhasil disimpan', 'Data dikonfirmasi oleh backend.');
+        closeDrawer('catalog-drawer-backdrop');
+        await loadAdminCatalog();
+      } finally {
+        state.catalogBusy = false;
+        setButtonBusy(button, false);
+      }
+    });
+
+    function renderAdminTab(tab) {
+      state.adminTab = tab;
+
+      $('#admin-orders-section').hidden = tab !== 'orders';
+      $('#admin-catalog-section').hidden = tab !== 'catalog';
+
+      $('#admin-page-title').textContent = tab === 'orders'
+        ? 'Manajemen Pesanan'
+        : 'Manajemen Katalog';
+
+      $('#admin-page-subtitle').textContent = tab === 'orders'
+        ? 'Kelola pesanan dan status layanan.'
+        : 'Kelola paket dan informasi menu.';
+
+      $$('[data-admin-tab]').forEach(function (button) {
+        button.classList.toggle('active', button.dataset.adminTab === tab);
+      });
+
+      if (tab === 'orders') loadAdminOrders();
+      else loadAdminCatalog();
+    }
+
+    $$('[data-admin-tab]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        renderAdminTab(button.dataset.adminTab);
+      });
+    });
+
+    $('#admin-refresh').addEventListener('click', function () {
+      if (state.adminTab === 'orders') loadAdminOrders();
+      else loadAdminCatalog();
+    });
+
+    $('#orders-reload').addEventListener('click', loadAdminOrders);
+
+    $('#order-search').addEventListener('input', function () {
+      renderOrders();
+    });
+
+    $('#order-status-filter').addEventListener('change', function () {
+      state.orderStatus = this.value;
+      $$('#order-filter-pills button').forEach(function (button) {
+        button.classList.toggle('active', button.dataset.status === state.orderStatus);
+      });
+      loadAdminOrders();
+    });
+
+    $$('[data-status]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.orderStatus = button.dataset.status;
+        $('#order-status-filter').value = state.orderStatus;
+        $$('[data-status]').forEach(function (entry) {
+          entry.classList.toggle('active', entry === button);
+        });
+        renderOrders();
+      });
+    });
+
+    $('#login-form').addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      var passphrase = $('#login-passphrase').value;
+      var button = $('#login-submit');
+
+      setButtonBusy(button, true, 'Memverifikasi...');
+
+      try {
+        if (window.GaslyClient.isSimulationMode()) {
+          showToast('Mode simulasi', 'Gunakan Isi Demo untuk mencoba dashboard.', 'error');
+          return;
+        }
+
+        var result = await window.GaslyClient.login(
+          passphrase,
+          $('#login-persist').checked
+        );
+
+        if (!isSuccess(result)) {
+          showToast('Login gagal', result.message, 'error');
+          return;
+        }
+
+        state.admin = true;
+        $('#login-passphrase').value = '';
+        closeModal('login-modal');
+        showAdmin();
+        showToast('Login berhasil', 'Sesi admin telah aktif.');
+      } finally {
+        setButtonBusy(button, false);
+      }
+    });
+
+    $('#login-demo').addEventListener('click', function () {
+      if (!window.GaslyClient.isSimulationMode()) return;
+      state.admin = true;
+      closeModal('login-modal');
+      showAdmin();
+      showToast('Preview Mode aktif', 'Dashboard menggunakan data simulasi.');
+    });
+
+    $('#admin-logout').addEventListener('click', async function () {
+      await window.GaslyClient.logout();
+      state.admin = false;
+      state.orders = [];
+      showPublic();
+      showToast('Sesi ditutup', 'Anda telah keluar dari panel admin.');
+    });
+
+    $('#reset-preview').addEventListener('click', function () {
+      if (!window.GaslyClient.isSimulationMode()) return;
+
+      if (window.DapurSajiSimulation) {
+        window.DapurSajiSimulation.reset();
+      }
+
+      state.orders = [];
+      state.admin = false;
+      loadCatalog();
+      showPublic();
+      showToast('Preview direset', 'Data simulasi kembali ke kondisi awal.');
+    });
+
+    /*
+     * PREVIEW SIMULATION
+     * 16 placeholder katalog, tidak ada seed pelanggan atau pesanan palsu.
+     * Pesanan hanya dibuat ketika pengguna mengisi form sendiri.
+     */
+    (function initializeSimulation() {
+      var simulatedCatalog = [];
+      var simulatedOrders = [];
+      var sequence = 0;
+      var currentSession = false;
+
+      var menuNames = [
+        'Paket Nasi Kotak A',
+        'Paket Nasi Kotak B',
+        'Paket Nasi Kotak C',
+        'Paket Ayam Spesial',
+        'Paket Lauk Nusantara',
+        'Paket Rapat Sederhana',
+        'Paket Rapat Lengkap',
+        'Paket Acara Keluarga',
+        'Paket Prasmanan Mini',
+        'Paket Prasmanan',
+        'Paket Nasi Kuning',
+        'Paket Nasi Liwet',
+        'Paket Hemat',
+        'Paket Premium',
+        'Paket Snack Box',
+        'Paket Menu Tradisional'
+      ];
+
+      function initializeSeed() {
+        simulatedCatalog = menuNames.map(function (name, index) {
+          return {
+            package_id: 'SEED-20261128-' + String(index + 1).padStart(4, '0'),
+            package_name: name,
+            category: index % 2 ? 'Paket Acara' : 'Nasi Kotak',
+            description: 'Paket contoh untuk pratinjau antarmuka. Silakan ganti dengan data katalog asli.',
+            menu_details: 'SIMULASI — Detail menu belum ditentukan oleh pemilik usaha.',
+            price_amount: null,
+            minimum_quantity: null,
+            image_url: '',
+            is_active: true,
+            updated_at: new Date().toISOString()
+          };
+        });
+
+        simulatedOrders = [];
+        sequence = 0;
+      }
+
+      initializeSeed();
+
+      function localSuccess(data, message) {
+        return window.GaslyClient.success(data, message);
+      }
+
+      function localError(message, code) {
+        return window.GaslyClient.failure(message, code);
+      }
+
+      async function handle(action, payload) {
+        if (action === 'catalog.list') {
+          return localSuccess({
+            items: simulatedCatalog.filter(function (item) {
+              return payload.active_only === false || item.is_active;
+            })
+          }, 'Katalog simulasi dimuat.');
+        }
+
+        if (action === 'order.create') {
+          var items = payload.items || [];
+
+          if (!payload.customer_name || !payload.customer_phone ||
+              !payload.delivery_date || !payload.delivery_time || !items.length) {
+            return localError('Data pesanan belum lengkap.', 'VALIDATION_ERROR');
+          }
+
+          sequence += 1;
+
+          var id = 'ORD-20261128-' + String(sequence).padStart(4, '0');
+          var token = window.GaslyClient.uuid() + '-' + window.GaslyClient.uuid();
+          var nonce = window.GaslyClient.uuid();
+
+          var total = items.reduce(function (sum, entry) {
+            var menu = simulatedCatalog.find(function (item) {
+              return item.package_id === entry.package_id;
+            });
+            return sum + (menu && menu.price_amount ? menu.price_amount * entry.quantity : 0);
+          }, 0);
+
+          var order = {
+            order_id: id,
+            customer_name: payload.customer_name,
+            customer_phone: payload.customer_phone,
+            delivery_date: payload.delivery_date,
+            delivery_time: payload.delivery_time,
+            fulfillment_type: payload.fulfillment_type,
+            delivery_address: payload.delivery_address,
+            customer_note: payload.customer_note,
+            order_status: 'MENUNGGU_DP',
+            subtotal_amount: total,
+            dp_amount: null,
+            tracking_token: token,
+            uploadNonce: nonce,
+            updated_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+            items: items
+          };
+
+          simulatedOrders.unshift(order);
+
+          return localSuccess({
+            order_id: id,
+            tracking_token: token,
+            uploadNonce: nonce,
+            order_status: order.order_status,
+            subtotal_amount: total,
+            dp_amount: null
+          }, 'Pesanan simulasi berhasil dibuat.');
+        }
+
+        if (action === 'order.track') {
+          var found = simulatedOrders.find(function (order) {
+            return order.order_id === payload.order_id &&
+              order.tracking_token === payload.tracking_token;
+          });
+
+          if (!found) return localError('Pesanan tidak dapat diverifikasi.', 'NOT_FOUND');
+
+          return localSuccess({
+            order: {
+              order_id: found.order_id,
+              order_status: found.order_status,
+              subtotal_amount: found.subtotal_amount,
+              dp_amount: found.dp_amount,
+              delivery_date: found.delivery_date,
+              delivery_time: found.delivery_time
+            }
+          }, 'Status ditemukan.');
+        }
+
+        if (action === 'file.ticket') {
+          var uploadOrder = simulatedOrders.find(function (order) {
+            return order.order_id === payload.order_id &&
+              order.tracking_token === payload.tracking_token &&
+              order.uploadNonce === payload.uploadNonce;
+          });
+
+          if (!uploadOrder) return localError('Tiket upload tidak valid.', 'FORBIDDEN');
+
+          return localSuccess({
+            ticket: window.GaslyClient.uuid(),
+            upload_nonce: uploadOrder.uploadNonce
+          }, 'Tiket simulasi dibuat.');
+        }
+
+        if (action === 'file.upload') {
+          if (!payload.ticket || !payload.upload_nonce || !payload.file_base64) {
+            return localError('Data unggahan tidak lengkap.', 'VALIDATION_ERROR');
+          }
+
+          return localSuccess({
+            uploaded: true,
+            simulated: true
+          }, 'Upload simulasi berhasil.');
+        }
+
+        if (action === 'auth.login') {
+          return localSuccess({
+            token: 'SIMULATION_SESSION',
+            role: 'ADMIN'
+          }, 'Login simulasi berhasil.');
+        }
+
+        if (action === 'auth.logout') {
+          currentSession = false;
+          return localSuccess({}, 'Logout simulasi.');
+        }
+
+        if (action === 'order.adminList') {
+          if (!currentSession) {
+            return localError('Sesi simulasi belum aktif.', 'FORBIDDEN');
+          }
+
+          var filtered = simulatedOrders.filter(function (order) {
+            var statusMatches = !payload.status || order.order_status === payload.status;
+            var query = String(payload.query || '').toLowerCase();
+            var queryMatches = !query ||
+              order.order_id.toLowerCase().indexOf(query) >= 0 ||
+              order.customer_name.toLowerCase().indexOf(query) >= 0;
+
+            return statusMatches && queryMatches;
+          });
+
+          return localSuccess({ orders: filtered });
+        }
+
+        if (action === 'order.updateStatus') {
+          var target = simulatedOrders.find(function (order) {
+            return order.order_id === payload.order_id;
+          });
+
+          if (!target) return localError('Pesanan tidak ditemukan.', 'NOT_FOUND');
+
+          if (target.updated_at !== payload.expected_updated_at) {
+            return localError('Data berubah. Muat ulang sebelum memperbarui.', 'CONFLICT');
+          }
+
+          target.order_status = payload.next_status;
+          target.updated_at = new Date().toISOString();
+
+          return localSuccess({ order: target }, 'Status simulasi diperbarui.');
+        }
+
+        if (action === 'file.adminView') {
+          return localError('Tidak ada bukti transfer simulasi untuk dibuka.', 'NOT_FOUND');
+        }
+
+        if (action === 'catalog.save') {
+          var existing = simulatedCatalog.find(function (item) {
+            return item.package_id === payload.package_id;
+          });
+
+          if (existing) {
+            Object.assign(existing, payload, {
+              updated_at: new Date().toISOString()
+            });
+          } else {
+            simulatedCatalog.push(Object.assign({}, payload, {
+              package_id: 'SIM-PKG-' + window.GaslyClient.uuid().slice(0, 8),
+              updated_at: new Date().toISOString()
+            }));
+          }
+
+          return localSuccess({}, 'Paket simulasi berhasil disimpan.');
+        }
+
+        return localError('Action tidak tersedia dalam mode simulasi.', 'NOT_FOUND');
+      }
+
+      global.DapurSajiSimulation = {
+        handle: function (action, payload, options) {
+          if (action === 'auth.login') currentSession = true;
+          if (action === 'auth.logout') currentSession = false;
+          return handle(action, payload, options);
+        },
+        reset: function () {
+          initializeSeed();
+          currentSession = false;
+        }
+      };
+    })();
+
+    /*
+     * Simulation admin login is isolated from production.
+     * The local simulation is intentionally not a real authentication system.
+     */
+    var originalRequest = window.GaslyClient.request;
+
+    if (window.GaslyClient.isSimulationMode()) {
+      $('#simulation-banner').hidden = false;
+      $('#login-demo-info').hidden = false;
+      $('#connection-status').textContent = 'Preview Mode · Lokal';
+    } else {
+      $('#simulation-banner').hidden = true;
+      $('#login-demo-info').hidden = true;
+      $('#connection-status').textContent = 'Google Apps Script /exec';
+    }
+
+    $('#catalog-grid').innerHTML = '';
+    $('#orders-table-body').innerHTML = '';
+
+    initializeMedia();
+    loadCatalog();
+
+  })();
+  </script>
+</body>
+</html>

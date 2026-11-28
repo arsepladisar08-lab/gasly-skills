@@ -277,7 +277,7 @@ function enqueueOutboxJob_(jobType, payloadObj) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) return { ok: false, code: 'LOCK_TIMEOUT' };
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var sheet = ss.getSheetByName('JOBS_OUTBOX');
     if (!sheet) return { ok: false, code: 'NOT_FOUND' };
     var lastCol = sheet.getLastColumn();
@@ -351,7 +351,7 @@ function handlePaymentCreateCheckout_(req) {
 
   var newSubRecord = null;
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var subsSheet = ss.getSheetByName('SUBSCRIPTIONS');
     if (!subsSheet) {
       return createResponse_('error', null, 'Tabel SUBSCRIPTIONS belum diinisialisasi.', 'NOT_FOUND');

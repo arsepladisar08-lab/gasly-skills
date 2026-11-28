@@ -1,0 +1,212 @@
+{
+  "contract_version": "1.0.0",
+  "kb_version": "2.1.0",
+  "project": {
+    "name": "DapurSaji",
+    "surface_profile": "PUBLIC_SERVICE",
+    "access_profile": "P3",
+    "regulatory_domain": "NONE"
+  },
+  "architecture": {
+    "tier": "TIER_1_DECOUPLED_WORKSPACE",
+    "frontend_stack": "html-tailwind",
+    "hosting_target": "cloudflare_pages",
+    "auth_primary": "GAS_ADMIN_PASSPHRASE",
+    "auth_google_enabled": false
+  },
+  "envelope_spec": {
+    "status_values": [
+      "success",
+      "error"
+    ],
+    "code_values": [
+      "OK",
+      "VALIDATION_ERROR",
+      "NOT_FOUND",
+      "FORBIDDEN",
+      "CONFLICT",
+      "LOCK_TIMEOUT",
+      "RATE_LIMITED",
+      "INTERNAL_ERROR"
+    ]
+  },
+  "entities": [
+    {
+      "sheet_name": "ORDERS",
+      "id_prefix": "ORD",
+      "data_classification": "SENSITIVE_PII",
+      "concurrency_mode": "OPTIMISTIC_VERSION",
+      "headers": [
+        "order_id",
+        "created_at",
+        "updated_at",
+        "customer_name",
+        "customer_phone",
+        "delivery_date",
+        "delivery_time",
+        "fulfillment_type",
+        "delivery_address",
+        "customer_note",
+        "order_status",
+        "subtotal_amount",
+        "dp_amount",
+        "payment_due_at",
+        "tracking_token_hash",
+        "idempotency_key",
+        "proof_file_id",
+        "proof_mime_type",
+        "proof_uploaded_at",
+        "deleted_at"
+      ],
+      "drive_upload": {
+        "enabled": true,
+        "visibility": "private"
+      }
+    },
+    {
+      "sheet_name": "ORDER_ITEMS",
+      "id_prefix": "ORI",
+      "data_classification": "CONFIDENTIAL",
+      "concurrency_mode": "APPEND_ONLY",
+      "headers": [
+        "item_id",
+        "order_id",
+        "package_id",
+        "package_name_snapshot",
+        "unit_price",
+        "quantity",
+        "line_subtotal",
+        "created_at"
+      ],
+      "drive_upload": {
+        "enabled": false,
+        "visibility": "none"
+      }
+    },
+    {
+      "sheet_name": "CATALOG",
+      "id_prefix": "PKG",
+      "data_classification": "PUBLIC",
+      "concurrency_mode": "OPTIMISTIC_VERSION",
+      "headers": [
+        "package_id",
+        "package_name",
+        "category",
+        "description",
+        "menu_details",
+        "price_amount",
+        "minimum_quantity",
+        "image_url",
+        "is_active",
+        "sort_order",
+        "updated_at",
+        "deleted_at"
+      ],
+      "drive_upload": {
+        "enabled": false,
+        "visibility": "none"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "catalog.list",
+      "min_role": "PUBLIC",
+      "require_idem": false,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    },
+    {
+      "name": "order.create",
+      "min_role": "PUBLIC",
+      "require_idem": true,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    },
+    {
+      "name": "order.track",
+      "min_role": "PUBLIC",
+      "require_idem": false,
+      "rate_limited": true,
+      "public_lookup": true,
+      "requires_high_entropy_token": true,
+      "ui_bound": true
+    },
+    {
+      "name": "file.ticket",
+      "min_role": "PUBLIC_ORDER_OWNER",
+      "require_idem": true,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": true,
+      "ui_bound": true
+    },
+    {
+      "name": "file.upload",
+      "min_role": "PUBLIC_ORDER_OWNER",
+      "require_idem": true,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": true,
+      "ui_bound": true
+    },
+    {
+      "name": "auth.login",
+      "min_role": "PUBLIC",
+      "require_idem": false,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    },
+    {
+      "name": "auth.logout",
+      "min_role": "ADMIN",
+      "require_idem": false,
+      "rate_limited": false,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    },
+    {
+      "name": "order.adminList",
+      "min_role": "ADMIN",
+      "require_idem": false,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    },
+    {
+      "name": "order.updateStatus",
+      "min_role": "ADMIN",
+      "require_idem": true,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    },
+    {
+      "name": "file.adminView",
+      "min_role": "ADMIN",
+      "require_idem": false,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    },
+    {
+      "name": "catalog.save",
+      "min_role": "ADMIN",
+      "require_idem": true,
+      "rate_limited": true,
+      "public_lookup": false,
+      "requires_high_entropy_token": false,
+      "ui_bound": true
+    }
+  ]
+}

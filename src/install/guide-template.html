@@ -3,57 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panduan Instalasi &amp; Deployment End-to-End — Gasly</title>
+  <title>Panduan Deploy Interaktif — Gasly</title>
   <style>
-    /* Gasly Design Tokens — Preset: dense-dashboard (KB v2.1.0) */
-    :root,
-    [data-theme="light"] {
-      --bg-base: #F1F5F9;
+    /* Soft Neo-Brutalist — Minimalist, Soft, Clean (WCAG AA Verified) */
+    :root {
+      --bg-base: #F7F5F0;
       --bg-surface: #FFFFFF;
-      --bg-interactive: #E2E8F0;
-      --text-primary: #0F172A;
-      --text-secondary: #334155;
-      --text-helper: #475569;
-      --text-disabled: #94A3B8;
-      --border-subtle: #CBD5E1;
-      --border-focus: #1D4ED8;
-      --accent-solid: #1D4ED8;
-      --accent-text-on-solid: #FFFFFF;
-      --success-solid: #047857;
-      --success-text-on-solid: #FFFFFF;
-      --warning-solid: #B45309;
-      --warning-text-on-solid: #FFFFFF;
-      --danger-solid: #B91C1C;
-      --danger-text-on-solid: #FFFFFF;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --bg-soft: #EFECE6;
+      --ink: #18181B;
+      --ink-secondary: #3F3F46;
+      --ink-muted: #52525B;
+      --border-ink: #1E293B;
+      --shadow-offset: 4px 4px 0px #1E293B;
+      --shadow-sm: 2px 2px 0px #1E293B;
+
+      /* Soft Pastel Accents — Kontras >= 10:1 terhadap --ink (#18181B) */
+      --mint: #A7F3D0;
+      --sky: #BAE6FD;
+      --butter: #FDE68A;
+      --lavender: #DDD6FE;
+      --peach: #FED7AA;
+      --rose-soft: #FECDD3;
+
+      --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-      --radius-sm: 4px;
-      --radius-md: 6px;
-      --radius-lg: 10px;
-      --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.03);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-pill: 999px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg-base: #0B0F19;
-        --bg-surface: #111827;
-        --bg-interactive: #1E293B;
-        --text-primary: #F8FAFC;
-        --text-secondary: #CBD5E1;
-        --text-helper: #94A3B8;
-        --text-disabled: #64748B;
-        --border-subtle: #1E293B;
-        --border-focus: #3B82F6;
-        --accent-solid: #2563EB;
-        --accent-text-on-solid: #FFFFFF;
-        --success-solid: #047857;
-        --success-text-on-solid: #FFFFFF;
-        --warning-solid: #F59E0B;
-        --warning-text-on-solid: #0B0F19;
-        --danger-solid: #DC2626;
-        --danger-text-on-solid: #FFFFFF;
-        --shadow-card: none;
+        --bg-base: #141519;
+        --bg-surface: #1D1F26;
+        --bg-soft: #262934;
+        --ink: #F8FAFC;
+        --ink-secondary: #CBD5E1;
+        --ink-muted: #94A3B8;
+        --border-ink: #475569;
+        --shadow-offset: 4px 4px 0px #090A0D;
+        --shadow-sm: 2px 2px 0px #090A0D;
       }
     }
 
@@ -61,93 +50,143 @@
     body {
       margin: 0;
       background-color: var(--bg-base);
-      color: var(--text-primary);
+      color: var(--ink);
       font-family: var(--font-sans);
       font-size: 14px;
       line-height: 1.6;
     }
-    a { color: var(--border-focus); font-weight: 600; }
+
     .shell {
-      max-width: 1180px;
+      max-width: 1140px;
       margin: 0 auto;
-      padding: 20px 16px 64px;
+      padding: 24px 16px 72px;
       display: grid;
-      grid-template-columns: 270px minmax(0, 1fr);
-      gap: 20px;
+      grid-template-columns: 272px minmax(0, 1fr);
+      gap: 24px;
       align-items: start;
     }
-    .sidebar {
-      position: sticky;
-      top: 16px;
-      background-color: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-      box-shadow: var(--shadow-card);
-    }
+
     .card {
       background-color: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
+      border: 2px solid var(--border-ink);
       border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-offset);
       padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-card);
+      margin-bottom: 20px;
     }
-    .header-bar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      background-color: var(--bg-surface);
+      border: 2px solid var(--border-ink);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-offset);
+      padding: 18px;
     }
+
     h1, h2, h3 {
       margin: 0 0 6px 0;
-      font-family: var(--font-display);
-      color: var(--text-primary);
-      letter-spacing: -0.02em;
+      color: var(--ink);
+      letter-spacing: -0.025em;
+      line-height: 1.25;
     }
-    h1 { font-size: 22px; font-weight: 700; }
+    h1 { font-size: 24px; font-weight: 800; }
     h2 { font-size: 17px; font-weight: 700; }
-    h3 { font-size: 15px; font-weight: 600; }
-    p { margin: 0 0 8px 0; color: var(--text-secondary); }
-    .helper { font-size: 12px; color: var(--text-helper); }
+    h3 { font-size: 15px; font-weight: 700; }
+    p { margin: 0 0 8px 0; color: var(--ink-secondary); }
+    .helper { font-size: 12px; color: var(--ink-muted); }
     .tabular-nums { font-variant-numeric: tabular-nums; }
 
-    .badge {
+    /* Pills & Badges (Soft Pastel + Dark Ink) */
+    .pill {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 2px 8px;
+      gap: 6px;
+      padding: 3px 10px;
       font-size: 11px;
-      font-weight: 600;
-      border-radius: 999px;
-      background-color: var(--bg-interactive);
-      color: var(--text-primary);
+      font-weight: 700;
+      border-radius: var(--radius-pill);
+      border: 1.5px solid var(--border-ink);
+      background-color: var(--bg-soft);
+      color: var(--ink);
       white-space: nowrap;
     }
-    .badge-ok { background-color: var(--success-solid); color: var(--success-text-on-solid); }
-    .badge-warn { background-color: var(--warning-solid); color: var(--warning-text-on-solid); }
-    .badge-accent { background-color: var(--accent-solid); color: var(--accent-text-on-solid); }
+    .pill-mint { background-color: var(--mint); color: #0F172A; }
+    .pill-sky { background-color: var(--sky); color: #0F172A; }
+    .pill-butter { background-color: var(--butter); color: #0F172A; }
+    .pill-lavender { background-color: var(--lavender); color: #0F172A; }
+    .pill-rose { background-color: var(--rose-soft); color: #0F172A; }
 
+    /* Buttons & Shortcut Hyperlinks */
+    button, .shortcut-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 2px solid var(--border-ink);
+      border-radius: var(--radius-md);
+      background-color: var(--bg-surface);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+    }
+    button:hover, .shortcut-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0px var(--border-ink);
+    }
+    button:active, .shortcut-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px var(--border-ink);
+    }
+    .btn-mint, .shortcut-mint { background-color: var(--mint); color: #0F172A; }
+    .btn-sky, .shortcut-sky { background-color: var(--sky); color: #0F172A; }
+    .btn-butter, .shortcut-butter { background-color: var(--butter); color: #0F172A; }
+    .btn-lavender, .shortcut-lavender { background-color: var(--lavender); color: #0F172A; }
+    .btn-soft { background-color: var(--bg-soft); color: var(--ink); box-shadow: none; }
+
+    .tab-btn { box-shadow: none; background-color: var(--bg-soft); color: var(--ink-secondary); }
+    .tab-btn[aria-selected="true"] {
+      background-color: var(--sky);
+      color: #0F172A;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .shortcut-bar, .tabs-row, .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    /* Progress Bar */
     .progress-track {
       width: 100%;
-      height: 8px;
-      background-color: var(--bg-interactive);
-      border-radius: 999px;
+      height: 12px;
+      border: 2px solid var(--border-ink);
+      border-radius: var(--radius-pill);
+      background-color: var(--bg-soft);
       overflow: hidden;
-      margin: 10px 0 12px;
+      margin: 10px 0 14px;
     }
     .progress-fill {
       height: 100%;
       width: 0%;
-      background-color: var(--success-solid);
+      background-color: var(--mint);
       transition: width 180ms ease;
     }
 
+    /* Sidebar Stepper */
     .nav-list {
       list-style: none;
-      margin: 12px 0;
+      margin: 0 0 14px;
       padding: 0;
       display: flex;
       flex-direction: column;
@@ -155,107 +194,123 @@
     }
     .nav-btn {
       width: 100%;
-      text-align: left;
-      min-height: 40px;
-      padding: 8px 10px;
-      border-radius: var(--radius-md);
-      border: 1px solid transparent;
-      background-color: transparent;
-      color: var(--text-secondary);
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      cursor: pointer;
+      text-align: left;
+      box-shadow: none;
+      background-color: transparent;
+      border: 1.5px solid transparent;
+      padding: 8px 10px;
+      font-weight: 600;
+      color: var(--ink-secondary);
     }
-    .nav-btn:hover { background-color: var(--bg-interactive); color: var(--text-primary); }
+    .nav-btn:hover {
+      transform: none;
+      box-shadow: none;
+      background-color: var(--bg-soft);
+      color: var(--ink);
+    }
     .nav-btn[aria-current="step"] {
-      background-color: var(--bg-interactive);
-      border-color: var(--border-focus);
-      color: var(--text-primary);
+      background-color: var(--butter);
+      color: #0F172A;
+      border-color: var(--border-ink);
+      box-shadow: var(--shadow-sm);
     }
-    .nav-status-dot {
-      width: 8px;
-      height: 8px;
+    .dot {
+      width: 10px;
+      height: 10px;
       border-radius: 999px;
-      background-color: var(--border-subtle);
+      border: 1.5px solid var(--border-ink);
+      background-color: var(--bg-surface);
       flex-shrink: 0;
     }
-    .nav-btn[data-done="true"] .nav-status-dot { background-color: var(--success-solid); }
+    .nav-btn[data-done="true"] .dot { background-color: var(--mint); }
 
     .sidebar-actions {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border-subtle);
+      padding-top: 12px;
+      border-top: 1.5px dashed var(--border-ink);
     }
 
+    /* Forms & Inputs */
     .grid-form {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 12px;
+      margin-top: 10px;
     }
     label {
       display: block;
       font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
+      font-weight: 700;
+      color: var(--ink);
       margin-bottom: 4px;
     }
     input[type="text"], input[type="url"] {
       width: 100%;
-      min-height: 40px;
-      padding: 8px 10px;
-      border: 1px solid var(--border-subtle);
+      min-height: 42px;
+      padding: 8px 12px;
+      border: 2px solid var(--border-ink);
       border-radius: var(--radius-md);
       background-color: var(--bg-base);
-      color: var(--text-primary);
+      color: var(--ink);
       font-family: var(--font-mono);
       font-size: 12px;
     }
-    button {
-      min-height: 40px;
-      min-width: 40px;
-      padding: 8px 12px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-subtle);
-      background-color: var(--bg-interactive);
-      color: var(--text-primary);
-      font-weight: 600;
-      font-size: 12px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    button.btn-primary {
-      background-color: var(--accent-solid);
-      color: var(--accent-text-on-solid);
-      border-color: var(--accent-solid);
-    }
-    button.tab-btn {
-      background-color: var(--bg-base);
-      color: var(--text-secondary);
-    }
-    button.tab-btn[aria-selected="true"] {
-      background-color: var(--accent-solid);
-      color: var(--accent-text-on-solid);
-      border-color: var(--accent-solid);
-    }
-    .tabs-row {
+
+    /* Step Cards */
+    .step-header {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin: 10px 0 12px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .step-check-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 4px 12px;
+      border: 1.5px solid var(--border-ink);
+      border-radius: var(--radius-pill);
+      background-color: var(--bg-soft);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .step-check-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: #0F172A; }
+
+    .meta-box {
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border-ink);
+      background-color: var(--bg-base);
+      font-size: 12px;
+      display: grid;
+      gap: 4px;
+      margin-bottom: 12px;
     }
 
-    .code-wrap { margin-top: 10px; }
+    .callout {
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--border-ink);
+      background-color: var(--butter);
+      color: #0F172A;
+      font-size: 12px;
+      margin: 12px 0;
+    }
+    .callout-mint { background-color: var(--mint); color: #0F172A; }
+    .callout-rose { background-color: var(--rose-soft); color: #0F172A; }
+
+    .code-wrap { margin-top: 12px; }
     .code-toolbar {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
@@ -263,11 +318,11 @@
     }
     pre {
       margin: 0;
-      padding: 12px;
+      padding: 12px 14px;
       border-radius: var(--radius-md);
+      border: 2px solid var(--border-ink);
       background-color: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
+      color: var(--ink);
       font-family: var(--font-mono);
       font-size: 12px;
       overflow-x: auto;
@@ -275,69 +330,16 @@
       word-break: break-word;
     }
 
-    .step-header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .step-check-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 40px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    .step-check-label input[type="checkbox"] { width: 18px; height: 18px; }
-    .meta-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 4px;
-      font-size: 12px;
-      padding: 10px 12px;
-      border-radius: var(--radius-md);
-      background-color: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      margin-bottom: 10px;
-    }
-    .prop-table-wrap { overflow-x: auto; margin-top: 10px; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      text-align: left;
-    }
-    th, td {
-      padding: 8px 10px;
-      border-bottom: 1px solid var(--border-subtle);
-      vertical-align: top;
-    }
-    th { color: var(--text-helper); font-weight: 600; text-transform: uppercase; font-size: 11px; }
-
-    .callout {
-      padding: 10px 12px;
-      border-radius: var(--radius-md);
-      border-left: 4px solid var(--border-focus);
-      background-color: var(--bg-base);
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin: 10px 0;
-    }
     details {
-      border: 1px solid var(--border-subtle);
+      border: 2px solid var(--border-ink);
       border-radius: var(--radius-md);
-      padding: 8px 12px;
-      margin-bottom: 8px;
+      padding: 8px 14px;
+      margin-bottom: 10px;
       background-color: var(--bg-base);
     }
     summary {
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
       min-height: 40px;
       display: flex;
       align-items: center;
@@ -345,7 +347,7 @@
     .hidden { display: none !important; }
 
     *:focus-visible {
-      outline: 2px solid var(--border-focus);
+      outline: 3px solid var(--border-ink);
       outline-offset: 2px;
     }
     @media (max-width: 900px) {
@@ -356,252 +358,236 @@
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
+        transform: none !important;
       }
     }
   </style>
 </head>
 <body>
   <div class="shell">
-    <!-- Sidebar Stepper & Progres -->
-    <aside class="sidebar" aria-label="Navigasi Langkah Instalasi">
-      <div>
-        <span class="badge badge-accent">GASLY DEPLOY COMPANION</span>
-        <h2 style="margin-top:8px;">Progres Deployment</h2>
-        <p class="helper tabular-nums" id="progress-badge">0 / 7 Langkah Selesai (0%)</p>
-      </div>
+    <!-- Sidebar Stepper Minimalist -->
+    <aside class="sidebar" aria-label="Peta Langkah Deployment">
+      <span class="pill pill-lavender">GASLY DEPLOY GUIDE</span>
+      <h2 style="margin-top:10px;">Alur 3 Fase</h2>
+      <p class="helper tabular-nums" id="progress-badge">0 / 7 Langkah Selesai (0%)</p>
       <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-wrap">
         <div class="progress-fill" id="progress-bar-fill"></div>
       </div>
 
-      <ul class="nav-list" id="step-nav-list">
-        <li><button type="button" class="nav-btn" data-jump-step="step-1"><span>1. Spreadsheet &amp; Kode .gs</span><span class="nav-status-dot"></span></button></li>
-        <li><button type="button" class="nav-btn" data-jump-step="step-2"><span>2. Setup 1-Klik Environment</span><span class="nav-status-dot"></span></button></li>
-        <li><button type="button" class="nav-btn" data-jump-step="step-3"><span>3. ScriptProperties &amp; Secret</span><span class="nav-status-dot"></span></button></li>
-        <li><button type="button" class="nav-btn" data-jump-step="step-4"><span>4. Deploy Web App /exec</span><span class="nav-status-dot"></span></button></li>
-        <li><button type="button" class="nav-btn" data-jump-step="step-5"><span>5. Google OAuth &amp; /privacy</span><span class="nav-status-dot"></span></button></li>
-        <li><button type="button" class="nav-btn" data-jump-step="step-6"><span>6. Build &amp; Deploy Frontend</span><span class="nav-status-dot"></span></button></li>
-        <li><button type="button" class="nav-btn" data-jump-step="step-7"><span>7. Uji Koneksi &amp; Go-Live</span><span class="nav-status-dot"></span></button></li>
+      <ul class="nav-list">
+        <li><button type="button" class="nav-btn" data-jump-step="step-1"><span>1. Buat Apps Script (script.new)</span><span class="dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-2"><span>2. Run setupAppEnvironment()</span><span class="dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-3"><span>3. Passphrase, PIN &amp; Secrets</span><span class="dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-4"><span>4. Deploy Backend /exec</span><span class="dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-5"><span>5. Buat Repo GitHub &amp; Upload</span><span class="dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-6"><span>6. Import GitHub ke Hosting</span><span class="dot"></span></button></li>
+        <li><button type="button" class="nav-btn" data-jump-step="step-7"><span>7. Uji Live &amp; Go-Live</span><span class="dot"></span></button></li>
       </ul>
 
       <div class="sidebar-actions">
-        <button type="button" id="btn-toggle-pending">Filter: Hanya Belum Selesai</button>
-        <button type="button" id="btn-reset-progress">Reset Progres Checklist</button>
+        <button type="button" class="btn-soft" id="btn-toggle-pending">Filter: Belum Selesai</button>
+        <button type="button" class="btn-soft" id="btn-reset-progress">Reset Progres</button>
       </div>
     </aside>
 
     <!-- Konten Utama -->
     <main>
+      <!-- Hero & Quick Shortcut Bar -->
       <header class="card">
-        <div class="header-bar">
+        <div class="step-header">
           <div>
-            <h1>Panduan Instalasi &amp; Deployment End-to-End</h1>
-            <p class="helper">Mandiri 100% (Offline-Capable) • Nol Panggilan Jaringan • Kontrak KB v2.1.0</p>
+            <h1>Panduan Deploy End-to-End</h1>
+            <p class="helper">Backend Apps Script (Auto-DB &amp; Drive) &rarr; Upload Repo GitHub &rarr; Import ke Hosting • 100% Offline Safe</p>
           </div>
-          <span class="badge badge-ok">OFFLINE SAFE</span>
+          <span class="pill pill-mint">KB v2.1.0</span>
         </div>
 
-        <!-- Panel Konfigurasi Live Placeholder Replacement -->
-        <h2 style="margin-top:8px;">Parameter Konfigurasi Proyek (Live Snippet Filler)</h2>
-        <p class="helper">Isi parameter di bawah untuk memperbarui seluruh blok perintah dan file konfigurasi secara instan via <code>textContent</code>. Nilai ini <strong>tidak pernah</strong> disimpan ke <code>localStorage</code> atau dikirim ke jaringan.</p>
+        <p class="helper" style="margin-bottom:4px;"><strong>Tombol Pintas Cepat (Buka di Tab Baru):</strong></p>
+        <div class="shortcut-bar">
+          <a class="shortcut-btn shortcut-mint" href="https://script.new" target="_blank" rel="noopener noreferrer">1. Buat Apps Script (script.new) &#8599;</a>
+          <a class="shortcut-btn shortcut-sky" href="https://github.com/new" target="_blank" rel="noopener noreferrer">2. Buat Repo GitHub Baru &#8599;</a>
+          <a class="shortcut-btn shortcut-butter" href="https://dash.cloudflare.com/?to=/:account/workers-and-pages/create/pages" target="_blank" rel="noopener noreferrer">3. Cloudflare Pages &#8599;</a>
+          <a class="shortcut-btn shortcut-lavender" href="https://app.netlify.com/start" target="_blank" rel="noopener noreferrer">Netlify Import &#8599;</a>
+          <a class="shortcut-btn" href="https://vercel.com/new" target="_blank" rel="noopener noreferrer">Vercel Import &#8599;</a>
+          <a class="shortcut-btn" href="https://app.sevalla.com/" target="_blank" rel="noopener noreferrer">Sevalla &#8599;</a>
+        </div>
+
+        <!-- Live Snippet Filler -->
+        <h2 style="margin-top:16px;">Isi Nilai Proyek Anda (Otomatis Mengisi Semua Snippet)</h2>
+        <p class="helper">Hanya mengisi teks di halaman ini lewat <code>textContent</code>. Tidak pernah disimpan ke <code>localStorage</code> atau dikirim ke internet.</p>
         <div class="grid-form">
           <div>
             <label for="cfg-spreadsheet-id">Spreadsheet ID (<code>{{SPREADSHEET_ID}}</code>)</label>
-            <input id="cfg-spreadsheet-id" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+            <input id="cfg-spreadsheet-id" type="text" placeholder="Salin dari log setupAppEnvironment()">
           </div>
           <div>
             <label for="cfg-gas-url">URL Web App /exec (<code>{{GAS_EXEC_URL}}</code>)</label>
-            <input id="cfg-gas-url" type="url" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+            <input id="cfg-gas-url" type="url" placeholder="https://script.google.com/macros/s/.../exec">
           </div>
           <div>
             <label for="cfg-google-client-id">Google Client ID (<code>{{GOOGLE_CLIENT_ID}}</code>)</label>
-            <input id="cfg-google-client-id" type="text" placeholder="1234567890-abc.apps.googleusercontent.com">
+            <input id="cfg-google-client-id" type="text" placeholder="Opsional jika auth.google aktif">
           </div>
           <div>
-            <label for="cfg-pages-domain">Domain Frontend (<code>{{PAGES_DOMAIN}}</code>)</label>
-            <input id="cfg-pages-domain" type="text" placeholder="https://app.contoh.id">
+            <label for="cfg-pages-domain">Domain Aplikasi Live (<code>{{PAGES_DOMAIN}}</code>)</label>
+            <input id="cfg-pages-domain" type="text" placeholder="https://aplikasi-anda.pages.dev">
           </div>
         </div>
-        <p id="cfg-validation-msg" class="helper" role="status" aria-live="polite" style="margin-top:8px;">Masukkan parameter proyek untuk mengisi otomatis seluruh snippet di bawah.</p>
+        <p id="cfg-validation-msg" class="helper" role="status" aria-live="polite" style="margin-top:8px;">Siap. Nilai yang Anda ketik langsung mengisi snippet di bawah.</p>
       </header>
 
-      <!-- Langkah 1 -->
+      <!-- LANGKAH 1 -->
       <section class="card install-step" id="step-1" data-install-step="step-1"
-        data-step-purpose="Membuat Google Spreadsheet database dan menyalin seluruh file backend .gs ke proyek Apps Script."
-        data-step-action="Buat Google Spreadsheet baru, catat SPREADSHEET_ID, buka Extensions > Apps Script, lalu tempel setup.gs dan code.gs."
-        data-step-expected="Seluruh file .gs tersimpan di proyek Apps Script tanpa syntax error."
-        data-step-source="src/core/facts.md &amp; https://developers.google.com/apps-script/guides/bound"
+        data-step-purpose="Membuat proyek Google Apps Script baru secara langsung tanpa membuat Spreadsheet manual terlebih dahulu."
+        data-step-action="Klik tombol shortcut script.new, beri nama proyek, lalu salin-tempel file setup.gs dan code.gs."
+        data-step-expected="File setup.gs dan code.gs tersimpan rapi di editor Google Apps Script tanpa error."
+        data-step-source="src/gas/config.md &amp; https://developers.google.com/apps-script/guides/standalone"
         data-step-verified="UNVERIFIED">
         <div class="step-header">
-          <h3>Langkah 1 — Persiapan Google Spreadsheet &amp; Kode Backend (.gs)</h3>
+          <div>
+            <span class="pill pill-mint">FASE 1 • BACKEND GAS</span>
+            <h3 style="margin-top:6px;">Langkah 1 — Buat Proyek Apps Script &amp; Tempel Kode Backend</h3>
+          </div>
           <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-1"> Selesai</label>
         </div>
-        <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Menyiapkan Google Spreadsheet sebagai database dan menanam kode backend V8.</div>
-          <div><strong>Aksi:</strong> Buat Spreadsheet baru, salin ID dari URL ke kolom <code>{{SPREADSHEET_ID}}</code> di atas, buka <strong>Extensions &gt; Apps Script</strong>, buat file <code>setup.gs</code> &amp; <code>code.gs</code>, lalu simpan (<code>Ctrl+S</code> / <code>Cmd+S</code>).</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Proyek Apps Script terikat pada Spreadsheet <code>{{SPREADSHEET_ID}}</code> dan siap diinisialisasi.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/bound" target="_blank" rel="noopener noreferrer">Apps Script Bound Scripts</a> <span class="badge badge-warn">UNVERIFIED</span></div>
+        <div class="meta-box">
+          <div><strong>Tujuan:</strong> Menyiapkan mesin backend Google Apps Script tanpa perlu membuat Spreadsheet atau Folder Drive secara manual.</div>
+          <div><strong>Aksi:</strong> Klik tombol pintas <strong>Buka script.new</strong> di bawah, ganti judul proyek, lalu buat file <code>setup.gs</code> dan <code>code.gs</code> dari hasil proyek Anda, kemudian tekan <code>Ctrl+S</code> / <code>Cmd+S</code>.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Seluruh file <code>.gs</code> tersimpan di editor tanpa pesan error sintaks.</div>
+          <div><strong>Sumber:</strong> <a href="https://developers.google.com/apps-script/guides/standalone" target="_blank" rel="noopener noreferrer">Apps Script Standalone Scripts</a> <span class="pill pill-butter">UNVERIFIED</span></div>
+        </div>
+        <div class="btn-row">
+          <a class="shortcut-btn shortcut-mint" href="https://script.new" target="_blank" rel="noopener noreferrer">Buka script.new Sekarang &#8599;</a>
+          <a class="shortcut-btn" href="https://script.google.com/home" target="_blank" rel="noopener noreferrer">Daftar Proyek Apps Script Saya &#8599;</a>
+        </div>
+      </section>
+
+      <!-- LANGKAH 2 -->
+      <section class="card install-step" id="step-2" data-install-step="step-2"
+        data-step-purpose="Membuat Google Spreadsheet database, Folder Google Drive, 16 baris seed, dan secret internal secara 100% otomatis."
+        data-step-action="Pilih setupAppEnvironment pada dropdown toolbar editor Apps Script lalu klik Run dan setujui izin akses."
+        data-step-expected="Execution Log mencetak spreadsheetId, spreadsheetUrl, driveFolderUrl, dan status kesehatan seluruh tabel."
+        data-step-source="src/gas/config.md (setupAppEnvironment)"
+        data-step-verified="UNVERIFIED">
+        <div class="step-header">
+          <div>
+            <span class="pill pill-mint">FASE 1 • BACKEND GAS</span>
+            <h3 style="margin-top:6px;">Langkah 2 — Klik <code>Run setupAppEnvironment()</code> (Auto-Create DB &amp; Drive)</h3>
+          </div>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-2"> Selesai</label>
+        </div>
+        <div class="meta-box">
+          <div><strong>Tujuan:</strong> Membuat file Google Spreadsheet + semua tab tabel + 16 data contoh + Folder Google Drive + <code>AUTH_HMAC_SECRET</code> &amp; <code>AUTH_PEPPER</code> dalam 1 kali klik.</div>
+          <div><strong>Aksi:</strong> Di toolbar atas editor Apps Script, pilih <strong><code>setupAppEnvironment</code></strong> &rarr; klik tombol <strong>Run</strong> &rarr; selesaikan dialog <em>Review Permissions</em>. Salin <code>spreadsheetId</code> dari Execution Log ke kolom <code>{{SPREADSHEET_ID}}</code> di atas.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Execution Log menampilkan <code>spreadsheetUrl</code>, <code>driveFolderUrl</code>, <code>sheetsHealthy: true</code>, dan <code>hmacSecretReady: true</code>.</div>
+          <div><strong>Sumber:</strong> <code>src/gas/config.md</code> <span class="pill pill-butter">UNVERIFIED</span></div>
+        </div>
+        <div class="callout callout-mint">
+          <strong>Serba Otomatis:</strong> Anda <strong>tidak perlu</strong> membuat Spreadsheet, Folder Drive, <code>AUTH_HMAC_SECRET</code>, atau <code>AUTH_PEPPER</code> secara manual. Semua sudah otomatis dibuat oleh <code>setupAppEnvironment()</code>.
         </div>
         <div class="code-wrap">
           <div class="code-toolbar">
-            <span class="helper">Tautan Spreadsheet Proyek Anda</span>
-            <button type="button" data-copy-target="snippet-step-1">Salin URL</button>
+            <span class="helper">Tautan Spreadsheet Database Anda (terisi otomatis setelah Spreadsheet ID dimasukkan)</span>
+            <button type="button" data-copy-target="snippet-ss-url">Salin URL</button>
           </div>
-          <pre id="snippet-step-1" data-template="https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit">https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit</pre>
+          <pre id="snippet-ss-url" data-template="https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit">https://docs.google.com/spreadsheets/d/{{SPREADSHEET_ID}}/edit</pre>
         </div>
       </section>
 
-      <!-- Langkah 2 -->
-      <section class="card install-step" id="step-2" data-install-step="step-2"
-        data-step-purpose="Menjalankan setupAppEnvironment() 1-klik untuk membuat skema sheet, seed objek, folder Drive, AUTH_HMAC_SECRET, dan AUTH_PEPPER."
-        data-step-action="Pilih setupAppEnvironment pada dropdown tombol Run di toolbar Apps Script Editor (atau menu Gasly Setup di Spreadsheet) lalu jalankan."
-        data-step-expected="Seluruh tab sheet, 16 baris SEED, folder Drive, dan secret internal terbentuk otomatis dengan laporan status di Execution Log."
-        data-step-source="src/gas/config.md (Seksi 2 &amp; 3)"
-        data-step-verified="UNVERIFIED">
-        <div class="step-header">
-          <h3>Langkah 2 — Jalankan Aksi 1-Klik <code>setupAppEnvironment()</code></h3>
-          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-2"> Selesai</label>
-        </div>
-        <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Menginisialisasi seluruh database, zona waktu, folder Drive, serta membuat <code>AUTH_HMAC_SECRET</code> &amp; <code>AUTH_PEPPER</code> secara otomatis.</div>
-          <div><strong>Aksi:</strong> Di toolbar Editor Apps Script, pilih fungsi <strong><code>setupAppEnvironment</code></strong> pada dropdown lalu klik <strong>Run</strong> (setujui dialog izin Google). Alternatif: muat ulang Google Sheets dan klik menu <strong>Gasly Setup &gt; 1. Setup App Environment</strong>.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Execution Log mencetak <code>GASLY SETUP APP ENVIRONMENT REPORT</code> dengan <code>sheetsHealthy: true</code> dan <code>hmacSecretReady: true</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/gas/config.md</code> <span class="badge badge-warn">UNVERIFIED</span></div>
-        </div>
-        <div class="callout">
-          <strong>Jangan buat manual:</strong> <code>AUTH_HMAC_SECRET</code>, <code>AUTH_PEPPER</code>, dan <code>DRIVE_ROOT_FOLDER_ID</code> sudah dibuat otomatis oleh <code>setupAppEnvironment()</code>.
-        </div>
-      </section>
-
-      <!-- Langkah 3 -->
+      <!-- LANGKAH 3 -->
       <section class="card install-step" id="step-3" data-install-step="step-3"
-        data-step-purpose="Mengatur hash passphrase admin, PIN 6 digit step-up, dan properti opsional di ScriptProperties tanpa plaintext di kode."
-        data-step-action="Gunakan menu Gasly Setup > 2. Atur Passphrase & PIN Admin di Spreadsheet, atau isi ADMIN_PASSPHRASE_INIT & ADMIN_PIN_INIT di Script Properties lalu jalankan setupAppEnvironment()."
-        data-step-expected="ADMIN_PASSPHRASE_HASH & ADMIN_PIN_HASH tersimpan, properti sementara terhapus otomatis, dan laporan menampilkan READY_TO_DEPLOY."
+        data-step-purpose="Mengatur hash passphrase admin (>=12 karakter), PIN 6 digit step-up, dan properti opsional di ScriptProperties tanpa plaintext di kode."
+        data-step-action="Buka Project Settings > Script Properties, isi ADMIN_PASSPHRASE_INIT & ADMIN_PIN_INIT (atau gunakan menu Gasly Setup di Spreadsheet), lalu jalankan setupAppEnvironment() kembali."
+        data-step-expected="Execution Log menampilkan status READY_TO_DEPLOY dan properti sementara *_INIT terhapus otomatis."
         data-step-source="src/gas/config.md &amp; https://developers.google.com/apps-script/guides/properties"
         data-step-verified="UNVERIFIED">
         <div class="step-header">
-          <h3>Langkah 3 — Kredensial Admin, <code>ScriptProperties</code> Matrix &amp; Generator Secret</h3>
+          <div>
+            <span class="pill pill-mint">FASE 1 • BACKEND GAS</span>
+            <h3 style="margin-top:6px;">Langkah 3 — Atur Passphrase &amp; PIN Admin (Nol Plaintext di Kode)</h3>
+          </div>
           <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-3"> Selesai</label>
         </div>
-        <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Menyimpan kredensial admin sebagai hash kriptografis di <code>ScriptProperties</code> tanpa pernah menulis plaintext di file <code>.gs</code>.</div>
-          <div><strong>Aksi (Cara Termudah):</strong> Di Google Sheets, klik <strong>Gasly Setup &gt; 2. Atur Passphrase &amp; PIN Admin</strong>. <strong>Alternatif (Headless):</strong> Buka <strong>Project Settings &gt; Script Properties</strong>, tambahkan <code>ADMIN_PASSPHRASE_INIT</code> (&ge;12 karakter) &amp; <code>ADMIN_PIN_INIT</code> (6 digit), lalu klik Run <code>setupAppEnvironment</code> lagi.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Execution Log menampilkan <code>status: "READY_TO_DEPLOY"</code> dan properti sementara <code>*_INIT</code> otomatis terhapus.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/properties" target="_blank" rel="noopener noreferrer">Apps Script Properties Service</a> <span class="badge badge-warn">UNVERIFIED</span></div>
-        </div>
-
-        <div class="prop-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Kunci ScriptProperties</th>
-                <th>Tipe</th>
-                <th>Cara Pengisian</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>AUTH_HMAC_SECRET</code>, <code>AUTH_PEPPER</code>, <code>DRIVE_ROOT_FOLDER_ID</code></td>
-                <td><span class="badge badge-ok">OTOMATIS</span></td>
-                <td>Dibuat otomatis oleh <code>setupAppEnvironment()</code>. Jangan ditimpa manual.</td>
-              </tr>
-              <tr>
-                <td><code>ADMIN_PASSPHRASE_INIT</code>, <code>ADMIN_PIN_INIT</code></td>
-                <td><span class="badge badge-warn">SEMENTARA</span></td>
-                <td>Isi sementara lalu jalankan <code>setupAppEnvironment()</code> (otomatis di-hash &amp; dihapus).</td>
-              </tr>
-              <tr>
-                <td><code>ACCESS_PROFILE</code>, <code>GOOGLE_CLIENT_ID</code>, <code>WEBHOOK_SHARED_SECRET</code></td>
-                <td><span class="badge">MANUAL</span></td>
-                <td>Setel di <strong>Project Settings &gt; Script Properties</strong> sesuai kontrak proyek.</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="meta-box">
+          <div><strong>Tujuan:</strong> Menyimpan hash kriptografis passphrase &amp; PIN admin ke <code>ScriptProperties</code> dengan aman.</div>
+          <div><strong>Aksi:</strong> Buka <strong>Project Settings (roda gigi) &gt; Script Properties</strong> &rarr; tambahkan properti sementara <code>ADMIN_PASSPHRASE_INIT</code> (&ge;12 karakter) dan <code>ADMIN_PIN_INIT</code> (6 digit angka) &rarr; Simpan &rarr; kembali ke Editor dan klik <strong>Run <code>setupAppEnvironment</code></strong> sekali lagi.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Log menampilkan <code>status: "READY_TO_DEPLOY"</code> dan properti sementara <code>*_INIT</code> otomatis lenyap dari Script Properties.</div>
+          <div><strong>Sumber:</strong> <a href="https://developers.google.com/apps-script/guides/properties" target="_blank" rel="noopener noreferrer">Apps Script Properties</a> <span class="pill pill-butter">UNVERIFIED</span></div>
         </div>
 
         <div class="code-wrap">
           <div class="code-toolbar">
-            <span class="helper">Pembuat Secret Acak Lokal CSPRNG (<code>crypto.getRandomValues</code> — khusus properti manual)</span>
-            <div>
-              <button type="button" class="btn-primary" id="btn-gen-secret">Buat Secret 32-Kar</button>
+            <span class="helper">Generator Secret Acak Lokal CSPRNG (<code>crypto.getRandomValues</code> — untuk properti manual)</span>
+            <div class="btn-row" style="margin:0;">
+              <button type="button" class="btn-butter" id="btn-gen-secret">Generate Secret 32-Kar</button>
               <button type="button" data-copy-target="generated-secret-output">Salin</button>
             </div>
           </div>
-          <pre id="generated-secret-output">[Klik "Buat Secret 32-Kar" — hanya tampil di memori, hilang saat reload]</pre>
+          <pre id="generated-secret-output">[Klik "Generate Secret 32-Kar" — hanya di memori browser, hilang saat reload]</pre>
         </div>
 
         <div class="code-wrap">
           <div class="code-toolbar">
-            <span class="helper">Ringkasan Kunci Script Properties Manual</span>
-            <button type="button" data-copy-target="snippet-step-3">Salin Daftar</button>
+            <span class="helper">Referensi Properti Manual di Script Properties</span>
+            <button type="button" data-copy-target="snippet-props">Salin Kunci</button>
           </div>
-          <pre id="snippet-step-3" data-template="ACCESS_PROFILE=P3&#10;GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}&#10;ADMIN_PASSPHRASE_INIT=&lt;minimal_12_karakter_lalu_run_setupAppEnvironment&gt;&#10;ADMIN_PIN_INIT=&lt;6_digit_angka_lalu_run_setupAppEnvironment&gt;">ACCESS_PROFILE=P3
-GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}
-ADMIN_PASSPHRASE_INIT=&lt;minimal_12_karakter_lalu_run_setupAppEnvironment&gt;
-ADMIN_PIN_INIT=&lt;6_digit_angka_lalu_run_setupAppEnvironment&gt;</pre>
+          <pre id="snippet-props" data-template="ADMIN_PASSPHRASE_INIT=&lt;passphrase_min_12_karakter&gt;&#10;ADMIN_PIN_INIT=&lt;6_digit_angka&gt;&#10;GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}">ADMIN_PASSPHRASE_INIT=&lt;passphrase_min_12_karakter&gt;
+ADMIN_PIN_INIT=&lt;6_digit_angka&gt;
+GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}</pre>
         </div>
       </section>
 
-      <!-- Langkah 4 -->
+      <!-- LANGKAH 4 -->
       <section class="card install-step" id="step-4" data-install-step="step-4"
-        data-step-purpose="Menerbitkan satu URL Web App .../exec dan memahami cara update rilis tanpa mengubah URL."
+        data-step-purpose="Menerbitkan endpoint Web App .../exec tunggal sebagai API headless bagi frontend."
         data-step-action="Klik Deploy > New deployment > Web app (Execute as: Me, Who has access: Anyone), lalu tempel URL /exec ke form parameter di atas."
-        data-step-expected="URL https://script.google.com/macros/.../exec aktif dan merespons JSON."
+        data-step-expected="Diperoleh URL https://script.google.com/macros/.../exec yang aktif."
         data-step-source="src/core/contract.md (Seksi 7) &amp; https://developers.google.com/apps-script/guides/web"
         data-step-verified="UNVERIFIED">
         <div class="step-header">
-          <h3>Langkah 4 — Deploy Web App (<code>.../exec</code>) &amp; Aturan Zero-Downtime Update</h3>
+          <div>
+            <span class="pill pill-mint">FASE 1 • BACKEND GAS</span>
+            <h3 style="margin-top:6px;">Langkah 4 — Deploy Web App Backend (<code>.../exec</code>)</h3>
+          </div>
           <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-4"> Selesai</label>
         </div>
-        <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Membuka endpoint headless API tunggal untuk diakses frontend lintas domain.</div>
-          <div><strong>Aksi:</strong> Klik <strong>Deploy &gt; New deployment</strong> &rarr; jenis <strong>Web app</strong> &rarr; <strong>Execute as: Me</strong> &rarr; <strong>Who has access: Anyone</strong> &rarr; <strong>Deploy</strong>. Salin URL ke input <code>{{GAS_EXEC_URL}}</code> di atas.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Endpoint <code>{{GAS_EXEC_URL}}</code> siap melayani request <code>POST text/plain;charset=utf-8</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/apps-script/guides/web" target="_blank" rel="noopener noreferrer">Apps Script Web Apps</a> <span class="badge badge-warn">UNVERIFIED</span></div>
+        <div class="meta-box">
+          <div><strong>Tujuan:</strong> Menerbitkan satu URL publik <code>.../exec</code> untuk dihubungkan ke frontend.</div>
+          <div><strong>Aksi:</strong> Di pojok kanan atas Editor Apps Script, klik <strong>Deploy &gt; New deployment</strong> &rarr; ikon roda gigi pilih <strong>Web app</strong> &rarr; <strong>Execute as: Me</strong> &rarr; <strong>Who has access: Anyone</strong> &rarr; klik <strong>Deploy</strong>. Salin URL <code>.../exec</code> ke kotak <code>{{GAS_EXEC_URL}}</code> di atas.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Endpoint <code>{{GAS_EXEC_URL}}</code> aktif dan siap menerima request <code>POST text/plain</code>.</div>
+          <div><strong>Sumber:</strong> <a href="https://developers.google.com/apps-script/guides/web" target="_blank" rel="noopener noreferrer">Apps Script Web Apps</a> <span class="pill pill-butter">UNVERIFIED</span></div>
         </div>
         <div class="callout">
-          <strong>Aturan Update Kode di Masa Depan (URL Tetap):</strong> Jangan klik <em>New deployment</em> saat revisi kode. Selalu buka <strong>Deploy &gt; Manage deployments &gt; Edit (ikon pensil) &gt; Version: New version &gt; Deploy</strong> agar URL <code>{{GAS_EXEC_URL}}</code> tidak berubah.
+          <strong>Cara Update Backend di Masa Depan (URL Tetap):</strong> Jangan buat <em>New deployment</em>. Selalu klik <strong>Deploy &gt; Manage deployments &gt; Edit (pensil) &gt; Version: New version &gt; Deploy</strong> agar URL <code>{{GAS_EXEC_URL}}</code> tidak berubah.
         </div>
       </section>
 
-      <!-- Langkah 5 -->
+      <!-- LANGKAH 5: BUAT REPO GITHUB BARU & UPLOAD FRONTEND -->
       <section class="card install-step" id="step-5" data-install-step="step-5"
-        data-step-purpose="Mengonfigurasi Google OAuth 2.0 Web Client ID (bila auth.google aktif) dan memastikan rute publik /privacy tersedia."
-        data-step-action="Tambahkan {{PAGES_DOMAIN}} pada Authorized JavaScript origins di Google Cloud Console dan publikasikan {{PAGES_DOMAIN}}/privacy."
-        data-step-expected="Login Google ID Token diverifikasi dengan aud === GOOGLE_CLIENT_ID tanpa memakai kuota MailApp."
-        data-step-source="src/core/access-profiles.md &amp; https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid"
-        data-step-verified="UNVERIFIED">
+        data-step-purpose="Menyimpan source code frontend ke repository GitHub baru agar siap di-import otomatis oleh platform hosting."
+        data-step-action="Buka github.com/new, buat repository baru, masukkan URL /exec ke file konfigurasi frontend (bila perlu), lalu unggah seluruh file frontend ke repository."
+        data-step-expected="Seluruh file frontend (index.html / package.json / src/) tersedia di branch main repository GitHub."
+        data-step-source="src/core/facts.md &amp; https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository"
+        data-step-verified="2026-11-28">
         <div class="step-header">
-          <h3>Langkah 5 — Google Sign-In OAuth (<code>auth.google</code>) &amp; Halaman <code>/privacy</code></h3>
+          <div>
+            <span class="pill pill-sky">FASE 2 • GITHUB REPOSITORY</span>
+            <h3 style="margin-top:6px;">Langkah 5 — Buat Repo GitHub Baru &amp; Upload File Frontend</h3>
+          </div>
           <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-5"> Selesai</label>
         </div>
-        <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Mengaktifkan login akun Google (0 kuota email) dan memenuhi syarat OAuth Consent Screen Google. *(Lewati langkah ini jika <code>auth_google_enabled: false</code>).*</div>
-          <div><strong>Aksi:</strong> Di Google Cloud Console, buat <strong>OAuth 2.0 Web Client ID</strong>, masukkan <code>{{PAGES_DOMAIN}}</code> ke <em>Authorized JavaScript origins</em>, pastikan halaman <code>{{PAGES_DOMAIN}}/privacy</code> publik, lalu tempel Client ID ke <code>{{GOOGLE_CLIENT_ID}}</code>.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Action <code>auth.google</code> menerima payload <code>{ idToken }</code> dan menerbitkan token sesi HMAC.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <a href="https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid" target="_blank" rel="noopener noreferrer">Google Identity Services Setup</a> <span class="badge badge-warn">UNVERIFIED</span></div>
-        </div>
-      </section>
-
-      <!-- Langkah 6: Interactive Stack + Hosting Platform Switcher -->
-      <section class="card install-step" id="step-6" data-install-step="step-6"
-        data-step-purpose="Menghubungkan frontend (html-tailwind atau react) ke URL /exec dan men-deploy ke platform hosting pilihan sesuai lisensi komersial."
-        data-step-action="Pilih stack frontend dan platform hosting target di bawah, salin file konfigurasi, lalu jalankan perintah build & deploy."
-        data-step-expected="Aplikasi frontend aktif di {{PAGES_DOMAIN}}, mode demo nonaktif otomatis, dan terhubung ke {{GAS_EXEC_URL}}."
-        data-step-source="src/core/facts.md (Seksi 2), src/stacks/html-tailwind.md &amp; src/stacks/react-vite.md"
-        data-step-verified="2026-11-25">
-        <div class="step-header">
-          <h3>Langkah 6 — Konfigurasi Stack &amp; Deploy Frontend (Interactive Switcher)</h3>
-          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-6"> Selesai</label>
-        </div>
-        <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Menyalin konfigurasi environment sesuai stack dan men-deploy ke target hosting yang sesuai ketentuan lisensi komersial.</div>
-          <div><strong>Aksi:</strong> Pilih tab <strong>Stack</strong> dan tab <strong>Hosting</strong> di bawah untuk melihat snippet konfigurasi &amp; perintah deployment spesifik.</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Frontend tayang di <code>{{PAGES_DOMAIN}}</code> dan seluruh mutasi menuju <code>{{GAS_EXEC_URL}}</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/facts.md</code> <span class="badge badge-ok">2026-11-25</span></div>
+        <div class="meta-box">
+          <div><strong>Tujuan:</strong> Menaruh seluruh file frontend di GitHub sehingga Cloudflare Pages / Netlify / Vercel / Sevalla dapat langsung me-build &amp; men-deploy otomatis setiap kali ada update.</div>
+          <div><strong>Aksi:</strong> Klik tombol pintas <strong>Buat Repo GitHub Baru</strong> di bawah, beri nama repo (boleh <em>Private</em>), lalu pilih <strong>"uploading an existing file"</strong> (seret folder frontend Anda) atau gunakan perintah Git di bawah.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> File frontend sudah tampil di branch <code>main</code> GitHub tanpa menyertakan file rahasia (<code>.env</code>).</div>
+          <div><strong>Sumber:</strong> <a href="https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository" target="_blank" rel="noopener noreferrer">GitHub Create Repository</a> <span class="pill pill-mint">2026-11-28</span></div>
         </div>
 
-        <p class="helper" style="margin-bottom:4px;"><strong>A. Pilih Stack Frontend:</strong></p>
+        <div class="btn-row">
+          <a class="shortcut-btn shortcut-sky" href="https://github.com/new" target="_blank" rel="noopener noreferrer">Buat Repo GitHub Baru (github.com/new) &#8599;</a>
+        </div>
+
+        <p class="helper" style="margin-top:10px;margin-bottom:4px;"><strong>Pilih Stack Frontend Anda:</strong></p>
         <div class="tabs-row" role="tablist" aria-label="Pilih Stack Frontend">
           <button type="button" class="tab-btn" role="tab" aria-selected="true" data-stack-tab="html">HTML + Tailwind</button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-stack-tab="react">React (Vite + TS)</button>
@@ -609,7 +595,7 @@ ADMIN_PIN_INIT=&lt;6_digit_angka_lalu_run_setupAppEnvironment&gt;</pre>
 
         <div id="stack-panel-html" class="code-wrap">
           <div class="code-toolbar">
-            <span class="helper">File: <code>src/config.js</code> (lalu jalankan <code>npm run build:css</code> untuk produksi)</span>
+            <span class="helper">Simpan ke <code>src/config.js</code> sebelum upload ke GitHub (URL <code>/exec</code> bersifat publik)</span>
             <button type="button" data-copy-target="snippet-stack-html">Salin config.js</button>
           </div>
           <pre id="snippet-stack-html" data-template="window.GASLY_CONFIG = {&#10;  EXEC_URL: '{{GAS_EXEC_URL}}',&#10;  GOOGLE_CLIENT_ID: '{{GOOGLE_CLIENT_ID}}',&#10;  ENTITY_IS_PRIVATE: true,&#10;  REQUEST_TIMEOUT_MS: 20000,&#10;  ALLOW_SESSION_STORAGE: false&#10;};">window.GASLY_CONFIG = {
@@ -623,105 +609,156 @@ ADMIN_PIN_INIT=&lt;6_digit_angka_lalu_run_setupAppEnvironment&gt;</pre>
 
         <div id="stack-panel-react" class="code-wrap hidden">
           <div class="code-toolbar">
-            <span class="helper">File: <code>.env</code> (lalu jalankan <code>npm run build</code> &rarr; output folder <code>dist/</code>)</span>
+            <span class="helper">Untuk uji lokal simpan di <code>.env</code> (jangan commit <code>.env</code>; masukkan variabel ini di dashboard hosting Langkah 6)</span>
             <button type="button" data-copy-target="snippet-stack-react">Salin .env</button>
           </div>
           <pre id="snippet-stack-react" data-template="VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}&#10;VITE_GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}">VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}
 VITE_GOOGLE_CLIENT_ID={{GOOGLE_CLIENT_ID}}</pre>
         </div>
+      </section>
 
-        <p class="helper" style="margin-top:14px;margin-bottom:4px;"><strong>B. Pilih Platform Hosting Target:</strong></p>
+      <!-- LANGKAH 6: IMPORT REPO GITHUB KE HOSTING -->
+      <section class="card install-step" id="step-6" data-install-step="step-6"
+        data-step-purpose="Mengimpor repository GitHub frontend ke platform hosting pilihan (Cloudflare Pages, Netlify, Sevalla, Vercel, atau Firebase Hosting)."
+        data-step-action="Pilih tab platform hosting di bawah, klik tombol shortcut Import GitHub, isi Build Command, Output Directory, dan Environment Variable, lalu klik Deploy."
+        data-step-expected="Aplikasi frontend live di {{PAGES_DOMAIN}} dan terhubung ke backend {{GAS_EXEC_URL}}."
+        data-step-source="src/core/facts.md (Seksi 2)"
+        data-step-verified="2026-11-28">
+        <div class="step-header">
+          <div>
+            <span class="pill pill-lavender">FASE 3 • IMPORT KE HOSTING</span>
+            <h3 style="margin-top:6px;">Langkah 6 — Import Repo GitHub ke Hosting Pilihan</h3>
+          </div>
+          <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-6"> Selesai</label>
+        </div>
+        <div class="meta-box">
+          <div><strong>Tujuan:</strong> Menayangkan aplikasi frontend secara otomatis dari repository GitHub Anda.</div>
+          <div><strong>Aksi:</strong> Pilih tab platform hosting yang diinginkan di bawah, klik tombol shortcut <strong>Import Repo</strong>, hubungkan akun GitHub, tempel pengaturan build &amp; environment, lalu klik <strong>Deploy</strong>.</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Diperoleh domain live <code>{{PAGES_DOMAIN}}</code> (salin ke kolom Domain di atas, dan tambahkan ke Google OAuth Origins bila memakai <code>auth.google</code>).</div>
+          <div><strong>Sumber:</strong> <code>src/core/facts.md</code> <span class="pill pill-mint">2026-11-28</span></div>
+        </div>
+
         <div class="tabs-row" role="tablist" aria-label="Pilih Platform Hosting">
           <button type="button" class="tab-btn" role="tab" aria-selected="true" data-host-tab="cloudflare">Cloudflare Pages</button>
-          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="sevalla">Sevalla</button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="netlify">Netlify</button>
-          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="firebase">Firebase Hosting</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="sevalla">Sevalla</button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="vercel">Vercel</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="firebase">Firebase Hosting</button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-host-tab="ghpages">GitHub Pages</button>
         </div>
 
         <div id="host-panel-cloudflare" class="code-wrap">
-          <div class="callout"><strong>Lisensi:</strong> Diizinkan komersial gratis (default Gasly, 500 build/bln). Docs: <a href="https://developers.cloudflare.com/pages/" target="_blank" rel="noopener noreferrer">Cloudflare Pages</a></div>
-          <div class="code-toolbar"><span class="helper">Deploy via CLI atau Git (Build: <code>npm run build</code>, Output: <code>dist</code>)</span><button type="button" data-copy-target="snippet-host-cf">Salin Perintah</button></div>
-          <pre id="snippet-host-cf" data-template="# React (Vite):&#10;npm run build &amp;&amp; npx wrangler pages deploy dist --project-name gasly-app&#10;# HTML+Tailwind (setelah npm run build:css):&#10;npx wrangler pages deploy . --project-name gasly-app&#10;# Domain target: {{PAGES_DOMAIN}}"># React (Vite):
-npm run build &amp;&amp; npx wrangler pages deploy dist --project-name gasly-app
-# HTML+Tailwind (setelah npm run build:css):
-npx wrangler pages deploy . --project-name gasly-app
-# Domain target: {{PAGES_DOMAIN}}</pre>
-        </div>
-
-        <div id="host-panel-sevalla" class="code-wrap hidden">
-          <div class="callout"><strong>Lisensi:</strong> Diizinkan komersial (gratis s/d 100 GB bandwidth &amp; 600 mnt build/bln, tunduk Fair Use). Docs: <a href="https://docs.sevalla.com/static-site-hosting/" target="_blank" rel="noopener noreferrer">Sevalla Static Sites</a></div>
-          <div class="code-toolbar"><span class="helper">Pengaturan Dashboard Sevalla Static Site</span><button type="button" data-copy-target="snippet-host-sevalla">Salin Pengaturan</button></div>
-          <pre id="snippet-host-sevalla" data-template="Build command: npm run build (React) atau npm run build:css (HTML+Tailwind)&#10;Publish directory: dist (React) atau . (HTML+Tailwind)&#10;SPA Index fallback: index.html&#10;Environment Variable (React): VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}&#10;Custom Domain: {{PAGES_DOMAIN}}">Build command: npm run build (React) atau npm run build:css (HTML+Tailwind)
-Publish directory: dist (React) atau . (HTML+Tailwind)
-SPA Index fallback: index.html
-Environment Variable (React): VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}
-Custom Domain: {{PAGES_DOMAIN}}</pre>
+          <div class="callout callout-mint"><strong>Rekomendasi Utama (Komersial Gratis):</strong> Cloudflare Pages mengizinkan proyek bisnis/komersial pada Free plan (500 build/bulan, bandwidth statis tanpa batas).</div>
+          <div class="btn-row">
+            <a class="shortcut-btn shortcut-mint" href="https://dash.cloudflare.com/?to=/:account/workers-and-pages/create/pages" target="_blank" rel="noopener noreferrer">Import Repo ke Cloudflare Pages &#8599;</a>
+            <a class="shortcut-btn" href="https://developers.cloudflare.com/pages/" target="_blank" rel="noopener noreferrer">Docs &#8599;</a>
+          </div>
+          <div class="code-toolbar"><span class="helper">Pengaturan Import GitHub di Cloudflare Pages</span><button type="button" data-copy-target="snippet-host-cf">Salin Pengaturan</button></div>
+          <pre id="snippet-host-cf" data-template="1. Klik Connect to Git &gt; Pilih Repo GitHub frontend Anda&#10;2. Build command: npm run build (React) | npm run build:css (HTML+Tailwind)&#10;3. Build output directory: dist (React) | . (HTML+Tailwind)&#10;4. Environment variables (React):&#10;   VITE_GAS_EXEC_URL = {{GAS_EXEC_URL}}&#10;   VITE_GOOGLE_CLIENT_ID = {{GOOGLE_CLIENT_ID}}&#10;5. Klik Save and Deploy &rarr; URL live: {{PAGES_DOMAIN}}">1. Klik Connect to Git &gt; Pilih Repo GitHub frontend Anda
+2. Build command: npm run build (React) | npm run build:css (HTML+Tailwind)
+3. Build output directory: dist (React) | . (HTML+Tailwind)
+4. Environment variables (React):
+   VITE_GAS_EXEC_URL = {{GAS_EXEC_URL}}
+   VITE_GOOGLE_CLIENT_ID = {{GOOGLE_CLIENT_ID}}
+5. Klik Save and Deploy &rarr; URL live: {{PAGES_DOMAIN}}</pre>
         </div>
 
         <div id="host-panel-netlify" class="code-wrap hidden">
-          <div class="callout"><strong>Lisensi:</strong> Diizinkan komersial (Free plan kuota kredit/bln; situs dijeda jika kredit habis). Docs: <a href="https://docs.netlify.com/" target="_blank" rel="noopener noreferrer">Netlify Docs</a></div>
-          <div class="code-toolbar"><span class="helper">File <code>netlify.toml</code> &amp; perintah deploy</span><button type="button" data-copy-target="snippet-host-netlify">Salin netlify.toml</button></div>
-          <pre id="snippet-host-netlify" data-template="[build]&#10;  command = &quot;npm run build&quot;&#10;  publish = &quot;dist&quot;&#10;[[redirects]]&#10;  from = &quot;/*&quot;&#10;  to = &quot;/index.html&quot;&#10;  status = 200&#10;# Setel VITE_GAS_EXEC_URL={{GAS_EXEC_URL}} di Site configuration &gt; Environment variables">[build]
-  command = "npm run build"
-  publish = "dist"
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-# Setel VITE_GAS_EXEC_URL={{GAS_EXEC_URL}} di Site configuration &gt; Environment variables</pre>
+          <div class="callout callout-mint"><strong>Komersial Gratis (Pantau Kuota Kredit):</strong> Netlify Free mengizinkan proyek komersial dengan batas kredit bulanan.</div>
+          <div class="btn-row">
+            <a class="shortcut-btn shortcut-lavender" href="https://app.netlify.com/start" target="_blank" rel="noopener noreferrer">Import Repo ke Netlify &#8599;</a>
+            <a class="shortcut-btn" href="https://docs.netlify.com/" target="_blank" rel="noopener noreferrer">Docs &#8599;</a>
+          </div>
+          <div class="code-toolbar"><span class="helper">Pengaturan Import GitHub di Netlify</span><button type="button" data-copy-target="snippet-host-netlify">Salin Pengaturan</button></div>
+          <pre id="snippet-host-netlify" data-template="1. Klik Import from Git &gt; GitHub &gt; Pilih Repo Anda&#10;2. Build command: npm run build (React) | npm run build:css (HTML+Tailwind)&#10;3. Publish directory: dist (React) | . (HTML+Tailwind)&#10;4. Environment variables (React):&#10;   VITE_GAS_EXEC_URL = {{GAS_EXEC_URL}}&#10;5. Klik Deploy site &rarr; URL live: {{PAGES_DOMAIN}}">1. Klik Import from Git &gt; GitHub &gt; Pilih Repo Anda
+2. Build command: npm run build (React) | npm run build:css (HTML+Tailwind)
+3. Publish directory: dist (React) | . (HTML+Tailwind)
+4. Environment variables (React):
+   VITE_GAS_EXEC_URL = {{GAS_EXEC_URL}}
+5. Klik Deploy site &rarr; URL live: {{PAGES_DOMAIN}}</pre>
         </div>
 
-        <div id="host-panel-firebase" class="code-wrap hidden">
-          <div class="callout"><strong>Lisensi:</strong> Diizinkan komersial (Spark Plan gratis s/d kuota, atau Blaze pay-as-you-go). Docs: <a href="https://firebase.google.com/docs/hosting" target="_blank" rel="noopener noreferrer">Firebase Hosting</a></div>
-          <div class="code-toolbar"><span class="helper">File <code>firebase.json</code> &amp; perintah deploy</span><button type="button" data-copy-target="snippet-host-firebase">Salin firebase.json</button></div>
-          <pre id="snippet-host-firebase" data-template="{&#10;  &quot;hosting&quot;: {&#10;    &quot;public&quot;: &quot;dist&quot;,&#10;    &quot;ignore&quot;: [&quot;firebase.json&quot;, &quot;**/.*&quot;, &quot;**/node_modules/**&quot;],&#10;    &quot;rewrites&quot;: [{ &quot;source&quot;: &quot;**&quot;, &quot;destination&quot;: &quot;/index.html&quot; }]&#10;  }&#10;}&#10;# Deploy: npm run build &amp;&amp; npx firebase deploy --only hosting&#10;# Target Domain: {{PAGES_DOMAIN}}">{
-  "hosting": {
-    "public": "dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }]
-  }
-}
-# Deploy: npm run build &amp;&amp; npx firebase deploy --only hosting
-# Target Domain: {{PAGES_DOMAIN}}</pre>
+        <div id="host-panel-sevalla" class="code-wrap hidden">
+          <div class="callout callout-mint"><strong>Komersial Gratis (s/d Kuota):</strong> Sevalla Static Site Hosting gratis biaya bulanan (100 GB bandwidth &amp; 600 menit build/bln).</div>
+          <div class="btn-row">
+            <a class="shortcut-btn shortcut-sky" href="https://app.sevalla.com/" target="_blank" rel="noopener noreferrer">Buka Dashboard Sevalla &#8599;</a>
+            <a class="shortcut-btn" href="https://docs.sevalla.com/static-site-hosting/" target="_blank" rel="noopener noreferrer">Docs &#8599;</a>
+          </div>
+          <div class="code-toolbar"><span class="helper">Pengaturan Import GitHub di Sevalla Static Site</span><button type="button" data-copy-target="snippet-host-sevalla">Salin Pengaturan</button></div>
+          <pre id="snippet-host-sevalla" data-template="1. Klik Static Sites &gt; Add Static Site &gt; Connect GitHub&#10;2. Build command: npm run build (React) | npm run build:css (HTML+Tailwind)&#10;3. Publish directory: dist (React) | . (HTML+Tailwind)&#10;4. Index file fallback: index.html&#10;5. Environment variable (React): VITE_GAS_EXEC_URL = {{GAS_EXEC_URL}}">1. Klik Static Sites &gt; Add Static Site &gt; Connect GitHub
+2. Build command: npm run build (React) | npm run build:css (HTML+Tailwind)
+3. Publish directory: dist (React) | . (HTML+Tailwind)
+4. Index file fallback: index.html
+5. Environment variable (React): VITE_GAS_EXEC_URL = {{GAS_EXEC_URL}}</pre>
         </div>
 
         <div id="host-panel-vercel" class="code-wrap hidden">
-          <div class="callout"><strong>Lisensi Penting:</strong> <strong>Vercel Hobby DILARANG untuk komersial</strong> (hanya personal/dev). Gunakan <strong>Vercel Pro ($20/bln)</strong> untuk proyek komersial. Docs: <a href="https://vercel.com/docs/projects/environment-variables" target="_blank" rel="noopener noreferrer">Vercel Docs</a></div>
-          <div class="code-toolbar"><span class="helper">Perintah Vercel CLI &amp; Environment</span><button type="button" data-copy-target="snippet-host-vercel">Salin Perintah</button></div>
-          <pre id="snippet-host-vercel" data-template="# Tambahkan env di Vercel Project Settings:&#10;# VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}&#10;npx vercel --prod&#10;# Target Domain: {{PAGES_DOMAIN}}"># Tambahkan env di Vercel Project Settings:
-# VITE_GAS_EXEC_URL={{GAS_EXEC_URL}}
-npx vercel --prod
-# Target Domain: {{PAGES_DOMAIN}}</pre>
+          <div class="callout callout-rose"><strong>Perhatian Lisensi:</strong> <strong>Vercel Hobby (Gratis)</strong> hanya untuk personal/non-komersial. Untuk bisnis/komersial wajib menggunakan <strong>Vercel Pro ($20/bulan)</strong>.</div>
+          <div class="btn-row">
+            <a class="shortcut-btn shortcut-butter" href="https://vercel.com/new" target="_blank" rel="noopener noreferrer">Import Repo ke Vercel (vercel.com/new) &#8599;</a>
+            <a class="shortcut-btn" href="https://vercel.com/docs/projects/environment-variables" target="_blank" rel="noopener noreferrer">Docs &#8599;</a>
+          </div>
+          <div class="code-toolbar"><span class="helper">Pengaturan Import GitHub di Vercel</span><button type="button" data-copy-target="snippet-host-vercel">Salin Pengaturan</button></div>
+          <pre id="snippet-host-vercel" data-template="1. Klik Import pada Repo GitHub Anda&#10;2. Framework Preset: Vite (React) atau Other (HTML+Tailwind)&#10;3. Buka Environment Variables &rarr; tambah:&#10;   VITE_GAS_EXEC_URL = {{GAS_EXEC_URL}}&#10;   VITE_GOOGLE_CLIENT_ID = {{GOOGLE_CLIENT_ID}}&#10;4. Klik Deploy &rarr; URL live: {{PAGES_DOMAIN}}">1. Klik Import pada Repo GitHub Anda
+2. Framework Preset: Vite (React) atau Other (HTML+Tailwind)
+3. Buka Environment Variables &rarr; tambah:
+   VITE_GAS_EXEC_URL = {{GAS_EXEC_URL}}
+   VITE_GOOGLE_CLIENT_ID = {{GOOGLE_CLIENT_ID}}
+4. Klik Deploy &rarr; URL live: {{PAGES_DOMAIN}}</pre>
+        </div>
+
+        <div id="host-panel-firebase" class="code-wrap hidden">
+          <div class="callout callout-mint"><strong>Komersial (Spark/Blaze):</strong> Firebase Hosting mendukung integrasi GitHub Actions otomatis lewat <code>firebase init hosting:github</code>.</div>
+          <div class="btn-row">
+            <a class="shortcut-btn shortcut-butter" href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer">Buka Firebase Console &#8599;</a>
+            <a class="shortcut-btn" href="https://firebase.google.com/docs/hosting/github-integration" target="_blank" rel="noopener noreferrer">Docs GitHub Integration &#8599;</a>
+          </div>
+          <div class="code-toolbar"><span class="helper">Konfigurasi <code>firebase.json</code></span><button type="button" data-copy-target="snippet-host-firebase">Salin firebase.json</button></div>
+          <pre id="snippet-host-firebase" data-template="{&#10;  &quot;hosting&quot;: {&#10;    &quot;public&quot;: &quot;dist&quot;,&#10;    &quot;rewrites&quot;: [{ &quot;source&quot;: &quot;**&quot;, &quot;destination&quot;: &quot;/index.html&quot; }]&#10;  }&#10;}&#10;# Hubungkan ke GitHub otomatis: npx firebase init hosting:github">{
+  "hosting": {
+    "public": "dist",
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+  }
+}
+# Hubungkan ke GitHub otomatis: npx firebase init hosting:github</pre>
         </div>
 
         <div id="host-panel-ghpages" class="code-wrap hidden">
-          <div class="callout"><strong>Lisensi Penting:</strong> <strong>GitHub Pages DILARANG untuk bisnis/SaaS komersial</strong> (GitHub ToS). Khusus dokumentasi, portofolio, atau demo prototipe non-komersial. Docs: <a href="https://docs.github.com/en/pages" target="_blank" rel="noopener noreferrer">GitHub Pages</a></div>
-          <div class="code-toolbar"><span class="helper">Catatan Build GitHub Pages</span><button type="button" data-copy-target="snippet-host-ghpages">Salin Catatan</button></div>
-          <pre id="snippet-host-ghpages" data-template="# Khusus demo non-komersial:&#10;# Untuk React (Vite), setel base: '/nama-repo/' pada vite.config.ts&#10;# Publikasikan folder dist/ ke branch gh-pages&#10;# Target URL: {{PAGES_DOMAIN}}"># Khusus demo non-komersial:
-# Untuk React (Vite), setel base: '/nama-repo/' pada vite.config.ts
-# Publikasikan folder dist/ ke branch gh-pages
-# Target URL: {{PAGES_DOMAIN}}</pre>
+          <div class="callout callout-rose"><strong>Khusus Non-Komersial:</strong> GitHub Pages dilarang untuk bisnis online/SaaS komersial (GitHub ToS). Cocok untuk demo, portofolio, atau prototipe gratis.</div>
+          <div class="btn-row">
+            <a class="shortcut-btn" href="https://docs.github.com/en/pages" target="_blank" rel="noopener noreferrer">Docs GitHub Pages &#8599;</a>
+          </div>
+          <div class="code-toolbar"><span class="helper">Aktifkan dari Settings Repo GitHub</span><button type="button" data-copy-target="snippet-host-ghpages">Salin Panduan</button></div>
+          <pre id="snippet-host-ghpages" data-template="1. Di Repo GitHub Anda, buka Settings &gt; Pages&#10;2. Source: Deploy from a branch (main / root untuk HTML+Tailwind) atau GitHub Actions (React Vite)&#10;3. Pastikan base di vite.config.ts sesuai nama repo&#10;4. Domain demo: {{PAGES_DOMAIN}}">1. Di Repo GitHub Anda, buka Settings &gt; Pages
+2. Source: Deploy from a branch (main / root untuk HTML+Tailwind) atau GitHub Actions (React Vite)
+3. Pastikan base di vite.config.ts sesuai nama repo
+4. Domain demo: {{PAGES_DOMAIN}}</pre>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px;">
+          <a class="shortcut-btn" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">Opsional: Buka Google Cloud Console (OAuth Client ID) &#8599;</a>
         </div>
       </section>
 
-      <!-- Langkah 7: Multi-OS Copyable Test Snippets -->
+      <!-- LANGKAH 7: UJI KONEKSI & GO-LIVE -->
       <section class="card install-step" id="step-7" data-install-step="step-7"
-        data-step-purpose="Memverifikasi respons JSON Envelope Kanonik dari endpoint /exec menggunakan terminal atau Browser Console."
-        data-step-action="Pilih OS/alat uji (cURL, PowerShell, atau Browser Console), salin perintah, lalu jalankan di perangkat Anda."
-        data-step-expected="Server mengembalikan JSON { status: 'success' | 'error', code: 'OK' | 'FORBIDDEN', meta: { schemaVersion } }."
+        data-step-purpose="Memverifikasi aplikasi live dan respons JSON Envelope Kanonik dari endpoint /exec."
+        data-step-action="Buka domain live {{PAGES_DOMAIN}} untuk uji manual, atau salin perintah uji koneksi sesuai OS di bawah."
+        data-step-expected="Aplikasi live terhubung ke Spreadsheet/Drive tanpa error CORS, dan endpoint /exec mengembalikan JSON envelope valid."
         data-step-source="src/core/contract.md (Seksi 2 &amp; 4)"
-        data-step-verified="2026-11-25">
+        data-step-verified="2026-11-28">
         <div class="step-header">
-          <h3>Langkah 7 — Uji Koneksi End-to-End (Multi-OS Copyable Snippets)</h3>
+          <div>
+            <span class="pill pill-butter">FASE 4 • VERIFIKASI &amp; GO-LIVE</span>
+            <h3 style="margin-top:6px;">Langkah 7 — Uji Koneksi Endpoint <code>/exec</code> &amp; Checklist Go-Live</h3>
+          </div>
           <label class="step-check-label"><input type="checkbox" data-step-checkbox="step-7"> Selesai</label>
         </div>
-        <div class="meta-grid">
-          <div><strong>Tujuan:</strong> Memastikan endpoint <code>{{GAS_EXEC_URL}}</code> aktif, mengikuti redirect <code>HTTP 302</code>, dan mengembalikan JSON Envelope Kanonik.</div>
-          <div><strong>Aksi:</strong> Pilih tab alat uji di bawah, klik salin, lalu jalankan dari terminal atau DevTools Console Anda (halaman ini tidak mengeksekusi panggilan jaringan).</div>
-          <div><strong>Hasil yang Diharapkan:</strong> Respons JSON valid dengan <code>status</code> huruf kecil (<code>"success"</code> atau <code>"error"</code>) — pada profil <code>P4</code>, <code>items.list</code> tanpa token harus mengembalikan <code>code: "FORBIDDEN"</code>.</div>
-          <div><strong>Sumber &amp; Verifikasi:</strong> <code>src/core/contract.md</code> <span class="badge badge-ok">2026-11-25</span></div>
+        <div class="meta-box">
+          <div><strong>Tujuan:</strong> Memastikan frontend di <code>{{PAGES_DOMAIN}}</code> dan backend di <code>{{GAS_EXEC_URL}}</code> saling terhubung mulus.</div>
+          <div><strong>Aksi:</strong> Salin salah satu perintah uji di bawah lalu jalankan di Terminal / PowerShell / DevTools Console (halaman panduan ini tidak melakukan panggilan jaringan).</div>
+          <div><strong>Hasil yang Diharapkan:</strong> Respons JSON berisi <code>"status": "success"</code> (atau <code>"FORBIDDEN"</code> pada profil <code>P4</code> sebelum login).</div>
+          <div><strong>Sumber:</strong> <code>src/core/contract.md</code> <span class="pill pill-mint">2026-11-28</span></div>
         </div>
 
         <div class="tabs-row" role="tablist" aria-label="Pilih Alat Uji Koneksi">
@@ -731,7 +768,7 @@ npx vercel --prod
         </div>
 
         <div id="test-panel-curl" class="code-wrap">
-          <div class="code-toolbar"><span class="helper">Jalankan di Terminal Mac/Linux/Git Bash</span><button type="button" data-copy-target="snippet-test-curl">Salin cURL</button></div>
+          <div class="code-toolbar"><span class="helper">Jalankan di Terminal</span><button type="button" data-copy-target="snippet-test-curl">Salin cURL</button></div>
           <pre id="snippet-test-curl" data-template="curl -sL -X POST '{{GAS_EXEC_URL}}' \&#10;  -H 'Content-Type: text/plain;charset=utf-8' \&#10;  -d '{&quot;action&quot;:&quot;items.list&quot;,&quot;v&quot;:1,&quot;auth&quot;:null,&quot;idem&quot;:null,&quot;payload&quot;:{}}'">curl -sL -X POST '{{GAS_EXEC_URL}}' \
   -H 'Content-Type: text/plain;charset=utf-8' \
   -d '{"action":"items.list","v":1,"auth":null,"idem":null,"payload":{}}'</pre>
@@ -744,7 +781,7 @@ Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;
         </div>
 
         <div id="test-panel-console" class="code-wrap hidden">
-          <div class="code-toolbar"><span class="helper">Tempel ke DevTools Console di domain {{PAGES_DOMAIN}}</span><button type="button" data-copy-target="snippet-test-console">Salin JS</button></div>
+          <div class="code-toolbar"><span class="helper">Tempel di DevTools Console pada {{PAGES_DOMAIN}}</span><button type="button" data-copy-target="snippet-test-console">Salin JS</button></div>
           <pre id="snippet-test-console" data-template="fetch('{{GAS_EXEC_URL}}', {&#10;  method: 'POST',&#10;  headers: { 'Content-Type': 'text/plain;charset=utf-8' },&#10;  redirect: 'follow',&#10;  body: JSON.stringify({ action: 'items.list', v: 1, auth: null, idem: null, payload: {} })&#10;}).then(r =&gt; r.json()).then(console.log);">fetch('{{GAS_EXEC_URL}}', {
   method: 'POST',
   headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -754,32 +791,24 @@ Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;
         </div>
       </section>
 
-      <!-- Akordeon Troubleshooting -->
+      <!-- Troubleshooting -->
       <section class="card" aria-labelledby="ts-heading">
-        <h2 id="ts-heading">Troubleshooting &amp; Pertanyaan Umum</h2>
+        <h2 id="ts-heading">Troubleshooting Singkat</h2>
         <details>
-          <summary>1. Mengapa POST ke /exec membalas HTTP 302 Redirect?</summary>
-          <p>Apps Script Web App selalu mengalihkan respons ke <code>script.googleusercontent.com</code> (<code>src/core/facts.md</code>, terverifikasi <code>2026-11-25</code>). Pastikan klien menggunakan <code>curl -L</code> atau <code>redirect: "follow"</code>.</p>
+          <summary>1. Di mana Spreadsheet dan Folder Drive yang dibuat setupAppEnvironment()?</summary>
+          <p>Cek panel <strong>Execution Log</strong> di bagian bawah Editor Apps Script setelah menjalankan <code>setupAppEnvironment()</code>—tautan langsung <code>spreadsheetUrl</code> dan <code>driveFolderUrl</code> dicetak di sana, atau buka <a href="https://drive.google.com/drive/my-drive" target="_blank" rel="noopener noreferrer">Google Drive Saya &#8599;</a>.</p>
         </details>
         <details>
-          <summary>2. Mengapa muncul error CORS / preflight OPTIONS gagal?</summary>
-          <p>GAS tidak melayani preflight <code>OPTIONS</code>. Jangan gunakan <code>application/json</code> atau header kustom <code>Authorization</code>; wajib <code>Content-Type: text/plain;charset=utf-8</code> dan letakkan <code>auth</code> di dalam body JSON (<code>src/core/contract.md</code>).</p>
+          <summary>2. Mengapa muncul error CORS saat memanggil /exec dari domain hosting?</summary>
+          <p>Pastikan deployment Web App disetel ke <strong>Execute as: Me</strong> dan <strong>Who has access: Anyone</strong>, serta request memakai <code>Content-Type: text/plain;charset=utf-8</code> tanpa header kustom <code>Authorization</code>.</p>
         </details>
         <details>
-          <summary>3. Mengapa file.ticket gagal VALIDATION_ERROR saat unggah foto publik?</summary>
-          <p>Pastikan frontend meneruskan <code>{ entity, entityId, uploadNonce }</code> yang diterima dari respons <code>items.create</code> ke aksi <code>file.ticket</code> dalam waktu maksimal 15 menit sejak record dibuat.</p>
+          <summary>3. Mengapa update kode di GitHub langsung men-deploy ulang, tapi update kode .gs belum berubah?</summary>
+          <p>Di Apps Script, menyimpan kode (<code>Ctrl+S</code>) belum memperbarui URL <code>/exec</code>. Anda wajib membuka <strong>Deploy &gt; Manage deployments &gt; Edit &gt; Version: New version &gt; Deploy</strong>.</p>
         </details>
         <details>
-          <summary>4. Mengapa aksi hapus (items.delete) ditolak FORBIDDEN meski sudah login Admin?</summary>
-          <p>Aksi destruktif dilindungi Step-Up PIN 6 digit. Panggil <code>auth.verifyPin</code> (<code>{ pin, targetAction: "items.delete" }</code>) lalu sertakan <code>stepUpToken</code> pada payload <code>items.delete</code>.</p>
-        </details>
-        <details>
-          <summary>5. Bagaimana cara memperbarui kode .gs tanpa mengubah URL /exec?</summary>
-          <p>Buka <strong>Deploy &gt; Manage deployments &gt; Edit (pensil) &gt; Version: New version &gt; Deploy</strong>. Jangan klik <em>New deployment</em> (<code>src/gas/config.md</code> Seksi 3).</p>
-        </details>
-        <details>
-          <summary>6. Berapa batas kuota runtime, konkurensi, dan email GAS?</summary>
-          <p>Maksimal <strong>6 menit/eksekusi</strong>, <strong>30 eksekusi simultan</strong> per akun, dan kuota <code>MailApp</code> <strong>100/hari</strong> (konsumen) atau <strong>1.500/hari</strong> (Google Workspace) (<code>src/core/facts.md</code>, <code>2026-11-25</code>).</p>
+          <summary>4. Mengapa hapus data (items.delete) ditolak FORBIDDEN meski sudah login?</summary>
+          <p>Aksi destruktif membutuhkan verifikasi PIN 6 digit (<code>auth.verifyPin</code> &rarr; <code>stepUpToken</code>). Pastikan <code>ADMIN_PIN_INIT</code> sudah dikonfigurasi di Langkah 3.</p>
         </details>
       </section>
     </main>
@@ -832,23 +861,20 @@ Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;
 
         if (pagesDomain) {
           if (FORBIDDEN_CHARS_RE.test(pagesDomain)) {
-            errors.PAGES_DOMAIN = 'Domain Pages mengandung karakter terlarang.';
+            errors.PAGES_DOMAIN = 'Domain aplikasi mengandung karakter terlarang.';
           } else {
             try {
               var dUrl = new URL(pagesDomain);
               if (dUrl.protocol !== 'https:' && dUrl.protocol !== 'http:') {
-                errors.PAGES_DOMAIN = 'Domain Pages wajib berprotokol https:// atau http://.';
+                errors.PAGES_DOMAIN = 'Domain wajib berprotokol https:// atau http://.';
               }
             } catch (e2) {
-              errors.PAGES_DOMAIN = 'Domain Pages wajib berupa URL valid (mis. https://app.contoh.id).';
+              errors.PAGES_DOMAIN = 'Domain wajib berupa URL valid (mis. https://app.pages.dev).';
             }
           }
         }
 
-        return {
-          valid: Object.keys(errors).length === 0,
-          errors: errors
-        };
+        return { valid: Object.keys(errors).length === 0, errors: errors };
       }
 
       function fillPlaceholders(templateStr, valuesObj) {
@@ -1063,9 +1089,7 @@ Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;
           (function(btn) {
             btn.addEventListener('click', function() {
               var stepId = btn.getAttribute('data-jump-step');
-              for (var m = 0; m < navBtns.length; m++) {
-                navBtns[m].removeAttribute('aria-current');
-              }
+              for (var m = 0; m < navBtns.length; m++) navBtns[m].removeAttribute('aria-current');
               btn.setAttribute('aria-current', 'step');
               var targetSection = doc.getElementById(stepId);
               if (targetSection) {
@@ -1080,7 +1104,7 @@ Invoke-RestMethod -Method Post -Uri '{{GAS_EXEC_URL}}' -ContentType 'text/plain;
         if (toggleBtn) {
           toggleBtn.addEventListener('click', function() {
             showOnlyPending = !showOnlyPending;
-            toggleBtn.textContent = showOnlyPending ? 'Filter: Tampilkan Semua' : 'Filter: Hanya Belum Selesai';
+            toggleBtn.textContent = showOnlyPending ? 'Filter: Tampilkan Semua' : 'Filter: Belum Selesai';
             updateProgressUi();
           });
         }
