@@ -136,12 +136,14 @@ Buka dan gunakan file referensi berikut saat menyusun panduan instalasi proyek:
 ## 3. ATURAN PENYUSUNAN LANGKAH KONDISIONAL DARI `GASLY_CONTRACT_JSON`
 
 Baca `GASLY_CONTRACT_JSON` (serta daftar file keluaran) dan aktifkan langkah secara spesifik:
-1. **Selalu Aktif (Langkah Inti Backend GAS & Interaktivitas Offline):**
-   - Pertahankan struktur interaktif 2-kolom dari `references/guide-template.html` (Sticky Sidebar Stepper + Filter Belum Selesai + Reset Progres, Live Snippet Filler 4 placeholder, `ScriptProperties` Matrix, Stack Switcher `html-tailwind`/`react`, Hosting Switcher 6 platform, serta Multi-OS Test Switcher `cURL`/`PowerShell`/`Browser Console` yang diletakkan pada atribut `data-template` di luar `<script>`).
-   - Pembuatan Google Spreadsheet & penyalinan file `.gs` (`setup.gs`, `code.gs`, dll.).
-   - Eksekusi 1-klik **`setupAppEnvironment()`** di toolbar Apps Script (atau menu **Gasly Setup** di Spreadsheet) yang otomatis menjalankan `initialSetupDatabase()`, membuat `AUTH_HMAC_SECRET`/`AUTH_PEPPER`/Drive folder, dan mengecek status kesiapan.
-   - Pengaturan kredensial admin via dialog aman **Gasly Setup > 2. Atur Passphrase & PIN Admin** atau properti sementara `ADMIN_PASSPHRASE_INIT` & `ADMIN_PIN_INIT` $\rightarrow$ `setupAppEnvironment()`.
-   - Deployment Web App (`Execute as: Me`, `Who has access: Anyone`) & kartu peringatan Zero-Downtime Update (**Manage deployments > Edit > New version > Deploy**).
+1. **Selalu Aktif (Tema Soft Neo-Brutalist, Alur 3 Fase & Shortcut Hyperlink):**
+   - **Estetika Wajib:** Gunakan desain **Soft Neo-Brutalist yang minimalist, soft, dan clean** dari `references/guide-template.html` (kanvas `#F7F5F0`, border tegas `2px solid #1E293B`, offset shadow halus `4px 4px 0`, aksen pastel WCAG AA `#A7F3D0` / `#BAE6FD` / `#FDE68A` / `#DDD6FE` berteks gelap `#0F172A`, dukungan dark mode & `prefers-reduced-motion`).
+   - **Tombol Shortcut Hyperlink:** Selalu sediakan tombol pintas `<a target="_blank" rel="noopener noreferrer">` untuk meringankan pengguna (`https://script.new`, `https://github.com/new`, `https://dash.cloudflare.com/?to=/:account/workers-and-pages/create/pages`, `https://app.netlify.com/start`, `https://vercel.com/new`, `https://app.sevalla.com/`, `https://console.firebase.google.com/`).
+   - **Urutan Alur Deploy End-to-End:**
+     1) **Fase 1 (Backend GAS Standalone):** Buka `script.new` $\rightarrow$ tempel `setup.gs` & `code.gs` $\rightarrow$ klik **Run `setupAppEnvironment()`** (otomatis membuat Spreadsheet, Folder Drive, tabel, seed, `AUTH_HMAC_SECRET`, & `AUTH_PEPPER`) $\rightarrow$ setel `ADMIN_PASSPHRASE_INIT` & `ADMIN_PIN_INIT` lalu Run `setupAppEnvironment()` lagi $\rightarrow$ Deploy Web App `/exec`.
+     2) **Fase 2 (GitHub Repository):** Buka `github.com/new` $\rightarrow$ buat repo baru $\rightarrow$ unggah seluruh file frontend ke branch `main`.
+     3) **Fase 3 (Import Repo GitHub ke Hosting):** Import repo GitHub ke hosting target (**Cloudflare Pages** / **Netlify** / **Sevalla** / **Vercel** / **Firebase Hosting** / **GitHub Pages**) beserta Build Command, Output Dir, dan Environment Variable `VITE_GAS_EXEC_URL` / `src/config.js`.
+     4) **Fase 4 (Verifikasi & Go-Live):** Uji endpoint `/exec` via Multi-OS Test Switcher (`data-template` di luar `<script>`) dan cantumkan prosedur Zero-Downtime Update (`Manage deployments > Edit > New version`).
 2. **Kondisional Berdasarkan `architecture.auth_google_enabled` & `access_profile`:**
    - Jika `auth_google_enabled === true`: sertakan langkah pembuatan Google Cloud OAuth 2.0 Web Client ID, pengisian `GOOGLE_CLIENT_ID` di `ScriptProperties`, dan bila menggunakan `P2-lite` sertakan opsi `P2_LITE_AUTO_PROVISION`.
 3. **Kondisional Berdasarkan Integrasi & Entitas:**

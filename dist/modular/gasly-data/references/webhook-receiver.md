@@ -61,7 +61,7 @@ function handleWebhookReceive_(req) {
       }
     }
 
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var isSubscriptionTarget =
       String(p.targetEntity || '').trim().toUpperCase() === 'SUBSCRIPTIONS' ||
       entityId.indexOf('SUB-') === 0 ||

@@ -417,7 +417,7 @@ function handleAuthGoogle_(req) {
       return createResponse_('error', null, 'Server sedang sibuk.', 'LOCK_TIMEOUT');
     }
     try {
-      var ss = getAppSpreadsheet_(false);
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
       var usersSheet = ss.getSheetByName('USERS');
       if (!usersSheet) {
         return createResponse_('error', null, 'Tabel USERS belum diinisialisasi.', 'NOT_FOUND');
@@ -559,7 +559,7 @@ function handleAuthSetCredentials_(req) {
   }
 
   try {
-    var ss = getAppSpreadsheet_(false);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName('USERS');
     if (!sheet || sheet.getLastRow() <= 1) {
       return createResponse_('error', null, 'Tabel USERS belum tersedia.', 'NOT_FOUND');

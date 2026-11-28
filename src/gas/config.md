@@ -170,7 +170,7 @@ function getAppSpreadsheet_(allowCreate) {
 
   var activeSs = null;
   try {
-    activeSs = getAppSpreadsheet_(false);
+    activeSs = SpreadsheetApp.getActiveSpreadsheet();
   } catch (e) {}
 
   if (activeSs) {
@@ -290,7 +290,15 @@ function initialSetupDatabase() {
         });
       }
 
-  // 5. Otomatis buat folder root Google Drive aplikasi bila belum ada
+      var activeHeaders = itemsSheet.getRange(1, 1, 1, itemsSheet.getLastColumn()).getValues()[0];
+      var seedRows = seedObjects.map(function(obj) {
+        return buildRowFromObject_(activeHeaders, obj);
+      });
+      itemsSheet.getRange(2, 1, seedRows.length, activeHeaders.length).setValues(seedRows);
+      props.setProperty('SEED_INITIALIZED', 'TRUE');
+    }
+
+    // 5. Otomatis buat folder root Google Drive aplikasi bila belum ada
   if (!props.getProperty('DRIVE_ROOT_FOLDER_ID')) {
     var folder = DriveApp.createFolder(APP_NAME + '_Workspace_' + ss.getId().slice(0, 6));
     props.setProperty('DRIVE_ROOT_FOLDER_ID', folder.getId());
@@ -305,14 +313,6 @@ function initialSetupDatabase() {
     spreadsheetUrl: typeof ss.getUrl === 'function' ? ss.getUrl() : ('https://docs.google.com/spreadsheets/d/' + ss.getId() + '/edit'),
     driveFolderId: props.getProperty('DRIVE_ROOT_FOLDER_ID')
   };
-
-      var activeHeaders = itemsSheet.getRange(1, 1, 1, itemsSheet.getLastColumn()).getValues()[0];
-      var seedRows = seedObjects.map(function(obj) {
-        return buildRowFromObject_(activeHeaders, obj);
-      });
-      itemsSheet.getRange(2, 1, seedRows.length, activeHeaders.length).setValues(seedRows);
-      props.setProperty('SEED_INITIALIZED', 'TRUE');
-    }
 
     var plansSheet = ss.getSheetByName('PLANS');
     if (plansSheet && plansSheet.getLastRow() <= 1) {
@@ -472,8 +472,9 @@ function setupAppEnvironment(fromClient) {
   if (fromClient !== undefined) {
     throw new Error('setupAppEnvironment() hanya boleh dijalankan dari toolbar Apps Script atau menu Spreadsheet.');
   }
+
   var driveId = props.getProperty('DRIVE_ROOT_FOLDER_ID') || '';
-  var summary = {
+var summary = {
   status: actionsRequired.length === 0 && diagnostics.ok ? 'READY_TO_DEPLOY' : 'PARTIAL_SETUP',
   schemaVersion: setupResult.schemaVersion,
   accessProfile: props.getProperty('ACCESS_PROFILE') || ACCESS_PROFILE,

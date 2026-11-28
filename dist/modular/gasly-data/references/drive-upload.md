@@ -157,7 +157,7 @@ function handleFileTicket_(req) {
   }
 
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var sheet = ss.getSheetByName(entityCfg.sheetName);
     if (!sheet || sheet.getLastRow() <= 1) {
       return createResponse_('error', null, 'Tabel tujuan tidak ditemukan.', 'NOT_FOUND');
@@ -306,7 +306,7 @@ function handleFileUpload_(req) {
 
   var createdFile = null;
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var sheet = ss.getSheetByName(entityCfg.sheetName);
     if (!sheet || sheet.getLastRow() <= 1) {
       return createResponse_('error', null, 'Tabel tujuan tidak ditemukan.', 'NOT_FOUND');
@@ -471,7 +471,7 @@ function handleFileDelete_(req) {
   }
 
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var sheet = ss.getSheetByName(entityCfg.sheetName);
     if (!sheet || sheet.getLastRow() <= 1) {
       return createResponse_('error', null, 'Tabel tujuan tidak ditemukan.', 'NOT_FOUND');

@@ -80,7 +80,7 @@ function saveIdempotentResponse_(action, idemKey, envelope) {
  * password_salt, password_hash, pin_salt, pin_hash) unless includeSecrets === true.
  */
 function readSheetObjects_(sheetName, includeSecrets) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getAppSpreadsheet_(false);
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
     return {
@@ -200,7 +200,7 @@ function handleItemsCreate_(req) {
   }
 
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var sheet = ss.getSheetByName('ITEMS');
     if (!sheet) {
       return createResponse_('error', null, 'Tabel ITEMS belum diinisialisasi.', 'NOT_FOUND');
@@ -277,7 +277,7 @@ function handleItemsUpdate_(req) {
   }
 
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var sheet = ss.getSheetByName('ITEMS');
     if (!sheet || sheet.getLastRow() <= 1) {
       return createResponse_('error', null, 'Data tidak ditemukan.', 'NOT_FOUND');
@@ -369,7 +369,7 @@ function handleItemsMutateDelta_(req) {
   }
 
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var sheet = ss.getSheetByName('ITEMS');
     if (!sheet || sheet.getLastRow() <= 1) {
       return createResponse_('error', null, 'Tabel ITEMS belum tersedia.', 'NOT_FOUND');
@@ -471,7 +471,7 @@ function handleItemsTrackPublic_(req) {
   }
   cache.put(globalRateKey, String(globalCount + 1), 60);
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getAppSpreadsheet_(false);
   var sheet = ss.getSheetByName('ITEMS');
   if (!sheet || sheet.getLastRow() <= 1) {
     return createResponse_('error', null, 'Data tiket tidak ditemukan.', 'NOT_FOUND');
@@ -524,7 +524,7 @@ function handleItemsDelete_(req) {
   }
 
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var sheet = ss.getSheetByName('ITEMS');
     if (!sheet || sheet.getLastRow() <= 1) {
       return createResponse_('error', null, 'Data tidak ditemukan.', 'NOT_FOUND');
@@ -583,7 +583,7 @@ function handleAdminPurgeSeed_(req) {
   }
 
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(false);
     var removedCount = 0;
     Object.keys(DB_SCHEMAS).forEach(function(sheetName) {
       var sheet = ss.getSheetByName(sheetName);
@@ -610,7 +610,7 @@ function handleAdminPurgeSeed_(req) {
 }
 
 function buildDiagnosticsReport_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getAppSpreadsheet_(false);
   var props = PropertiesService.getScriptProperties();
   var report = {
     schemaVersion: props.getProperty('SCHEMA_VERSION') || 'UNSET',

@@ -10,7 +10,7 @@ on:
 # Validation is read-only. Only the isolated publish job receives write access.
 permissions:
   contents: read
-    
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -28,7 +28,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-        node-version: "22" # <<PIN_VERSION>> recorded in VERIFY.md
+          node-version: "22" # atau boleh naik ke "24"
 
       - name: Build skill packages and verify RPC/manifest contracts
         run: python build_skills.py

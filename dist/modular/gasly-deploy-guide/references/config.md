@@ -42,6 +42,7 @@ Seluruh rahasia dan parameter konfigurasi lingkungan disimpan di dalam `Properti
 // FILE: setup.gs
 // Runtime: Google Apps Script V8
 
+var APP_NAME = 'Gasly_App';
 var SCHEMA_VERSION = '1.1.0';
 var DEFAULT_TZ = 'Asia/Jakarta';
 var ACCESS_PROFILE = 'P3'; // 'P1' | 'P3' | 'P4'
@@ -152,6 +153,41 @@ function buildRowFromObject_(expectedHeaders, recordObj) {
 }
 
 /**
+ * Membuka Spreadsheet aplikasi secara universal (mendukung Standalone script.new maupun Container-Bound).
+ * Jika allowCreate === true dan belum ada Spreadsheet, otomatis membuat file Spreadsheet baru
+ * dan menyimpan SPREADSHEET_ID ke ScriptProperties.
+ */
+function getAppSpreadsheet_(allowCreate) {
+  var props = PropertiesService.getScriptProperties();
+  var savedId = props.getProperty('SPREADSHEET_ID');
+  if (savedId) {
+    try {
+      return SpreadsheetApp.openById(savedId);
+    } catch (openErr) {
+      // Jika file lama terhapus, lanjutkan ke fallback di bawah
+    }
+  }
+
+  var activeSs = null;
+  try {
+    activeSs = SpreadsheetApp.getActiveSpreadsheet();
+  } catch (e) {}
+
+  if (activeSs) {
+    props.setProperty('SPREADSHEET_ID', activeSs.getId());
+    return activeSs;
+  }
+
+  if (allowCreate === true) {
+    var createdSs = SpreadsheetApp.create(APP_NAME + '_Database');
+    props.setProperty('SPREADSHEET_ID', createdSs.getId());
+    return createdSs;
+  }
+
+  throw new Error('SPREADSHEET_ID belum ditemukan. Jalankan setupAppEnvironment() dari toolbar Apps Script terlebih dahulu.');
+}
+
+/**
  * Idempotent database and ScriptProperties initializer.
  * Kept public (no trailing underscore) so the owner can run it from the GAS IDE toolbar.
  */
@@ -162,7 +198,7 @@ function initialSetupDatabase() {
   }
 
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getAppSpreadsheet_(true);
     var props = PropertiesService.getScriptProperties();
     var tz = Session.getScriptTimeZone() || DEFAULT_TZ;
 
@@ -261,6 +297,22 @@ function initialSetupDatabase() {
       itemsSheet.getRange(2, 1, seedRows.length, activeHeaders.length).setValues(seedRows);
       props.setProperty('SEED_INITIALIZED', 'TRUE');
     }
+
+    // 5. Otomatis buat folder root Google Drive aplikasi bila belum ada
+  if (!props.getProperty('DRIVE_ROOT_FOLDER_ID')) {
+    var folder = DriveApp.createFolder(APP_NAME + '_Workspace_' + ss.getId().slice(0, 6));
+    props.setProperty('DRIVE_ROOT_FOLDER_ID', folder.getId());
+  }
+
+  props.setProperty('SCHEMA_VERSION', SCHEMA_VERSION);
+  SpreadsheetApp.flush();
+  return {
+    status: 'success',
+    schemaVersion: SCHEMA_VERSION,
+    spreadsheetId: ss.getId(),
+    spreadsheetUrl: typeof ss.getUrl === 'function' ? ss.getUrl() : ('https://docs.google.com/spreadsheets/d/' + ss.getId() + '/edit'),
+    driveFolderId: props.getProperty('DRIVE_ROOT_FOLDER_ID')
+  };
 
     var plansSheet = ss.getSheetByName('PLANS');
     if (plansSheet && plansSheet.getLastRow() <= 1) {
@@ -420,6 +472,29 @@ function setupAppEnvironment(fromClient) {
   if (fromClient !== undefined) {
     throw new Error('setupAppEnvironment() hanya boleh dijalankan dari toolbar Apps Script atau menu Spreadsheet.');
   }
+
+  var driveId = props.getProperty('DRIVE_ROOT_FOLDER_ID') || '';
+var summary = {
+  status: actionsRequired.length === 0 && diagnostics.ok ? 'READY_TO_DEPLOY' : 'PARTIAL_SETUP',
+  schemaVersion: setupResult.schemaVersion,
+  accessProfile: props.getProperty('ACCESS_PROFILE') || ACCESS_PROFILE,
+  spreadsheetId: setupResult.spreadsheetId,
+  spreadsheetUrl: setupResult.spreadsheetUrl,
+  driveFolderId: driveId,
+  driveFolderUrl: driveId ? ('https://drive.google.com/drive/folders/' + driveId) : '',
+  credentialsStep: credStatus,
+  checks: {
+    spreadsheetReady: Boolean(setupResult.spreadsheetId),
+    driveRootReady: Boolean(driveId),
+    hmacSecretReady: Boolean(props.getProperty('AUTH_HMAC_SECRET')),
+    pepperReady: Boolean(props.getProperty('AUTH_PEPPER')),
+    adminPassphraseReady: hasAdminPassHash,
+    adminPinReady: hasAdminPinHash,
+    googleClientIdSet: Boolean(props.getProperty('GOOGLE_CLIENT_ID')),
+    sheetsHealthy: Boolean(diagnostics.ok)
+  },
+  actionsRequired: actionsRequired
+};
 
   var setupResult = initialSetupDatabase();
   var props = PropertiesService.getScriptProperties();
